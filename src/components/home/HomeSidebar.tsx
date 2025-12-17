@@ -6,9 +6,11 @@ import {
     BookOpen,
     User,
     ShieldCheck,
-    ArrowRight
+    ArrowRight,
+    LogOut
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { useAuth } from '../../store/useAuth';
 import { SidebarItem } from './SidebarItem';
 
 interface HomeSidebarProps {
@@ -17,6 +19,7 @@ interface HomeSidebarProps {
 
 export const HomeSidebar = ({ activeTab }: HomeSidebarProps) => {
     const navigate = useNavigate();
+    const { logout } = useAuth();
 
     return (
         <aside className="w-64 bg-white border-r border-slate-100 flex flex-col justify-between hidden md:flex flex-shrink-0 z-20">
@@ -63,7 +66,7 @@ export const HomeSidebar = ({ activeTab }: HomeSidebarProps) => {
             </div>
 
             {/* Footer Sidebar */}
-            <div className="p-6">
+            <div className="p-6 space-y-2">
                 <button className="w-full bg-slate-900 hover:bg-slate-800 text-white p-4 rounded-xl flex items-center justify-between group transition-all shadow-lg shadow-slate-200">
                     <div className="flex items-center gap-3">
                         <div className="bg-emerald-500/20 p-1.5 rounded-lg">
@@ -72,6 +75,17 @@ export const HomeSidebar = ({ activeTab }: HomeSidebarProps) => {
                         <span className="text-sm font-medium">Pasaporte DeepEnd</span>
                     </div>
                     <ArrowRight size={16} className="text-slate-400 group-hover:translate-x-1 transition-transform" />
+                </button>
+
+                <button
+                    onClick={() => {
+                        logout();
+                        navigate('/');
+                    }}
+                    className="w-full text-slate-500 hover:text-rose-500 p-3 rounded-xl flex items-center justify-center gap-2 transition-colors text-sm font-medium"
+                >
+                    <LogOut size={18} />
+                    Cerrar Sesión
                 </button>
             </div>
         </aside>

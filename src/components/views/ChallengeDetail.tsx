@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { ArrowLeft, CheckCircle2, Circle, FileText, Download, Zap, Trophy } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { HomeSidebar } from '../home/HomeSidebar';
-import { MobileNav } from '../home/MobileNav';
+
+
+import Header from '../../components/shared/Header';
 
 interface ChallengeStep {
     id: number;
@@ -31,7 +33,10 @@ export default function ChallengeDetail() {
     };
 
     return (
-        <div className="flex h-screen bg-slate-50 font-sans overflow-hidden">
+        <div className="flex flex-col md:flex-row h-screen bg-slate-50 font-sans overflow-hidden">
+            <div className="md:hidden w-full">
+                <Header />
+            </div>
 
             <HomeSidebar activeTab="Mis Retos" />
 
@@ -125,8 +130,8 @@ export default function ChallengeDetail() {
                                                 key={step.id}
                                                 onClick={() => toggleStep(step.id)}
                                                 className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center gap-4 ${step.completed
-                                                        ? 'bg-white border-emerald-100 shadow-none'
-                                                        : 'bg-white border-slate-100 hover:border-emerald-200 hover:shadow-sm'
+                                                    ? 'bg-white border-emerald-100 shadow-none'
+                                                    : 'bg-white border-slate-100 hover:border-emerald-200 hover:shadow-sm'
                                                     }`}
                                             >
                                                 <div className={`flex-shrink-0 w-6 h-6 rounded flex items-center justify-center transition-colors ${step.completed ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-300'
@@ -190,7 +195,7 @@ export default function ChallengeDetail() {
                 </div>
             </main>
 
-            <MobileNav />
+
 
         </div>
     );

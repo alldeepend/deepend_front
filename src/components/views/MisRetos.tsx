@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ArrowLeft, PlayCircle, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { HomeSidebar } from '../home/HomeSidebar';
-import { MobileNav } from '../home/MobileNav';
+
 
 interface ChallengeCardData {
     category: string;
@@ -64,6 +64,8 @@ const ChallengeCard = ({ data, onClick }: { data: ChallengeCardData; onClick?: (
     );
 };
 
+import Header from '../../components/shared/Header';
+
 export default function MisRetos() {
     const navigate = useNavigate();
     const [filter, setFilter] = useState<'active' | 'completed'>('active');
@@ -101,7 +103,10 @@ export default function MisRetos() {
     ];
 
     return (
-        <div className="flex h-screen bg-slate-50 font-sans overflow-hidden">
+        <div className="flex flex-col md:flex-row h-screen bg-slate-50 font-sans overflow-hidden">
+            <div className="md:hidden w-full">
+                <Header />
+            </div>
 
             <HomeSidebar activeTab="Mis Retos" />
 
@@ -164,7 +169,7 @@ export default function MisRetos() {
                 </div>
             </main>
 
-            <MobileNav />
+
 
         </div>
     );

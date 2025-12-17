@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../store/useAuth';
-import { LogOut, Bell, Check, X, Loader2, Menu } from 'lucide-react';
+import { LogOut, Bell, Check, X, Loader2, Menu, LayoutDashboard, Compass, Flag, BookOpen, User } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
@@ -23,7 +23,7 @@ export default function Header() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
-  const fetchNotifications = async () => {
+  /* const fetchNotifications = async () => {
     try {
       const response = await fetch(`${API_URL}/notifications`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -35,13 +35,13 @@ export default function Header() {
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
-  };
+  }; */
 
-  useEffect(() => {
+  /* useEffect(() => {
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
     return () => clearInterval(interval);
-  }, []);
+  }, []); */
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -98,7 +98,7 @@ export default function Header() {
         <ul className="hidden md:flex items-center gap-10 justify-between">
           <li>
             <Link to="/dashboard" className="text-stone-800 hover:text-accent-green transition-colors font-handwriting text-3xl">
-              Mil momentos
+              <img src="https://media.1000momentos.com/memories/69e82978-65ec-4ca5-9397-468483861205-DeepEnd_FondoBlanco.webp" alt="" />
             </Link>
           </li>
           <li>
@@ -188,7 +188,7 @@ export default function Header() {
         {/* Mobile Menu */}
         <div className="flex md:hidden items-center justify-between">
           <Link to="/dashboard" className="text-stone-800 hover:text-accent-green transition-colors font-handwriting text-2xl">
-            Mil momentos
+            <img className="w-20" src="https://media.1000momentos.com/memories/69e82978-65ec-4ca5-9397-468483861205-DeepEnd_FondoBlanco.webp" alt="" />
           </Link>
           <div className="relative" ref={mobileMenuRef}>
             <button
@@ -208,6 +208,56 @@ export default function Header() {
                   <h3 className="font-bold text-stone-800">Menú</h3>
                 </div>
                 <ul className="py-2">
+                  <li>
+                    <Link
+                      to="/dashboard"
+                      onClick={() => setShowMobileMenu(false)}
+                      className="flex items-center gap-3 w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-50 transition-colors"
+                    >
+                      <LayoutDashboard size={20} />
+                      <span className="font-medium">Dashboard</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/journey"
+                      onClick={() => setShowMobileMenu(false)}
+                      className="flex items-center gap-3 w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-50 transition-colors"
+                    >
+                      <Compass size={20} />
+                      <span className="font-medium">Mi Viaje</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/challenges"
+                      onClick={() => setShowMobileMenu(false)}
+                      className="flex items-center gap-3 w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-50 transition-colors"
+                    >
+                      <Flag size={20} />
+                      <span className="font-medium">Mis Retos</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/resources"
+                      onClick={() => setShowMobileMenu(false)}
+                      className="flex items-center gap-3 w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-50 transition-colors"
+                    >
+                      <BookOpen size={20} />
+                      <span className="font-medium">Mis Recursos</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/profile"
+                      onClick={() => setShowMobileMenu(false)}
+                      className="flex items-center gap-3 w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-50 transition-colors"
+                    >
+                      <User size={20} />
+                      <span className="font-medium">Perfil</span>
+                    </Link>
+                  </li>
                   <li>
                     <div className="relative px-4 py-3" ref={mobileNotificationRef}>
                       <button

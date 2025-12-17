@@ -214,9 +214,9 @@ export default function RegisterForm() {
           {/* --- STEP 1: ACCOUNT & BASIC INFO --- */}
           {step === 1 && (
             <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-              <div className="flex gap-4">
-                <input name="firstName" value={formData.firstName} onChange={handleChange} placeholder="Nombre(s)" required className="w-1/2 bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
-                <input name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Apellidos" required className="w-1/2 bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
+              <div className="flex flex-col md:flex-row gap-4">
+                <input name="firstName" value={formData.firstName} onChange={handleChange} placeholder="Nombre(s)" required className="w-full md:w-1/2 bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
+                <input name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Apellidos" required className="w-full md:w-1/2 bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
               </div>
 
               <input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="Correo electrónico" required className="w-full bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
@@ -236,14 +236,14 @@ export default function RegisterForm() {
           {/* --- STEP 2: PERSONAL & LOCATION --- */}
           {step === 2 && (
             <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <select name="tipo_documento" value={formData.tipo_documento} onChange={handleChange} className="bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all">
                   {DOCUMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
                 <input name="documento_identidad" value={formData.documento_identidad} onChange={handleChange} placeholder="No. Documento" className="bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs text-stone-500 ml-2">Fecha Nacimiento</label>
                   <input type="date" name="fecha_nacimiento" value={formData.fecha_nacimiento} onChange={handleChange} className="w-full bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
@@ -275,11 +275,11 @@ export default function RegisterForm() {
                 <input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))} placeholder="Teléfono / WhatsApp" className="w-2/3 bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input name="pais_residencia" value={formData.pais_residencia} onChange={handleChange} placeholder="País" className="bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
                 <input name="estado_residencia" value={formData.estado_residencia} onChange={handleChange} placeholder="Departamento/Estado" className="bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input name="ciudad_residencia" value={formData.ciudad_residencia} onChange={handleChange} placeholder="Ciudad" className="bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
                 <input name="codigo_postal" value={formData.codigo_postal} onChange={handleChange} placeholder="Código Postal" className="bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
               </div>

@@ -3,7 +3,7 @@ import React from 'react';
 export const HomeHeader = () => (
     <header className="flex justify-between items-end mb-8">
         <div>
-            <p className="text-xs font-bold text-slate-400 tracking-wider uppercase mb-1">Hoy, 3 de Diciembre</p>
+            <p className="text-xs font-bold text-slate-400 tracking-wider uppercase mb-1"> {new Date().toLocaleDateString()}</p>
             <h2 className="text-3xl font-light text-slate-800">Panel de Control</h2>
         </div>
 

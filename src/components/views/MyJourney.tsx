@@ -2,13 +2,18 @@ import React from 'react';
 import { ArrowLeft, Lock, Trophy, Target } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { HomeSidebar } from '../home/HomeSidebar';
-import { MobileNav } from '../home/MobileNav';
+
+
+import Header from '../../components/shared/Header';
 
 export default function MyJourney() {
     const navigate = useNavigate();
 
     return (
-        <div className="flex h-screen bg-slate-50 font-sans overflow-hidden">
+        <div className="flex flex-col md:flex-row h-screen bg-slate-50 font-sans overflow-hidden">
+            <div className="md:hidden w-full">
+                <Header />
+            </div>
 
             <HomeSidebar activeTab="Mi Viaje" />
 
@@ -142,7 +147,7 @@ export default function MyJourney() {
                 </div>
             </main>
 
-            <MobileNav />
+
 
         </div>
     );
