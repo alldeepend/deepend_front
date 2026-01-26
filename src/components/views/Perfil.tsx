@@ -1,31 +1,143 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Edit2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Edit2, Save, X, User as UserIcon, Calendar, MapPin, Phone, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { HomeSidebar } from '../home/HomeSidebar';
-
-
+import { useAuth } from '../../store/useAuth';
 import Header from '../../components/shared/Header';
 
-const Toggle = ({ enabled, onChange }: { enabled: boolean; onChange: () => void }) => (
-    <button
-        onClick={onChange}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${enabled ? 'bg-emerald-500' : 'bg-slate-300'
-            }`}
-    >
-        <span
-            className={`${enabled ? 'translate-x-6' : 'translate-x-1'
-                } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
-        />
-    </button>
-);
+// Helper to get API URL
+const getApiUrl = () => {
+    const envUrl = import.meta.env.VITE_API_URL;
+    if (envUrl && typeof envUrl === 'string') {
+        return envUrl.replace(/\/$/, '');
+    }
+    return 'http://localhost:3000'; // Fallback
+};
+
+const API_URL = getApiUrl();
+
+interface ProfileData {
+    firstName: string;
+    lastName: string;
+    whatsapp: string;
+    fecha_nacimiento: string;
+    pais_residencia: string;
+    ciudad_residencia: string;
+    email: string;
+    username: string;
+}
 
 export default function Perfil() {
+    const { user, setUser } = useAuth();
     const navigate = useNavigate();
-    const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-    const [darkModeEnabled, setDarkModeEnabled] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+
+    // Initial state matching the requested fields
+    const [formData, setFormData] = useState<ProfileData>({
+        firstName: '',
+        lastName: '',
+        whatsapp: '',
+        fecha_nacimiento: '',
+        pais_residencia: '',
+        ciudad_residencia: '',
+        email: '',
+        username: ''
+    });
+
+    useEffect(() => {
+        fetchProfile();
+    }, []);
+
+    const fetchProfile = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const response = await fetch(`${API_URL}/user/me`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log("Perfil data fetched:", data); // DEBUG LOG
+
+                // Format date for input field (YYYY-MM-DD)
+                let formattedDate = '';
+                if (data.fecha_nacimiento) {
+                    formattedDate = new Date(data.fecha_nacimiento).toISOString().split('T')[0];
+                }
+
+                const newData = {
+                    firstName: data.firstName || '',
+                    lastName: data.lastName || '',
+                    whatsapp: data.whatsapp || '',
+                    fecha_nacimiento: formattedDate,
+                    pais_residencia: data.pais_residencia || '',
+                    ciudad_residencia: data.ciudad_residencia || '',
+                    email: data.email || '',
+                    username: data.username || ''
+                };
+                console.log("Setting form data:", newData); // DEBUG LOG
+
+                setFormData(newData);
+            }
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleSave = async () => {
+        setSaving(true);
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_URL}/user/profile`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                const updatedUser = await response.json();
+                setIsEditing(false);
+                // Update global user state if needed, though useAuth might need a refresh logic
+                // For now, we rely on the fact that we just fetched the updated data or have it in state
+                // Optionally update local storage user if useAuth relies on it
+                const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+                localStorage.setItem('user', JSON.stringify({ ...storedUser, ...updatedUser }));
+            } else {
+                console.error('Failed to update profile');
+            }
+        } catch (error) {
+            console.error('Error updating profile:', error);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleCancel = () => {
+        setIsEditing(false);
+        fetchProfile(); // Revert changes
+    };
 
     return (
-        <div className="flex flex-col md:flex-row h-screen bg-slate-50 font-sans overflow-hidden">
+        <div className="flex flex-col md:flex-row h-screen bg-white font-sans overflow-hidden">
             <div className="md:hidden w-full">
                 <Header />
             </div>
@@ -33,114 +145,200 @@ export default function Perfil() {
             <HomeSidebar activeTab="Perfil" />
 
             <main className="flex-1 overflow-y-auto">
-                <div className="max-w-6xl mx-auto p-6 md:p-12">
+                <div className="max-w-4xl mx-auto p-6 md:p-12">
 
-                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-
-                        {/* Header */}
-                        <div className="flex items-center justify-between mb-8">
-                            <div>
-                                <button
-                                    onClick={() => navigate('/dashboard')}
-                                    className="flex items-center text-slate-400 text-sm mb-2 hover:text-slate-600 transition-colors group"
-                                >
-                                    <ArrowLeft size={16} className="mr-1 group-hover:-translate-x-1 transition-transform" />
-                                    Dashboard
-                                </button>
-                                <h2 className="text-3xl font-light text-slate-800">Perfil de Viajero</h2>
-                            </div>
-                            <button className="text-sm font-medium text-slate-400 hover:text-slate-600 underline">
-                                Editar
+                    {/* Header Section */}
+                    <div className="flex items-center justify-between mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
+                        <div>
+                            <button
+                                onClick={() => navigate('/dashboard')}
+                                className="flex items-center text-slate-400 text-sm mb-2 hover:text-slate-600 transition-colors group"
+                            >
+                                <ArrowLeft size={16} className="mr-1 group-hover:-translate-x-1 transition-transform" />
+                                Dashboard
                             </button>
+                            <h2 className="text-3xl font-light text-slate-800">Mi Perfil</h2>
                         </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                            {/* Left Column - Profile Card */}
-                            <div className="lg:col-span-1">
-                                <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-sm flex flex-col items-center text-center h-full">
-                                    <div className="relative mb-6">
-                                        <div className="w-32 h-32 rounded-full bg-emerald-50 border-4 border-white shadow-sm flex items-center justify-center relative overflow-hidden">
-                                            {/* Stylized Avatar Placeholder similar to image */}
-                                            <svg viewBox="0 0 100 100" className="w-full h-full text-slate-800" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                                <path d="M50 20 L50 40 M30 30 L70 30 M30 50 L70 50 M40 70 L60 70" className="opacity-10" />
-                                                {/* Geometric Face */}
-                                                <path d="M30 35 L40 60 L50 80 L60 60 L70 35 L50 20 Z" />
-                                                <line x1="30" y1="35" x2="70" y2="35" />
-                                                <line x1="40" y1="60" x2="60" y2="60" />
-                                                <line x1="50" y1="20" x2="50" y2="80" />
-                                                <circle cx="40" cy="45" r="3" fill="currentColor" className="text-slate-800" />
-                                                <circle cx="60" cy="45" r="3" fill="currentColor" className="text-slate-800" />
-                                            </svg>
-                                        </div>
-                                        <button className="absolute bottom-0 right-0 bg-emerald-500 text-white p-2 rounded-full shadow-md hover:bg-emerald-600 transition-colors">
-                                            <Edit2 size={14} />
-                                        </button>
-                                    </div>
-
-                                    <h3 className="text-2xl font-bold text-slate-800 mb-1">Alex</h3>
-                                    <p className="text-slate-400 text-xs font-medium mb-6">Unido en Septiembre 2024</p>
-
-                                    <div className="flex gap-2">
-                                        <span className="bg-slate-900 text-white text-xs font-bold px-4 py-1.5 rounded-full">Re-Builder</span>
-                                        <span className="bg-slate-100 text-slate-600 text-xs font-bold px-4 py-1.5 rounded-full">Lvl 2</span>
-                                    </div>
-                                </div>
+                        {!isEditing ? (
+                            <button
+                                onClick={() => setIsEditing(true)}
+                                className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-full text-sm font-medium hover:bg-slate-800 transition-colors shadow-sm hover:shadow active:scale-95"
+                            >
+                                <Edit2 size={14} />
+                                Editar Perfil
+                            </button>
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={handleCancel}
+                                    className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-full text-sm font-medium hover:bg-slate-50 transition-colors"
+                                    disabled={saving}
+                                >
+                                    <X size={14} />
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={handleSave}
+                                    className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-full text-sm font-medium hover:bg-emerald-600 transition-colors shadow-sm hover:shadow-emerald-500/25 active:scale-95 disabled:opacity-70"
+                                    disabled={saving}
+                                >
+                                    <Save size={14} />
+                                    {saving ? 'Guardando...' : 'Guardar Cambios'}
+                                </button>
                             </div>
-
-                            {/* Right Column - Stats & Settings */}
-                            <div className="lg:col-span-2 flex flex-col gap-6">
-                                {/* Stats Cards Row */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                    <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm">
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">RETOS COMPLETADOS</p>
-                                        <p className="text-4xl font-light text-slate-800">12</p>
-                                    </div>
-                                    <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm">
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">RACHA ACTUAL</p>
-                                        <p className="text-4xl font-light text-slate-800 flex items-center gap-2">
-                                            5 días <span className="text-2xl">🔥</span>
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Settings Section */}
-                                <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm flex-1">
-                                    <h3 className="text-sm font-bold text-slate-900 mb-6">Configuración</h3>
-
-                                    <div className="space-y-6">
-                                        <div className="flex items-center justify-between pb-6 border-b border-slate-50 last:border-0 last:pb-0">
-                                            <div>
-                                                <p className="font-medium text-slate-800">Notificaciones diarias</p>
-                                                <p className="text-xs text-slate-400">Recordatorios de microretos</p>
-                                            </div>
-                                            <Toggle
-                                                enabled={notificationsEnabled}
-                                                onChange={() => setNotificationsEnabled(!notificationsEnabled)}
-                                            />
-                                        </div>
-
-                                        <div className="flex items-center justify-between pb-6 border-b border-slate-50 last:border-0 last:pb-0">
-                                            <div>
-                                                <p className="font-medium text-slate-800">Modo Oscuro</p>
-                                                <p className="text-xs text-slate-400">Interfaz de alto contraste</p>
-                                            </div>
-                                            <Toggle
-                                                enabled={darkModeEnabled}
-                                                onChange={() => setDarkModeEnabled(!darkModeEnabled)}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
+                        )}
                     </div>
 
+                    {loading ? (
+                        <div className="flex items-center justify-center h-64">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
+                        </div>
+                    ) : (
+                        <div className="animate-in fade-in slide-in-from-bottom-8 duration-500">
+                            {/* Avatar & Main Info */}
+                            <div className="bg-slate-900 rounded-3xl p-8 mb-8 text-white relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+
+                                <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+                                    <div className="w-24 h-24 rounded-full bg-emerald-500 flex items-center justify-center text-3xl font-bold shadow-lg ring-4 ring-white/10">
+                                        {formData.firstName?.[0] || formData.username?.[1] || 'U'}
+                                    </div>
+                                    <div className="text-center md:text-left">
+                                        <h3 className="text-2xl font-bold mb-1">
+                                            {formData.firstName && formData.lastName
+                                                ? `${formData.firstName} ${formData.lastName}`
+                                                : formData.username || 'Usuario'}
+                                        </h3>
+                                        <p className="text-emerald-400 font-medium text-sm mb-4">{user?.email}</p>
+                                        <div className="flex flex-wrap justify-center md:justify-start gap-2">
+                                            <span className="px-3 py-1 rounded-full bg-white/10 text-xs font-medium backdrop-blur-sm border border-white/10">
+                                                Viajero
+                                            </span>
+                                            {formData.ciudad_residencia && (
+                                                <span className="px-3 py-1 rounded-full bg-white/10 text-xs font-medium backdrop-blur-sm border border-white/10 flex items-center gap-1">
+                                                    <MapPin size={10} />
+                                                    {formData.ciudad_residencia}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Form Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="md:col-span-2">
+                                    <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 pl-1">Información Personal</h4>
+                                </div>
+
+                                <Field
+                                    label="Nombre"
+                                    name="firstName"
+                                    value={formData.firstName}
+                                    icon={UserIcon}
+                                    isEditing={isEditing}
+                                    onChange={handleInputChange}
+                                />
+                                <Field
+                                    label="Apellido"
+                                    name="lastName"
+                                    value={formData.lastName}
+                                    icon={UserIcon}
+                                    isEditing={isEditing}
+                                    onChange={handleInputChange}
+                                />
+                                <Field
+                                    label="WhatsApp"
+                                    name="whatsapp"
+                                    value={formData.whatsapp}
+                                    icon={Phone}
+                                    type="tel"
+                                    isEditing={isEditing}
+                                    onChange={handleInputChange}
+                                />
+                                <Field
+                                    label="Fecha de Nacimiento"
+                                    name="fecha_nacimiento"
+                                    value={formData.fecha_nacimiento}
+                                    icon={Calendar}
+                                    type="date"
+                                    isEditing={isEditing}
+                                    onChange={handleInputChange}
+                                />
+
+                                <div className="md:col-span-2 mt-4">
+                                    <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 pl-1">Ubicación</h4>
+                                </div>
+
+                                <Field
+                                    label="País de Residencia"
+                                    name="pais_residencia"
+                                    value={formData.pais_residencia}
+                                    icon={MapPin}
+                                    isEditing={isEditing}
+                                    onChange={handleInputChange}
+                                />
+                                <Field
+                                    label="Ciudad de Residencia"
+                                    name="ciudad_residencia"
+                                    value={formData.ciudad_residencia}
+                                    icon={MapPin}
+                                    isEditing={isEditing}
+                                    onChange={handleInputChange}
+                                />
+                            </div>
+                        </div>
+                    )}
                 </div>
             </main>
-
-
-
         </div>
     );
 }
+
+// Reusable component moved outside
+const Field = ({
+    label,
+    name,
+    type = "text",
+    icon: Icon,
+    value,
+    isEditing,
+    onChange
+}: {
+    label: string,
+    name: keyof ProfileData,
+    type?: string,
+    icon: any,
+    value: string,
+    isEditing: boolean,
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+}) => (
+    <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 transition-all hover:border-slate-200">
+        <div className="flex items-start gap-4">
+            <div className="p-2 bg-white rounded-lg shadow-sm text-slate-400">
+                <Icon size={20} />
+            </div>
+            <div className="flex-1">
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    {label}
+                </label>
+                {isEditing ? (
+                    <input
+                        type={type}
+                        name={name}
+                        value={value}
+                        onChange={onChange}
+                        className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                        placeholder={`Ingresa tu ${label.toLowerCase()}`}
+                    />
+                ) : (
+                    <p className="text-slate-800 font-medium text-sm min-h-[24px] flex items-center">
+                        {value || <span className="text-slate-300 italic">No especificado</span>}
+                    </p>
+                )}
+            </div>
+        </div>
+    </div>
+);
+

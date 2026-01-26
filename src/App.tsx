@@ -9,6 +9,8 @@ import MisRetos from './components/views/MisRetos';
 import MisRecursos from './components/views/MisRecursos';
 import Perfil from './components/views/Perfil';
 import ChallengeDetail from './components/views/ChallengeDetail';
+import ForgotPassword from './components/views/ForgotPassword';
+import ResetPassword from './components/views/ResetPassword';
 
 function App() {
   const host = window.location.hostname;
@@ -60,6 +62,16 @@ function App() {
         <Route path="/register" element={
           <PublicRoute>
             <Register />
+          </PublicRoute>
+        } />
+        <Route path="/forgot-password" element={
+          <PublicRoute>
+            <ForgotPassword />
+          </PublicRoute>
+        } />
+        <Route path="/reset-password" element={
+          <PublicRoute>
+            <ResetPassword />
           </PublicRoute>
         } />
 

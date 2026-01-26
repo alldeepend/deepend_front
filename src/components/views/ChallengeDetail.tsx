@@ -1,35 +1,67 @@
 import React, { useState } from 'react';
 import { ArrowLeft, CheckCircle2, Circle, FileText, Download, Zap, Trophy } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { HomeSidebar } from '../home/HomeSidebar';
-
-
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Header from '../../components/shared/Header';
 
+const host = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/api\/?$/, '');
+
 interface ChallengeStep {
-    id: number;
+    id: string;
     text: string;
     completed: boolean;
 }
 
 export default function ChallengeDetail() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const challengeId = searchParams.get('id');
+    const queryClient = useQueryClient();
 
-    // State for checklist steps
-    const [steps, setSteps] = useState<ChallengeStep[]>([
-        { id: 1, text: 'Descarga tus movimientos bancarios de los últimos 30 días', completed: true },
-        { id: 2, text: 'Identifica y resalta todos los gastos menores a $5.00', completed: false },
-        { id: 3, text: 'Calcula el total anualizado de esos gastos y anótalo', completed: false },
-    ]);
+    // Fetch challenge details
+    const { data: challenge, isLoading } = useQuery({
+        queryKey: ['challenge', challengeId],
+        queryFn: async () => {
+            if (!challengeId) return null;
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${host}/api/challenges/${challengeId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error('Failed to fetch challenge');
+            return await res.json();
+        },
+        enabled: !!challengeId
+    });
 
-    // Calculate progress
-    const completedSteps = steps.filter(s => s.completed).length;
-    const progressPercentage = (completedSteps / steps.length) * 100;
+    // Toggle Task Mutation
+    const toggleTaskMutation = useMutation({
+        mutationFn: async (taskId: string) => {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${host}/api/challenges/${challengeId}/tasks/${taskId}/toggle`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error('Failed to toggle task');
+            return await res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['challenge', challengeId] });
+            queryClient.invalidateQueries({ queryKey: ['challenges'] });
+        }
+    });
 
-    const toggleStep = (id: number) => {
-        setSteps(steps.map(step =>
-            step.id === id ? { ...step, completed: !step.completed } : step
-        ));
+    if (!challengeId) return <div>No challenge ID provided</div>;
+    if (isLoading) return <div className="flex justify-center p-12"><div className="animate-spin h-8 w-8 border-4 border-emerald-500 rounded-full border-t-transparent"></div></div>;
+    if (!challenge) return <div>Challenge not found</div>;
+
+    // Calculate progress (using backend data)
+    const steps = challenge.tasks || [];
+    const completedSteps = steps.filter((s: ChallengeStep) => s.completed).length;
+    const progressPercentage = steps.length > 0 ? (completedSteps / steps.length) * 100 : 0;
+
+    const toggleStep = (id: string) => {
+        toggleTaskMutation.mutate(id);
     };
 
     return (
@@ -56,26 +88,26 @@ export default function ChallengeDetail() {
 
                         {/* Hero Section */}
                         <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden mb-8">
-                            {/* Banner Image */}
-                            <div className="h-64 bg-slate-900 relative overflow-hidden">
+                            {/* Banner Image - Dynamic based on category if available, or static fallback */}
+                            <div className={`h-64 relative overflow-hidden ${challenge.category === 'Finanzas' ? 'bg-emerald-900' : 'bg-slate-900'}`}>
                                 {/* Gradient Overlay */}
                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent z-10"></div>
 
-                                {/* 3D Piggy Bank Placeholder - Using CSS Shapes or an Image */}
                                 <div className="absolute right-10 top-1/2 -translate-y-1/2 w-64 h-64 opacity-90">
+                                    {/* Placeholder image logic */}
                                     <img
                                         src="https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=800"
-                                        alt="Auditoría de Gastos"
+                                        alt={challenge.title}
                                         className="object-cover w-full h-full rounded-full"
                                     />
                                 </div>
 
                                 <div className="absolute bottom-8 left-8 z-20">
                                     <span className="inline-block px-3 py-1 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 text-white text-[10px] font-bold tracking-wider uppercase mb-3">
-                                        Finanzas Personales
+                                        {challenge.category}
                                     </span>
                                     <h1 className="text-4xl font-bold text-white tracking-tight">
-                                        Auditoría de Gastos Hormiga
+                                        {challenge.title}
                                     </h1>
                                 </div>
                             </div>
@@ -85,7 +117,7 @@ export default function ChallengeDetail() {
                                 <div className="lg:col-span-2">
                                     <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3">Misión</h3>
                                     <p className="text-slate-500 text-lg leading-relaxed">
-                                        Los gastos hormiga pueden consumir hasta el 15% de tus ingresos mensuales sin que te des cuenta. Este reto te ayuda a tapar esas fugas.
+                                        {challenge.description}
                                     </p>
                                 </div>
                                 <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 lg:col-span-1">
@@ -93,12 +125,12 @@ export default function ChallengeDetail() {
                                         <span className="text-slate-400 text-sm">Recompensa</span>
                                         <div className="flex items-center text-emerald-500 font-bold">
                                             <Zap size={16} className="mr-1 fill-current" />
-                                            <span>150 XP</span>
+                                            <span>{challenge.xpReward || 150} XP</span>
                                         </div>
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <span className="text-slate-400 text-sm">Dificultad</span>
-                                        <span className="bg-white px-2 py-1 rounded border border-slate-200 text-xs font-bold text-slate-600">Baja</span>
+                                        <span className="bg-white px-2 py-1 rounded border border-slate-200 text-xs font-bold text-slate-600">Media</span>
                                     </div>
                                 </div>
                             </div>
@@ -109,7 +141,7 @@ export default function ChallengeDetail() {
 
                             {/* Left Column - Action Steps */}
                             <div className="lg:col-span-2">
-                                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+                                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 mb-8">
                                     <div className="flex justify-between items-end mb-6">
                                         <h3 className="text-xl font-bold text-slate-800">Pasos de Acción</h3>
                                         <span className="text-sm text-slate-400 font-medium">{completedSteps}/{steps.length} Completados</span>
@@ -125,7 +157,7 @@ export default function ChallengeDetail() {
 
                                     {/* Steps List */}
                                     <div className="space-y-4">
-                                        {steps.map((step) => (
+                                        {steps.map((step: ChallengeStep) => (
                                             <div
                                                 key={step.id}
                                                 onClick={() => toggleStep(step.id)}
@@ -144,8 +176,49 @@ export default function ChallengeDetail() {
                                                 </span>
                                             </div>
                                         ))}
+                                        {steps.length === 0 && <p className="text-slate-400 text-sm">No hay pasos definidos para este reto aún.</p>}
                                     </div>
                                 </div>
+
+                                {/* Submissions Section */}
+                                {challenge.submissions && challenge.submissions.length > 0 && (
+                                    <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+                                        <h3 className="text-xl font-bold text-slate-800 mb-6">Tus Respuestas</h3>
+                                        <div className="space-y-4">
+                                            {challenge.submissions.map((sub: any) => (
+                                                <div key={sub.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                                    {(() => {
+                                                        try {
+                                                            const parsed = JSON.parse(sub.content);
+                                                            if (typeof parsed === 'object' && parsed !== null) {
+                                                                return (
+                                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
+                                                                        {Object.entries(parsed).map(([key, value]) => (
+                                                                            <div key={key} className="flex flex-col border-b border-slate-100 last:border-0 pb-2 last:pb-0">
+                                                                                <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+                                                                                    {key.replace(/_/g, ' ')}
+                                                                                </span>
+                                                                                <span className="text-sm font-medium text-slate-700">
+                                                                                    {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                                                                                </span>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                );
+                                                            }
+                                                            return <p className="text-slate-600 text-sm">{sub.content}</p>;
+                                                        } catch (e) {
+                                                            return <p className="text-slate-600 text-sm">{sub.content}</p>;
+                                                        }
+                                                    })()}
+                                                    <span className="text-xs text-slate-400 mt-2 block">
+                                                        Enviado el {new Date(sub.createdAt).toLocaleDateString()}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Right Column - Resources & Badge */}

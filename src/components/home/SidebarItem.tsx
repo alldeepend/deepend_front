@@ -5,15 +5,18 @@ interface SidebarItemProps {
     label: string;
     active: boolean;
     onClick: () => void;
+    disabled?: boolean;
 }
 
-export const SidebarItem = ({ icon: Icon, label, active, onClick }: SidebarItemProps) => (
+export const SidebarItem = ({ icon: Icon, label, active, onClick, disabled = false }: SidebarItemProps) => (
     <button
-        onClick={onClick}
-        className={`flex items-center w-full p-3 mb-2 rounded-lg transition-colors duration-200 ${active
-            ? 'text-emerald-500 font-semibold bg-emerald-50/50'
-            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-            }`}
+        onClick={disabled ? undefined : onClick}
+        disabled={disabled}
+        className={`
+        flex items-center p-3 cursor-pointer transition-colors
+        ${active ? 'bg-blue-100 text-blue-600' : 'text-gray-600'}
+        ${disabled ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:bg-gray-100'}
+      `}
     >
         <Icon size={20} className="mr-3" />
         <span className="text-sm font-medium">{label}</span>

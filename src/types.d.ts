@@ -9,6 +9,9 @@ type User = {
   username: string | null;
   whatsapp: string | null;
   avatar: string | null;
+  fecha_nacimiento: string | null;
+  pais_residencia: string | null;
+  ciudad_residencia: string | null;
   createdAt: string;
 }
 

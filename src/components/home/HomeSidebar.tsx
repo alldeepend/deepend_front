@@ -37,11 +37,13 @@ export const HomeSidebar = ({ activeTab }: HomeSidebarProps) => {
                         label="Dashboard"
                         active={activeTab === 'Dashboard'}
                         onClick={() => navigate('/dashboard')}
+
                     />
                     <SidebarItem
                         icon={Compass}
                         label="Mi Viaje"
                         active={activeTab === 'Mi Viaje'}
+                        // disabled={true}
                         onClick={() => navigate('/journey')}
                     />
                     <SidebarItem
@@ -67,7 +69,7 @@ export const HomeSidebar = ({ activeTab }: HomeSidebarProps) => {
 
             {/* Footer Sidebar */}
             <div className="p-6 space-y-2">
-                <button className="w-full bg-slate-900 hover:bg-slate-800 text-white p-4 rounded-xl flex items-center justify-between group transition-all shadow-lg shadow-slate-200">
+                {/* <button className="w-full bg-slate-900 hover:bg-slate-800 text-white p-4 rounded-xl flex items-center justify-between group transition-all shadow-lg shadow-slate-200">
                     <div className="flex items-center gap-3">
                         <div className="bg-emerald-500/20 p-1.5 rounded-lg">
                             <ShieldCheck size={18} className="text-emerald-400" />
@@ -75,7 +77,7 @@ export const HomeSidebar = ({ activeTab }: HomeSidebarProps) => {
                         <span className="text-sm font-medium">Pasaporte DeepEnd</span>
                     </div>
                     <ArrowRight size={16} className="text-slate-400 group-hover:translate-x-1 transition-transform" />
-                </button>
+                </button> */}
 
                 <button
                     onClick={() => {

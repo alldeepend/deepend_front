@@ -70,6 +70,11 @@ export default function LoginForm() {
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
+            <div className="flex justify-end mt-1">
+              <Link to="/forgot-password" className="text-xs text-stone-500 hover:text-stone-800">
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
           </div>
 
 
@@ -81,7 +86,7 @@ export default function LoginForm() {
         </form>
 
         <div className="mt-6 text-center">
-          <Link to="/setup" className="text-sm text-stone-500 hover:text-stone-800 underline">
+          <Link to="/register" className="text-sm text-stone-500 hover:text-stone-800 underline">
             ¿No tienes cuenta? Regístrate
           </Link>
         </div>

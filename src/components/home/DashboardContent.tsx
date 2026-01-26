@@ -10,7 +10,7 @@ export const DashboardContent = () => (
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
             <StatsCard />
-            <SocialProfileCard />
+            {/* <SocialProfileCard /> */}
         </div>
 
         <ActiveChallenges />
