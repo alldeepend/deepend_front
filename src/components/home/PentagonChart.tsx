@@ -79,7 +79,7 @@ export const PentagonChart = ({ data = [
                 </div>
             </div>
 
-            <div className="w-full grid grid-cols-2 gap-2 mt-2 px-2">
+            <div className="w-full grid grid-cols-1 gap-2 mt-2 px-2">
                 {data.map((item, index) => (
                     <div key={index} className="flex items-center justify-between text-[12px] text-slate-600 bg-slate-50 p-1.5 rounded border border-slate-100">
                         <span className="font-medium truncate mr-1">{item.label}</span>

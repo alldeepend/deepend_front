@@ -15,11 +15,12 @@ export const StatsCard = () => {
             const res = await fetch(`${host}/api/user/balance-chart`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
+
+
             if (!res.ok) throw new Error('Failed to fetch chart data');
             return await res.json();
         }
     });
-
     return (
         <div className="lg:col-span-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between relative overflow-hidden">
             {/* Decoración de fondo sutil */}
