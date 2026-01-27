@@ -218,7 +218,7 @@ export default function Header() {
                       <span className="font-medium">Dashboard</span>
                     </Link>
                   </li>
-                  <li>
+                  {/* <li>
                     <Link
                       to="/journey"
                       onClick={() => setShowMobileMenu(false)}
@@ -247,7 +247,7 @@ export default function Header() {
                       <BookOpen size={20} />
                       <span className="font-medium">Mis Recursos</span>
                     </Link>
-                  </li>
+                  </li> */}
                   <li>
                     <Link
                       to="/profile"

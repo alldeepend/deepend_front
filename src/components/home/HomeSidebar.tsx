@@ -39,7 +39,7 @@ export const HomeSidebar = ({ activeTab }: HomeSidebarProps) => {
                         onClick={() => navigate('/dashboard')}
 
                     />
-                    <SidebarItem
+                    {/* <SidebarItem
                         icon={Compass}
                         label="Mi Viaje"
                         active={activeTab === 'Mi Viaje'}
@@ -57,7 +57,7 @@ export const HomeSidebar = ({ activeTab }: HomeSidebarProps) => {
                         label="Mis Recursos"
                         active={activeTab === 'Mis Recursos'}
                         onClick={() => navigate('/resources')}
-                    />
+                    /> */}
                     <SidebarItem
                         icon={User}
                         label="Perfil"
