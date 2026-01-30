@@ -9,7 +9,7 @@ type RegisterUser = {
 	preferredName?: string;
 	whatsapp: string;
 	username?: string;
-	categories: number[];
+	categories?: number[];
 
 	// Extended fields
 	tipo_documento?: string;

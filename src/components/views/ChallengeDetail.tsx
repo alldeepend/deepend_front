@@ -13,6 +13,21 @@ interface ChallengeStep {
     completed: boolean;
 }
 
+interface ChallengeDetail {
+    id: string;
+    title: string;
+    tasks: ChallengeStep[];
+    submissions: any[];
+    // New fields
+    que_es?: string;
+    para_que_sirve?: string;
+    que_lograra?: string;
+    tiempos?: string;
+    que_se_requiere?: string;
+    que_recibe?: string;
+    requerimientos?: string;
+}
+
 export default function ChallengeDetail() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -93,14 +108,14 @@ export default function ChallengeDetail() {
                                 {/* Gradient Overlay */}
                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent z-10"></div>
 
-                                <div className="absolute right-10 top-1/2 -translate-y-1/2 w-64 h-64 opacity-90">
-                                    {/* Placeholder image logic */}
+                                {/* <div className="absolute right-10 top-1/2 -translate-y-1/2 w-64 h-64 opacity-90">
+                                  
                                     <img
                                         src="https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=800"
                                         alt={challenge.title}
                                         className="object-cover w-full h-full rounded-full"
                                     />
-                                </div>
+                                </div> */}
 
                                 <div className="absolute bottom-8 left-8 z-20">
                                     <span className="inline-block px-3 py-1 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 text-white text-[10px] font-bold tracking-wider uppercase mb-3">
@@ -115,10 +130,11 @@ export default function ChallengeDetail() {
                             {/* Mission & Rewards Row */}
                             <div className="p-8 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                                 <div className="lg:col-span-2">
-                                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3">Misión</h3>
-                                    <p className="text-slate-500 text-lg leading-relaxed">
-                                        {challenge.description}
-                                    </p>
+                                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3">¿Qué es?</h3>
+                                    <div
+                                        className="text-slate-500 text-lg leading-relaxed prose prose-slate"
+                                        dangerouslySetInnerHTML={{ __html: challenge.que_es || '' }}
+                                    />
                                 </div>
                                 <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 lg:col-span-1">
                                     <div className="flex justify-between items-center mb-3">
@@ -135,132 +151,171 @@ export default function ChallengeDetail() {
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        {/* Content Grid */}
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Details Grid - New Fields */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        {challenge.para_que_sirve && (
+                            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                                <h4 className="font-bold text-slate-800 mb-2">¿Para qué sirve?</h4>
+                                <div className="text-slate-600 text-sm prose prose-sm" dangerouslySetInnerHTML={{ __html: challenge.para_que_sirve }} />
+                            </div>
+                        )}
+                        {challenge.que_lograra && (
+                            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                                <h4 className="font-bold text-slate-800 mb-2">¿Qué lograrás?</h4>
+                                <div className="text-slate-600 text-sm prose prose-sm" dangerouslySetInnerHTML={{ __html: challenge.que_lograra }} />
+                            </div>
+                        )}
+                        {challenge.tiempos && (
+                            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                                <h4 className="font-bold text-slate-800 mb-2">Tiempos</h4>
+                                <div className="text-slate-600 text-sm prose prose-sm" dangerouslySetInnerHTML={{ __html: challenge.tiempos }} />
+                            </div>
+                        )}
+                        {challenge.que_se_requiere && (
+                            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                                <h4 className="font-bold text-slate-800 mb-2">Alcance y entregable</h4>
+                                <div className="text-slate-600 text-sm prose prose-sm" dangerouslySetInnerHTML={{ __html: challenge.que_se_requiere }} />
+                            </div>
+                        )}
+                        {/* {challenge.que_recibe && (
+                            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                                <h4 className="font-bold text-slate-800 mb-2">¿Qué recibes?</h4>
+                                <div className="text-slate-600 text-sm prose prose-sm" dangerouslySetInnerHTML={{ __html: challenge.que_recibe }} />
+                            </div>
+                        )} */}
+                        {challenge.requerimientos && (
+                            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                                <h4 className="font-bold text-slate-800 mb-2">Requerimientos</h4>
+                                <div className="text-slate-600 text-sm prose prose-sm" dangerouslySetInnerHTML={{ __html: challenge.requerimientos }} />
+                            </div>
+                        )}
+                    </div>
 
-                            {/* Left Column - Action Steps */}
-                            <div className="lg:col-span-2">
-                                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 mb-8">
-                                    <div className="flex justify-between items-end mb-6">
-                                        <h3 className="text-xl font-bold text-slate-800">Pasos de Acción</h3>
-                                        <span className="text-sm text-slate-400 font-medium">{completedSteps}/{steps.length} Completados</span>
-                                    </div>
+                    {/* Content Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-                                    {/* Progress Bar */}
-                                    <div className="w-full bg-slate-100 rounded-full h-2 mb-8">
+                        {/* Left Column - Action Steps */}
+                        <div className="lg:col-span-2">
+                            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 mb-8">
+                                <div className="flex justify-between items-end mb-6">
+                                    <h3 className="text-xl font-bold text-slate-800">Pasos de Acción</h3>
+                                    <span className="text-sm text-slate-400 font-medium">{completedSteps}/{steps.length} Completados</span>
+                                </div>
+
+                                {/* Progress Bar */}
+                                <div className="w-full bg-slate-100 rounded-full h-2 mb-8">
+                                    <div
+                                        className="bg-emerald-500 h-2 rounded-full transition-all duration-500"
+                                        style={{ width: `${progressPercentage}%` }}
+                                    ></div>
+                                </div>
+
+                                {/* Steps List */}
+                                <div className="space-y-4">
+                                    {steps.map((step: ChallengeStep) => (
                                         <div
-                                            className="bg-emerald-500 h-2 rounded-full transition-all duration-500"
-                                            style={{ width: `${progressPercentage}%` }}
-                                        ></div>
-                                    </div>
+                                            key={step.id}
+                                            onClick={() => toggleStep(step.id)}
+                                            className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center gap-4 ${step.completed
+                                                ? 'bg-white border-emerald-100 shadow-none'
+                                                : 'bg-white border-slate-100 hover:border-emerald-200 hover:shadow-sm'
+                                                }`}
+                                        >
+                                            <div className={`flex-shrink-0 w-6 h-6 rounded flex items-center justify-center transition-colors ${step.completed ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-300'
+                                                }`}>
+                                                <CheckCircle2 size={16} />
+                                            </div>
+                                            <span className={`text-sm font-medium transition-colors ${step.completed ? 'text-slate-400 line-through' : 'text-slate-700'
+                                                }`}>
+                                                {step.text}
+                                            </span>
+                                        </div>
+                                    ))}
+                                    {steps.length === 0 && <p className="text-slate-400 text-sm">No hay pasos definidos para este reto aún.</p>}
+                                </div>
+                            </div>
 
-                                    {/* Steps List */}
+                            {/* Submissions Section */}
+                            {challenge.submissions && challenge.submissions.length > 0 && (
+                                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+                                    <h3 className="text-xl font-bold text-slate-800 mb-6">Tus Respuestas</h3>
                                     <div className="space-y-4">
-                                        {steps.map((step: ChallengeStep) => (
-                                            <div
-                                                key={step.id}
-                                                onClick={() => toggleStep(step.id)}
-                                                className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center gap-4 ${step.completed
-                                                    ? 'bg-white border-emerald-100 shadow-none'
-                                                    : 'bg-white border-slate-100 hover:border-emerald-200 hover:shadow-sm'
-                                                    }`}
-                                            >
-                                                <div className={`flex-shrink-0 w-6 h-6 rounded flex items-center justify-center transition-colors ${step.completed ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-300'
-                                                    }`}>
-                                                    <CheckCircle2 size={16} />
-                                                </div>
-                                                <span className={`text-sm font-medium transition-colors ${step.completed ? 'text-slate-400 line-through' : 'text-slate-700'
-                                                    }`}>
-                                                    {step.text}
+                                        {challenge.submissions.map((sub: any) => (
+                                            <div key={sub.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                                {(() => {
+                                                    try {
+                                                        const parsed = JSON.parse(sub.content);
+                                                        if (typeof parsed === 'object' && parsed !== null) {
+                                                            return (
+                                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
+                                                                    {Object.entries(parsed).map(([key, value]) => (
+                                                                        <div key={key} className="flex flex-col border-b border-slate-100 last:border-0 pb-2 last:pb-0">
+                                                                            <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+                                                                                {key.replace(/_/g, ' ')}
+                                                                            </span>
+                                                                            <span className="text-sm font-medium text-slate-700">
+                                                                                {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                                                                            </span>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            );
+                                                        }
+                                                        return <p className="text-slate-600 text-sm">{sub.content}</p>;
+                                                    } catch (e) {
+                                                        return <p className="text-slate-600 text-sm">{sub.content}</p>;
+                                                    }
+                                                })()}
+                                                <span className="text-xs text-slate-400 mt-2 block">
+                                                    Enviado el {new Date(sub.createdAt).toLocaleDateString()}
                                                 </span>
                                             </div>
                                         ))}
-                                        {steps.length === 0 && <p className="text-slate-400 text-sm">No hay pasos definidos para este reto aún.</p>}
                                     </div>
                                 </div>
+                            )}
+                        </div>
 
-                                {/* Submissions Section */}
-                                {challenge.submissions && challenge.submissions.length > 0 && (
-                                    <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
-                                        <h3 className="text-xl font-bold text-slate-800 mb-6">Tus Respuestas</h3>
-                                        <div className="space-y-4">
-                                            {challenge.submissions.map((sub: any) => (
-                                                <div key={sub.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                                    {(() => {
-                                                        try {
-                                                            const parsed = JSON.parse(sub.content);
-                                                            if (typeof parsed === 'object' && parsed !== null) {
-                                                                return (
-                                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
-                                                                        {Object.entries(parsed).map(([key, value]) => (
-                                                                            <div key={key} className="flex flex-col border-b border-slate-100 last:border-0 pb-2 last:pb-0">
-                                                                                <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
-                                                                                    {key.replace(/_/g, ' ')}
-                                                                                </span>
-                                                                                <span className="text-sm font-medium text-slate-700">
-                                                                                    {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                                                                                </span>
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-                                                                );
-                                                            }
-                                                            return <p className="text-slate-600 text-sm">{sub.content}</p>;
-                                                        } catch (e) {
-                                                            return <p className="text-slate-600 text-sm">{sub.content}</p>;
-                                                        }
-                                                    })()}
-                                                    <span className="text-xs text-slate-400 mt-2 block">
-                                                        Enviado el {new Date(sub.createdAt).toLocaleDateString()}
-                                                    </span>
-                                                </div>
-                                            ))}
+                        {/* Right Column - Resources & Badge */}
+                        <div className="space-y-6">
+                            {/* Useful Resources */}
+                            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+                                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">Recursos Útiles</h3>
+                                <div className="space-y-3">
+                                    <div className="flex items-start gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer">
+                                        <div className="bg-blue-50 text-blue-500 p-2 rounded-lg">
+                                            <FileText size={18} />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-sm font-bold text-slate-700">Guía de Gastos</h4>
+                                            <p className="text-xs text-slate-400">Lectura de 3 min</p>
                                         </div>
                                     </div>
-                                )}
-                            </div>
-
-                            {/* Right Column - Resources & Badge */}
-                            <div className="space-y-6">
-                                {/* Useful Resources */}
-                                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
-                                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">Recursos Útiles</h3>
-                                    <div className="space-y-3">
-                                        <div className="flex items-start gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer">
-                                            <div className="bg-blue-50 text-blue-500 p-2 rounded-lg">
-                                                <FileText size={18} />
-                                            </div>
-                                            <div>
-                                                <h4 className="text-sm font-bold text-slate-700">Guía de Gastos</h4>
-                                                <p className="text-xs text-slate-400">Lectura de 3 min</p>
-                                            </div>
+                                    <div className="flex items-start gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer">
+                                        <div className="bg-red-50 text-red-500 p-2 rounded-lg">
+                                            <Download size={18} />
                                         </div>
-                                        <div className="flex items-start gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer">
-                                            <div className="bg-red-50 text-red-500 p-2 rounded-lg">
-                                                <Download size={18} />
-                                            </div>
-                                            <div>
-                                                <h4 className="text-sm font-bold text-slate-700">Plantilla Excel</h4>
-                                                <p className="text-xs text-slate-400">Descarga .xlsx</p>
-                                            </div>
+                                        <div>
+                                            <h4 className="text-sm font-bold text-slate-700">Plantilla Excel</h4>
+                                            <p className="text-xs text-slate-400">Descarga .xlsx</p>
                                         </div>
                                     </div>
-                                </div>
-
-                                {/* Badge Reward Preview */}
-                                <div className="bg-emerald-500 rounded-3xl shadow-lg shadow-emerald-200 p-6 text-center text-white relative overflow-hidden">
-                                    <div className="relative z-10">
-                                        <Trophy size={32} className="mx-auto mb-3 opacity-90" />
-                                        <h3 className="font-bold text-lg mb-1">Insignia: Halcón</h3>
-                                        <p className="text-emerald-100 text-xs text-opacity-90">Completa este reto para ganar esta insignia.</p>
-                                    </div>
-                                    {/* Decorative circles */}
-                                    <div className="absolute top-0 right-0 w-24 h-24 bg-white opacity-10 rounded-full -mr-10 -mt-10"></div>
-                                    <div className="absolute bottom-0 left-0 w-16 h-16 bg-white opacity-10 rounded-full -ml-8 -mb-8"></div>
                                 </div>
                             </div>
 
+                            {/* Badge Reward Preview */}
+                            <div className="bg-emerald-500 rounded-3xl shadow-lg shadow-emerald-200 p-6 text-center text-white relative overflow-hidden">
+                                <div className="relative z-10">
+                                    <Trophy size={32} className="mx-auto mb-3 opacity-90" />
+                                    <h3 className="font-bold text-lg mb-1">Insignia: Halcón</h3>
+                                    <p className="text-emerald-100 text-xs text-opacity-90">Completa este reto para ganar esta insignia.</p>
+                                </div>
+                                {/* Decorative circles */}
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-white opacity-10 rounded-full -mr-10 -mt-10"></div>
+                                <div className="absolute bottom-0 left-0 w-16 h-16 bg-white opacity-10 rounded-full -ml-8 -mb-8"></div>
+                            </div>
                         </div>
 
                     </div>
@@ -270,6 +325,6 @@ export default function ChallengeDetail() {
 
 
 
-        </div>
+        </div >
     );
 }

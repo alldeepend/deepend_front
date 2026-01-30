@@ -30,11 +30,13 @@ export default function LoginForm() {
     <div className="min-h-screen bg-light-white flex items-center justify-center p-6 font-montserrat">
       <div className="bg-white p-6 md:p-8 rounded-2xl w-full shadow-xs max-w-md border border-stone-200">
         <div className="text-center mb-8">
+
           <div className="w-16 h-16 bg-stone-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-            <LogIn size={24} className="text-stone-400" />
+            <img src="https://media.100cosasporhacer.com/pwa.png" alt="" />
+
           </div>
           <h2 className="font-american text-3xl text-stone-800 font-bold">Bienvenido de nuevo</h2>
-          <p className="text-stone-500 text-base mt-2">Continúa tu historia</p>
+          <p className="text-stone-500 text-base mt-2">Continúa tu viaje</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

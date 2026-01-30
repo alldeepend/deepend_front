@@ -22,7 +22,7 @@ const SOCIAL_PLATFORMS = ["Instagram", "Facebook", "TikTok", "X (Twitter)", "Lin
 export default function RegisterForm() {
   const navigate = useNavigate();
   const location = useLocation();
-  const selectedCategories = location.state?.categories || [];
+  // const selectedCategories = location.state?.categories || []; // REMOVED: Legacy logic
   const { setUser } = useAuth();
 
   // --- STEPS MANAGEMENT ---
@@ -160,7 +160,7 @@ export default function RegisterForm() {
         whatsapp: fullPhone,
         telefono: fullPhone,
         name: `${formData.firstName} ${formData.lastName}`, // Composite name
-        categories: selectedCategories,
+        // categories: selectedCategories, // REMOVED: Legacy logic
         ingreso_mensual_hogar: formData.ingreso_mensual_hogar ? parseFloat(formData.ingreso_mensual_hogar.toString()) : 0,
         dependientes_economicos: parseInt(formData.dependientes_economicos.toString() || '0'),
         // redes_sociales is already in correct format

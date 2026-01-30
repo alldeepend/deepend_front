@@ -218,6 +218,10 @@ export default function Header() {
                       <span className="font-medium">Dashboard</span>
                     </Link>
                   </li>
+
+                  {/* ///////Ocualtar/////// */}
+
+
                   {/* <li>
                     <Link
                       to="/journey"
@@ -248,6 +252,10 @@ export default function Header() {
                       <span className="font-medium">Mis Recursos</span>
                     </Link>
                   </li> */}
+
+                  {/* ///////Ocualtar/////// */}
+
+
                   <li>
                     <Link
                       to="/profile"
