@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { HomeSidebar } from '../home/HomeSidebar';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Header from '../../components/shared/Header';
+import { useAuth } from '../../store/useAuth';
 
 const host = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/api\/?$/, '');
 
@@ -33,6 +34,20 @@ export default function ChallengeDetail() {
     const [searchParams] = useSearchParams();
     const challengeId = searchParams.get('id');
     const queryClient = useQueryClient();
+    const [currentFinancialIndex, setCurrentFinancialIndex] = useState(0);
+    const [currentResponseIndex, setCurrentResponseIndex] = useState(0);
+    const { user } = useAuth();
+    const [hasFinancialDraft, setHasFinancialDraft] = useState(false);
+
+    // Check for draft
+    React.useEffect(() => {
+        if (user?.id) {
+            const draft = localStorage.getItem(`financial_assessment_${user.id}_ingresos`);
+            if (draft) {
+                setHasFinancialDraft(true);
+            }
+        }
+    }, [user?.id]);
 
     // Fetch challenge details
     const { data: challenge, isLoading } = useQuery({
@@ -78,6 +93,34 @@ export default function ChallengeDetail() {
     const toggleStep = (id: string) => {
         toggleTaskMutation.mutate(id);
     };
+
+    // Helper to get financial assessments (parsed)
+    const financialSubmissions = challenge.submissions && challenge.submissions.length > 0
+        ? challenge.submissions
+            .map((s: any) => {
+                try {
+                    return { ...s, parsedContent: JSON.parse(s.content) };
+                } catch {
+                    return { ...s, parsedContent: null };
+                }
+            })
+            .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        : [];
+
+    const currentFinancialSubmission = financialSubmissions[currentFinancialIndex];
+    const financialSummary = currentFinancialSubmission?.parsedContent?.responses?.summary || currentFinancialSubmission?.parsedContent?.summary;
+
+    const formatCurrency = (val: number) => {
+        return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val || 0);
+    };
+
+    const formatPercent = (val: number) => {
+        return `${(val || 0).toFixed(1)}%`;
+    };
+
+    // Generic submissions (for non-financial or fallback)
+    const genericSubmissions = challenge.submissions || [];
+    const currentGenericSubmission = genericSubmissions[currentResponseIndex];
 
     return (
         <div className="flex flex-col md:flex-row h-screen bg-slate-50 font-sans overflow-hidden">
@@ -135,6 +178,96 @@ export default function ChallengeDetail() {
                                         className="text-slate-500 text-lg leading-relaxed prose prose-slate"
                                         dangerouslySetInnerHTML={{ __html: challenge.que_es || '' }}
                                     />
+
+                                    {/* Conditional Financial Assessment Button */}
+                                    {challengeId === 'a3ae5adc-a689-4082-a691-4338000ced3a' && (
+                                        <div className="mt-6 space-y-6">
+                                            <button
+                                                onClick={() => navigate(`/challenges/financial-assessment?challengeId=${challengeId}`)}
+                                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-all flex items-center gap-2"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                                                {hasFinancialDraft ? 'Continuar Evaluación' : (financialSubmissions.length > 0 ? 'Nueva Evaluación' : 'Realizar Evaluación Financiera')}
+                                            </button>
+
+                                            {/* Financial Summary Slider */}
+                                            {financialSummary && (
+                                                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 shadow-sm">
+                                                    <div className="flex justify-between items-center mb-4">
+                                                        <h4 className="text-lg font-bold text-slate-800 flex items-center">
+                                                            <Trophy className="text-emerald-500 mr-2" size={20} />
+                                                            Tu Resultado Financiero
+                                                        </h4>
+
+                                                        {financialSubmissions.length > 1 && (
+                                                            <div className="flex items-center gap-2">
+                                                                <button
+                                                                    onClick={() => setCurrentFinancialIndex(prev => Math.min(prev + 1, financialSubmissions.length - 1))}
+                                                                    disabled={currentFinancialIndex === financialSubmissions.length - 1}
+                                                                    className="p-1 rounded-full hover:bg-slate-200 disabled:opacity-30 transition-colors"
+                                                                >
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                                                                </button>
+                                                                <span className="text-xs font-medium text-slate-500 whitespace-nowrap">
+                                                                    {financialSubmissions.length - currentFinancialIndex} / {financialSubmissions.length}
+                                                                </span>
+                                                                <button
+                                                                    onClick={() => setCurrentFinancialIndex(prev => Math.max(prev - 1, 0))}
+                                                                    disabled={currentFinancialIndex === 0}
+                                                                    className="p-1 rounded-full hover:bg-slate-200 disabled:opacity-30 transition-colors"
+                                                                >
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                                        <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                                                            <p className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Flujo de Caja Libre</p>
+                                                            <p className={`text-2xl font-bold ${financialSummary.flujoCaja >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                                                                {formatCurrency(financialSummary.flujoCaja)}
+                                                            </p>
+                                                            <p className="text-[10px] text-slate-400 mt-1">Ingresos - Gastos - Deudas - Ahorro</p>
+                                                        </div>
+                                                        <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                                                            <p className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Ratio de Ahorro</p>
+                                                            <p className={`text-2xl font-bold ${financialSummary.ratioAhorro > 0 ? 'text-emerald-600' : 'text-yellow-600'}`}>
+                                                                {formatPercent(financialSummary.ratioAhorro)}
+                                                            </p>
+                                                            <p className="text-[10px] text-slate-400 mt-1">Meta: &gt;20%</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-2 gap-3 text-sm mb-4">
+                                                        <div className="p-3 bg-white rounded-lg border border-slate-100">
+                                                            <p className="text-slate-400 text-xs mb-1">{financialSummary.ingresoNetoMensual ? 'Ingreso Neto' : 'Ingresos'}</p>
+                                                            <p className="font-bold text-slate-700">{formatCurrency(financialSummary.ingresoNetoMensual || financialSummary.totalIngresos)}</p>
+                                                        </div>
+                                                        <div className="p-3 bg-white rounded-lg border border-slate-100">
+                                                            <p className="text-slate-400 text-xs mb-1">{financialSummary.totalGastosOperativos ? 'Gastos Oper.' : 'Gastos'}</p>
+                                                            <p className="font-bold text-slate-700">{formatCurrency(financialSummary.totalGastosOperativos || financialSummary.totalGastos)}</p>
+                                                        </div>
+                                                        <div className="p-3 bg-white rounded-lg border border-slate-100">
+                                                            <p className="text-slate-400 text-xs mb-1">Deudas</p>
+                                                            <p className="font-bold text-red-500">{formatCurrency(financialSummary.totalDeudas || 0)}</p>
+                                                        </div>
+                                                        <div className="p-3 bg-white rounded-lg border border-slate-100">
+                                                            <p className="text-slate-400 text-xs mb-1">Inversión/Ahorro</p>
+                                                            <p className="font-bold text-emerald-600">{formatCurrency(financialSummary.totalAhorroInversion || 0)}</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="text-right">
+                                                        <span className="text-xs text-slate-400">
+                                                            Registrado el {new Date(currentFinancialSubmission.createdAt).toLocaleDateString()}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 lg:col-span-1">
                                     <div className="flex justify-between items-center mb-3">
@@ -237,42 +370,71 @@ export default function ChallengeDetail() {
                                 </div>
                             </div>
 
-                            {/* Submissions Section */}
-                            {challenge.submissions && challenge.submissions.length > 0 && (
+                            {/* Submissions Section - Generic Carrousel (Hidden for Financial Challenge) */}
+                            {challengeId !== 'a3ae5adc-a689-4082-a691-4338000ced3a' && genericSubmissions.length > 0 && currentGenericSubmission && (
                                 <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
-                                    <h3 className="text-xl font-bold text-slate-800 mb-6">Tus Respuestas</h3>
-                                    <div className="space-y-4">
-                                        {challenge.submissions.map((sub: any) => (
-                                            <div key={sub.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                                {(() => {
-                                                    try {
-                                                        const parsed = JSON.parse(sub.content);
-                                                        if (typeof parsed === 'object' && parsed !== null) {
-                                                            return (
-                                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
-                                                                    {Object.entries(parsed).map(([key, value]) => (
-                                                                        <div key={key} className="flex flex-col border-b border-slate-100 last:border-0 pb-2 last:pb-0">
-                                                                            <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
-                                                                                {key.replace(/_/g, ' ')}
-                                                                            </span>
-                                                                            <span className="text-sm font-medium text-slate-700">
-                                                                                {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                                                                            </span>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            );
-                                                        }
-                                                        return <p className="text-slate-600 text-sm">{sub.content}</p>;
-                                                    } catch (e) {
-                                                        return <p className="text-slate-600 text-sm">{sub.content}</p>;
-                                                    }
-                                                })()}
-                                                <span className="text-xs text-slate-400 mt-2 block">
-                                                    Enviado el {new Date(sub.createdAt).toLocaleDateString()}
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h3 className="text-xl font-bold text-slate-800">Tus Respuestas</h3>
+
+                                        {/* Controls */}
+                                        {genericSubmissions.length > 1 && (
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => setCurrentResponseIndex(prev => Math.min(prev + 1, genericSubmissions.length - 1))} // Note: "Previous" in time means higher index in filtered/sorted array usually? Wait, genericSubmissions is raw from API potentially unsorted or sorted by backend.
+                                                    // Assuming backend returns newest last? or usually newest first? Let's assume standard array order.
+                                                    // Actually, let's implement safe bounds for generic carousel.
+                                                    disabled={currentResponseIndex === genericSubmissions.length - 1}
+                                                    className="p-1 rounded-full hover:bg-slate-100 disabled:opacity-30 transition-colors"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                                                </button>
+                                                <span className="text-xs font-medium text-slate-500">
+                                                    {currentResponseIndex + 1} / {genericSubmissions.length}
                                                 </span>
+                                                <button
+                                                    onClick={() => setCurrentResponseIndex(prev => Math.max(prev - 1, 0))}
+                                                    disabled={currentResponseIndex === 0}
+                                                    className="p-1 rounded-full hover:bg-slate-100 disabled:opacity-30 transition-colors"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                                                </button>
                                             </div>
-                                        ))}
+                                        )}
+                                    </div>
+
+                                    {/* Slide Content */}
+                                    <div className="p-6 bg-slate-50 rounded-xl border border-slate-100 min-h-[150px]">
+                                        {(() => {
+                                            const sub = currentGenericSubmission;
+                                            try {
+                                                const parsed = JSON.parse(sub.content);
+                                                if (typeof parsed === 'object' && parsed !== null) {
+                                                    return (
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
+                                                            {Object.entries(parsed).map(([key, value]) => (
+                                                                <div key={key} className="flex flex-col border-b border-slate-100 last:border-0 pb-2 last:pb-0">
+                                                                    <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+                                                                        {key.replace(/_/g, ' ')}
+                                                                    </span>
+                                                                    <span className="text-sm font-medium text-slate-700">
+                                                                        {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                                                                    </span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    );
+                                                }
+                                                return <p className="text-slate-600 text-sm whitespace-pre-wrap">{sub.content}</p>;
+                                            } catch (e) {
+                                                return <p className="text-slate-600 text-sm whitespace-pre-wrap">{sub.content}</p>;
+                                            }
+                                        })()}
+
+                                        <div className="mt-4 pt-4 border-t border-slate-200 text-right">
+                                            <span className="text-xs text-slate-400">
+                                                Enviado el {new Date(currentGenericSubmission.createdAt).toLocaleDateString()}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             )}

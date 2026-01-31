@@ -39,6 +39,7 @@ export default function RegisterForm() {
     name: '',
     firstName: '',
     lastName: '',
+    preferredName: '',
 
     tipo_documento: 'CC',
     documento_identidad: '',
@@ -172,7 +173,8 @@ export default function RegisterForm() {
         setUser(result.user);
         navigate('/dashboard');
       } else {
-        setError('Error al registrar. Revisa los datos.');
+        // @ts-ignore
+        setError(result.error || 'Error al registrar. Revisa los datos.');
       }
     } catch (err) {
       console.error(err);
@@ -218,6 +220,7 @@ export default function RegisterForm() {
                 <input name="firstName" value={formData.firstName} onChange={handleChange} placeholder="Nombre(s)" required className="w-full md:w-1/2 bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
                 <input name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Apellidos" required className="w-full md:w-1/2 bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
               </div>
+              <input name="preferredName" value={formData.preferredName} onChange={handleChange} placeholder="¿Cómo te gusta que te llamen?" className="w-full bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
 
               <input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="Correo electrónico" required className="w-full bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
 

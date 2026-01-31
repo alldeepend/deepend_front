@@ -13,6 +13,6 @@ export const DashboardContent = () => (
             {/* <SocialProfileCard /> */}
         </div>
 
-        <ActiveChallenges />
+        {/* <ActiveChallenges /> */}
     </>
 );

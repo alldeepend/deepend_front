@@ -64,15 +64,17 @@ export const userApi = {
 				body: JSON.stringify(userData)
 			});
 
-			if (!response.ok) {
-				throw new Error('Error registering user');
-			}
 			const data = await response.json();
+
+			if (!response.ok) {
+				return { success: false, error: data.error || 'Error registering user' };
+			}
+
 			localStorage.setItem('token', data.token);
 			localStorage.setItem('user', JSON.stringify(data.user));
 			return { success: true, user: data.user };
 		} catch (error) {
-			return { success: false };
+			return { success: false, error: 'Network error or server unavailable' };
 		}
 	},
 	getNextActivity: async () => {

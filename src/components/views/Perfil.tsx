@@ -25,6 +25,7 @@ interface ProfileData {
     ciudad_residencia: string;
     email: string;
     username: string;
+    preferredName: string;
 }
 
 export default function Perfil() {
@@ -43,7 +44,8 @@ export default function Perfil() {
         pais_residencia: '',
         ciudad_residencia: '',
         email: '',
-        username: ''
+        username: '',
+        preferredName: ''
     });
 
     useEffect(() => {
@@ -79,7 +81,8 @@ export default function Perfil() {
                     pais_residencia: data.pais_residencia || '',
                     ciudad_residencia: data.ciudad_residencia || '',
                     email: data.email || '',
-                    username: data.username || ''
+                    username: data.username || '',
+                    preferredName: data.preferredName || ''
                 };
                 console.log("Setting form data:", newData); // DEBUG LOG
 
@@ -206,15 +209,15 @@ export default function Perfil() {
                                     </div>
                                     <div className="text-center md:text-left">
                                         <h3 className="text-2xl font-bold mb-1">
-                                            {formData.firstName && formData.lastName
+                                            {formData.preferredName || (formData.firstName && formData.lastName
                                                 ? `${formData.firstName} ${formData.lastName}`
-                                                : formData.username || 'Usuario'}
+                                                : formData.username || 'Usuario')}
                                         </h3>
                                         <p className="text-emerald-400 font-medium text-sm mb-4">{user?.email}</p>
                                         <div className="flex flex-wrap justify-center md:justify-start gap-2">
-                                            <span className="px-3 py-1 rounded-full bg-white/10 text-xs font-medium backdrop-blur-sm border border-white/10">
+                                            {/* <span className="px-3 py-1 rounded-full bg-white/10 text-xs font-medium backdrop-blur-sm border border-white/10">
                                                 Viajero
-                                            </span>
+                                            </span> */}
                                             {formData.ciudad_residencia && (
                                                 <span className="px-3 py-1 rounded-full bg-white/10 text-xs font-medium backdrop-blur-sm border border-white/10 flex items-center gap-1">
                                                     <MapPin size={10} />
@@ -231,7 +234,14 @@ export default function Perfil() {
                                 <div className="md:col-span-2">
                                     <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 pl-1">Información Personal</h4>
                                 </div>
-
+                                <Field
+                                    label="¿Cómo te gusta que te llamen?"
+                                    name="preferredName"
+                                    value={formData.preferredName}
+                                    icon={UserIcon}
+                                    isEditing={isEditing}
+                                    onChange={handleInputChange}
+                                />
                                 <Field
                                     label="Nombre"
                                     name="firstName"
@@ -248,6 +258,7 @@ export default function Perfil() {
                                     isEditing={isEditing}
                                     onChange={handleInputChange}
                                 />
+
                                 <Field
                                     label="WhatsApp"
                                     name="whatsapp"
