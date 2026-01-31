@@ -342,7 +342,7 @@ export default function FinancialAssessment() {
                                 <DynamicList
                                     title="Otros Descuentos (Libranzas, seguros, etc.)"
                                     items={ingresos.otros_descuentos}
-                                    onChange={(items) => setIngresos(p => ({ ...p, otros_descuentos: items }))}
+                                    onChange={(items) => setIngresos((p: any) => ({ ...p, otros_descuentos: items }))}
                                 />
                             </div>
 
@@ -360,7 +360,7 @@ export default function FinancialAssessment() {
                             <DynamicList
                                 title="Otros Ahorros Automáticos/Manuales"
                                 items={ahorros.otros_ahorros}
-                                onChange={(items) => setAhorros(p => ({ ...p, otros_ahorros: items }))}
+                                onChange={(items) => setAhorros((p: any) => ({ ...p, otros_ahorros: items }))}
                             />
                             <SimpleSummary label="TOTAL DESTINADO A INVERSIÓN/AHORRO" value={totalAhorroInversion} note={`Ratio de ahorro: ${formatPercent(pctAhorro)}`} formatCurrency={formatCurrency} />
                         </SectionCard>
@@ -373,7 +373,7 @@ export default function FinancialAssessment() {
                                         type="checkbox"
                                         className="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500"
                                         checked={deudas.pagaste_deudas}
-                                        onChange={(e) => setDeudas(p => ({ ...p, pagaste_deudas: e.target.checked }))}
+                                        onChange={(e) => setDeudas((p: any) => ({ ...p, pagaste_deudas: e.target.checked }))}
                                     />
                                     <span className="text-slate-700 font-medium">¿Pagaste deudas este mes?</span>
                                 </label>
@@ -383,7 +383,7 @@ export default function FinancialAssessment() {
                                 <DynamicList
                                     title="Registro de Deudas (Tarjeta, Crédito, Préstamo...)"
                                     items={deudas.items}
-                                    onChange={(items) => setDeudas(p => ({ ...p, items }))}
+                                    onChange={(items) => setDeudas((p: any) => ({ ...p, items }))}
                                 />
                             )}
                             <SimpleSummary label="TOTAL DESTINADO A DEUDAS" value={totalDeudas} note={`${formatPercent(pctDeudas)} de tu ingreso neto`} formatCurrency={formatCurrency} />
