@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router';
 import { useAuth } from '../../store/useAuth';
+import PasaporteReminder from './PasaporteReminder';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -13,6 +14,11 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/" replace />;
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <PasaporteReminder />
+      {children}
+    </>
+  );
 }
 

@@ -13,6 +13,8 @@ type User = {
   pais_residencia: string | null;
   ciudad_residencia: string | null;
   createdAt: string;
+  membership: string;
+  role?: string;
 }
 
 type AppComment = {

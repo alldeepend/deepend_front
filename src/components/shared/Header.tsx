@@ -8,7 +8,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout, setUser } = useAuth();
+  const { user, logout, setUser } = useAuth();
 
   const isDiary = location.pathname.includes('/diary');
 
@@ -222,36 +222,41 @@ export default function Header() {
                   {/* ///////Ocualtar/////// */}
 
 
-                  {/* <li>
-                    <Link
-                      to="/journey"
-                      onClick={() => setShowMobileMenu(false)}
-                      className="flex items-center gap-3 w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-50 transition-colors"
-                    >
-                      <Compass size={20} />
-                      <span className="font-medium">Mi Viaje</span>
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/challenges"
-                      onClick={() => setShowMobileMenu(false)}
-                      className="flex items-center gap-3 w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-50 transition-colors"
-                    >
-                      <Flag size={20} />
-                      <span className="font-medium">Mis Retos</span>
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/resources"
-                      onClick={() => setShowMobileMenu(false)}
-                      className="flex items-center gap-3 w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-50 transition-colors"
-                    >
-                      <BookOpen size={20} />
-                      <span className="font-medium">Mis Recursos</span>
-                    </Link>
-                  </li> */}
+                  {/* Secciones restringidas por rol */}
+                  {(user?.role === 'admin' /* || user?.role === 'user' */) && (
+                    <>
+                      <li>
+                        <Link
+                          to="/journey"
+                          onClick={() => setShowMobileMenu(false)}
+                          className="flex items-center gap-3 w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-50 transition-colors"
+                        >
+                          <Compass size={20} />
+                          <span className="font-medium">Mi Viaje</span>
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          to="/challenges"
+                          onClick={() => setShowMobileMenu(false)}
+                          className="flex items-center gap-3 w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-50 transition-colors"
+                        >
+                          <Flag size={20} />
+                          <span className="font-medium">Mis Retos</span>
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          to="/resources"
+                          onClick={() => setShowMobileMenu(false)}
+                          className="flex items-center gap-3 w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-50 transition-colors"
+                        >
+                          <BookOpen size={20} />
+                          <span className="font-medium">Mis Recursos</span>
+                        </Link>
+                      </li>
+                    </>
+                  )}
 
                   {/* ///////Ocualtar/////// */}
 

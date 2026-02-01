@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
-import { ArrowLeft, CheckCircle2, Circle, FileText, Download, Zap, Trophy } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, FileText, Trophy, Zap, Download } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { HomeSidebar } from '../home/HomeSidebar';
+import DynamicForm from '../shared/DynamicForm';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Header from '../../components/shared/Header';
 import { useAuth } from '../../store/useAuth';
@@ -39,10 +41,16 @@ export default function ChallengeDetail() {
     const { user } = useAuth();
     const [hasFinancialDraft, setHasFinancialDraft] = useState(false);
 
+    // --- Auto Reload Logic (Moved to Top) ---
+    const [shouldReloadOnComplete, setShouldReloadOnComplete] = useState(false);
+
+    // Helper to calculate completion safely even before full data
+    // We can't access 'challenge' directly if it's not loaded, but we can check if it exists in the effect
+
     // Check for draft
     React.useEffect(() => {
         if (user?.id) {
-            const draft = localStorage.getItem(`financial_assessment_${user.id}_ingresos`);
+            const draft = localStorage.getItem(`financial_assessment_${user.id} _ingresos`);
             if (draft) {
                 setHasFinancialDraft(true);
             }
@@ -58,17 +66,40 @@ export default function ChallengeDetail() {
             const res = await fetch(`${host}/api/challenges/${challengeId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            if (!res.ok) throw new Error('Failed to fetch challenge');
-            return await res.json();
+            if (!res.ok) {
+                console.error("Challenge Detail Fetch Error:", res.status, res.statusText);
+                const errorBody = await res.text();
+                console.error("Error Body:", errorBody);
+                throw new Error('Failed to fetch challenge');
+            }
+            const data = await res.json();
+            return data;
         },
         enabled: !!challengeId
     });
+
+    const stepsSafe = challenge?.tasks || [];
+    const isTotallyCompletedSafe = stepsSafe.length > 0 && stepsSafe.every((s: any) => s.completed);
+
+    // 1. Enable reload trigger ONLY if we start with an incomplete challenge
+    React.useEffect(() => {
+        if (!isLoading && challenge && !isTotallyCompletedSafe) {
+            setShouldReloadOnComplete(true);
+        }
+    }, [isLoading, challenge, isTotallyCompletedSafe]);
+
+    // 2. Trigger reload if we were tracking (started incomplete) and now it is complete
+    React.useEffect(() => {
+        if (shouldReloadOnComplete && isTotallyCompletedSafe) {
+            window.location.reload();
+        }
+    }, [shouldReloadOnComplete, isTotallyCompletedSafe]);
 
     // Toggle Task Mutation
     const toggleTaskMutation = useMutation({
         mutationFn: async (taskId: string) => {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${host}/api/challenges/${challengeId}/tasks/${taskId}/toggle`, {
+            const res = await fetch(`${host} /api/challenges / ${challengeId} /tasks/${taskId}/toggle`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -78,6 +109,46 @@ export default function ChallengeDetail() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['challenge', challengeId] });
             queryClient.invalidateQueries({ queryKey: ['challenges'] });
+        }
+    });
+
+    // --- Dynamic Form Logic (Moved to top level) ---
+    const [activeTaskForm, setActiveTaskForm] = useState<{ id: string, schema: any } | null>(null);
+
+    const submitFormMutation = useMutation({
+        mutationFn: async ({ taskId, data }: { taskId: string, data: any }) => {
+            const token = localStorage.getItem('token');
+
+            // 1. Save Submission
+            const resSub = await fetch(`${host}/api/challenges/${challengeId}/submissions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    responses: {
+                        taskId: taskId,
+                        ...data
+                    }
+                })
+            });
+            if (!resSub.ok) throw new Error('Failed to save submission');
+
+            // 2. Mark Task as Complete (if not already)
+            // Note: We need to find the task to check completion, but inside mutation we just blindly toggle if needed or rely on backend idempotency.
+            // For safety, let's just toggle.
+            const resToggle = await fetch(`${host}/api/challenges/${challengeId}/tasks/${taskId}/toggle`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!resToggle.ok) throw new Error('Failed to complete task');
+
+            return { success: true };
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['challenge', challengeId] });
+            setActiveTaskForm(null);
         }
     });
 
@@ -122,6 +193,16 @@ export default function ChallengeDetail() {
     const genericSubmissions = challenge.submissions || [];
     const currentGenericSubmission = genericSubmissions[currentResponseIndex];
 
+    const handleTaskClick = (task: any) => {
+        if (task.formSchema) {
+            // Open Form
+            setActiveTaskForm({ id: task.id, schema: task.formSchema });
+        } else {
+            // Standard Toggle
+            toggleStep(task.id);
+        }
+    };
+
     return (
         <div className="flex flex-col md:flex-row h-screen bg-slate-50 font-sans overflow-hidden">
             <div className="md:hidden w-full">
@@ -130,7 +211,7 @@ export default function ChallengeDetail() {
 
             <HomeSidebar activeTab="Mis Retos" />
 
-            <main className="flex-1 overflow-y-auto">
+            <main className="flex-1 overflow-y-auto relative">
                 <div className="max-w-5xl mx-auto p-6 md:p-12">
 
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -175,7 +256,7 @@ export default function ChallengeDetail() {
                                 <div className="lg:col-span-2">
                                     <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3">¿Qué es?</h3>
                                     <div
-                                        className="text-slate-500 text-lg leading-relaxed prose prose-slate"
+                                        className="text-slate-500 text-md leading-relaxed prose prose-slate"
                                         dangerouslySetInnerHTML={{ __html: challenge.que_es || '' }}
                                     />
 
@@ -347,23 +428,33 @@ export default function ChallengeDetail() {
 
                                 {/* Steps List */}
                                 <div className="space-y-4">
-                                    {steps.map((step: ChallengeStep) => (
+                                    {steps.map((step: any) => (
                                         <div
                                             key={step.id}
-                                            onClick={() => toggleStep(step.id)}
+                                            onClick={() => handleTaskClick(step)}
                                             className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center gap-4 ${step.completed
                                                 ? 'bg-white border-emerald-100 shadow-none'
                                                 : 'bg-white border-slate-100 hover:border-emerald-200 hover:shadow-sm'
                                                 }`}
                                         >
-                                            <div className={`flex-shrink-0 w-6 h-6 rounded flex items-center justify-center transition-colors ${step.completed ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-300'
+                                            <div className={`flex-shrink-0 w-6 h-6 rounded flex items-center justify-center transition-colors ${step.completed ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-[#ed2629]'
                                                 }`}>
                                                 <CheckCircle2 size={16} />
                                             </div>
-                                            <span className={`text-sm font-medium transition-colors ${step.completed ? 'text-slate-400 line-through' : 'text-slate-700'
-                                                }`}>
-                                                {step.text}
-                                            </span>
+                                            <div className="flex-1">
+                                                <span className={`text-sm font-medium transition-colors ${step.completed ? 'text-slate-400 line-through' : 'text-slate-700'
+                                                    }`}>
+                                                    {step.text}
+                                                </span>
+                                                {step.formSchema && !step.completed && (
+                                                    <span className="block text-xs text-[#ed2629] font-bold mt-1">Requiere completar formulario</span>
+                                                )}
+                                            </div>
+                                            {step.formSchema && (
+                                                <div className="text-slate-400">
+                                                    <FileText size={16} />
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                     {steps.length === 0 && <p className="text-slate-400 text-sm">No hay pasos definidos para este reto aún.</p>}
@@ -408,19 +499,27 @@ export default function ChallengeDetail() {
                                             const sub = currentGenericSubmission;
                                             try {
                                                 const parsed = JSON.parse(sub.content);
-                                                if (typeof parsed === 'object' && parsed !== null) {
+                                                // Handle nested responses if standard dynamic form
+                                                const displayContent = parsed.responses || parsed;
+
+                                                if (typeof displayContent === 'object' && displayContent !== null) {
                                                     return (
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
-                                                            {Object.entries(parsed).map(([key, value]) => (
-                                                                <div key={key} className="flex flex-col border-b border-slate-100 last:border-0 pb-2 last:pb-0">
-                                                                    <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
-                                                                        {key.replace(/_/g, ' ')}
-                                                                    </span>
-                                                                    <span className="text-sm font-medium text-slate-700">
-                                                                        {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                                                                    </span>
-                                                                </div>
-                                                            ))}
+                                                            {Object.entries(displayContent).map(([key, value]) => {
+                                                                // Skip taskId
+                                                                if (key === 'taskId') return null;
+
+                                                                return (
+                                                                    <div key={key} className="flex flex-col border-b border-slate-100 last:border-0 pb-2 last:pb-0">
+                                                                        <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+                                                                            {key.replace(/_/g, ' ')}
+                                                                        </span>
+                                                                        <span className="text-sm font-medium text-slate-700">
+                                                                            {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                                                                        </span>
+                                                                    </div>
+                                                                );
+                                                            })}
                                                         </div>
                                                     );
                                                 }
@@ -441,8 +540,8 @@ export default function ChallengeDetail() {
                         </div>
 
                         {/* Right Column - Resources & Badge */}
-                        <div className="space-y-6">
-                            {/* Useful Resources */}
+                        {/* <div className="space-y-6">
+                            
                             <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
                                 <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">Recursos Útiles</h3>
                                 <div className="space-y-3">
@@ -467,22 +566,38 @@ export default function ChallengeDetail() {
                                 </div>
                             </div>
 
-                            {/* Badge Reward Preview */}
+                           
                             <div className="bg-emerald-500 rounded-3xl shadow-lg shadow-emerald-200 p-6 text-center text-white relative overflow-hidden">
                                 <div className="relative z-10">
                                     <Trophy size={32} className="mx-auto mb-3 opacity-90" />
                                     <h3 className="font-bold text-lg mb-1">Insignia: Halcón</h3>
                                     <p className="text-emerald-100 text-xs text-opacity-90">Completa este reto para ganar esta insignia.</p>
                                 </div>
-                                {/* Decorative circles */}
+                                
                                 <div className="absolute top-0 right-0 w-24 h-24 bg-white opacity-10 rounded-full -mr-10 -mt-10"></div>
                                 <div className="absolute bottom-0 left-0 w-16 h-16 bg-white opacity-10 rounded-full -ml-8 -mb-8"></div>
                             </div>
-                        </div>
+                        </div> */}
 
                     </div>
 
                 </div>
+
+                {/* MODAL FORM OVERLAY */}
+                {activeTaskForm && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+                            <div className="p-6 md:p-8 overflow-y-auto">
+                                <DynamicForm
+                                    schema={activeTaskForm.schema}
+                                    onSubmit={(data) => submitFormMutation.mutate({ taskId: activeTaskForm.id, data })}
+                                    onCancel={() => setActiveTaskForm(null)}
+                                    isSubmitting={submitFormMutation.isPending}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
             </main>
 
 
