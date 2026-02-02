@@ -27,10 +27,9 @@ export const StatsCard = () => {
             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-full -mr-8 -mt-8 opacity-50"></div>
 
             <div>
-                <h3 className="text-xl font-bold text-slate-800">Hola, {user?.preferredName || user?.firstName || 'Usuario'}.</h3>
+                <h3 className="text-xl font-bold text-slate-800">Tu grafica de la vida</h3>
                 <div className="flex items-center gap-2 mt-1">
-                    {/* <span className="text-slate-500 text-sm">Clase:</span>
-                    <span className="bg-slate-900 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Re-Builder</span> */}
+
                 </div>
             </div>
 
@@ -43,11 +42,6 @@ export const StatsCard = () => {
                     <PentagonChart data={chartData} />
                 </div>
             )}
-
-            {/* <div className="flex justify-between items-end border-t border-slate-50 pt-4">
-                <span className="text-slate-400 text-sm font-medium">Balance General</span>
-                <span className="text-emerald-500 font-bold text-lg">78<span className="text-slate-300 text-sm">/100</span></span>
-            </div> */}
         </div>
     );
 };

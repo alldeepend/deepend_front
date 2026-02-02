@@ -221,7 +221,16 @@ export default function Header() {
 
                   {/* ///////Ocualtar/////// */}
 
-
+                  <li>
+                    <Link
+                      to="/challenges"
+                      onClick={() => setShowMobileMenu(false)}
+                      className="flex items-center gap-3 w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-50 transition-colors"
+                    >
+                      <Flag size={20} />
+                      <span className="font-medium">Mis Retos</span>
+                    </Link>
+                  </li>
                   {/* Secciones restringidas por rol */}
                   {(user?.role === 'admin' /* || user?.role === 'user' */) && (
                     <>
@@ -235,16 +244,7 @@ export default function Header() {
                           <span className="font-medium">Mi Viaje</span>
                         </Link>
                       </li>
-                      <li>
-                        <Link
-                          to="/challenges"
-                          onClick={() => setShowMobileMenu(false)}
-                          className="flex items-center gap-3 w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-50 transition-colors"
-                        >
-                          <Flag size={20} />
-                          <span className="font-medium">Mis Retos</span>
-                        </Link>
-                      </li>
+
                       <li>
                         <Link
                           to="/resources"

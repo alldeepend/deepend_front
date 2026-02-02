@@ -12,6 +12,7 @@ import ChallengeDetail from './components/views/ChallengeDetail';
 import ForgotPassword from './components/views/ForgotPassword';
 import ResetPassword from './components/views/ResetPassword';
 import FinancialAssessment from './components/views/FinancialAssessment';
+import ActivityHistory from './components/views/ActivityHistory';
 
 function App() {
   const host = window.location.hostname;
@@ -58,6 +59,11 @@ function App() {
         <Route path="/challenges/financial-assessment" element={
           <ProtectedRoute>
             <FinancialAssessment />
+          </ProtectedRoute>
+        } />
+        <Route path="/activities" element={
+          <ProtectedRoute>
+            <ActivityHistory />
           </ProtectedRoute>
         } />
         <Route path="/login" element={

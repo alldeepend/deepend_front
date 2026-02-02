@@ -27,13 +27,13 @@ const ChallengeCard = ({ data, onClick }: { data: ChallengeCardData; onClick?: (
         >
 
             <div className="flex justify-between items-start mb-4">
-                <span className={`text-[10px] font-bold tracking-wider uppercase px-3 py-1 rounded-full ${data.badgeClass}`}>
+                <span className={`text-[10px] font-bold tracking-wider uppercase px-3 py-1 rounded-full ${data.status === 'active' ? 'text-[#ed2629]' : 'text-[#57ba47]'}`}>
                     {data.category}
                 </span>
                 {data.status === 'active' ? (
-                    <PlayCircle className={`w-6 h-6 ${data.colorClass} opacity-80 cursor-pointer hover:opacity-100 transition-opacity`} />
+                    <PlayCircle className={`w-6 h-6 text-[#ed2629] opacity-80 cursor-pointer hover:opacity-100 transition-opacity`} />
                 ) : (
-                    <Lock className="w-5 h-5 text-slate-300" />
+                    <Lock className="w-5 h-5 text-[#57ba47]" />
                 )}
             </div>
 
@@ -48,14 +48,14 @@ const ChallengeCard = ({ data, onClick }: { data: ChallengeCardData; onClick?: (
             {data.status !== 'locked' ? (
                 <div>
                     <div className="flex justify-between items-end mb-2">
-                        <span className="text-xs text-slate-400 font-medium">
+                        <span className={`text-xs ${data.status === 'active' ? 'text-[#ed2629]' : 'text-[#57ba47]'} font-medium`}>
                             {data.status === 'completed' ? 'Completado' : 'Progreso'}
                         </span>
-                        <span className="text-xs font-bold text-slate-800">{data.progress}%</span>
+                        <span className={`text-xs font-bold ${data.status === 'active' ? 'text-[#ed2629]' : 'text-[#57ba47]'}`}>{data.progress}%</span>
                     </div>
                     <div className="w-full bg-slate-100 rounded-full h-1.5">
                         <div
-                            className={`h-1.5 rounded-full ${data.bgClass}`}
+                            className={`h-1.5 rounded-full ${data.status === 'active' ? 'bg-[#ed2629]' : 'bg-[#57ba47]'}`}
                             style={{ width: `${data.progress}%` }}
                         ></div>
                     </div>

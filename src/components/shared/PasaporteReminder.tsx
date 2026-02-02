@@ -85,7 +85,7 @@ export default function PasaporteReminder() {
                 </button>
 
                 <div className="flex flex-col items-center text-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-indigo-200">
+                    <div className="w-16 h-16 bg-gradient-to-br from-[#57ba47] to-[#57ba47] rounded-full flex items-center justify-center mb-6 shadow-lg shadow-indigo-200">
                         <Trophy className="text-white w-8 h-8" />
                     </div>
 
@@ -94,7 +94,7 @@ export default function PasaporteReminder() {
                     </h3>
 
                     <p className="text-slate-600 mb-8 leading-relaxed">
-                        Para desbloquear todo el potencial de DeepEnd y personalizar tu experiencia, necesitas completar el reto <span className="font-semibold text-indigo-600">Pasaporte Deepend</span>.
+                        Para desbloquear todo el potencial de DeepEnd y personalizar tu experiencia, necesitas completar el reto <span className="font-semibold text-[#57ba47]">Pasaporte Deepend</span>.
                     </p>
 
                     <button
