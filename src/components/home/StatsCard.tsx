@@ -27,7 +27,7 @@ export const StatsCard = () => {
             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-full -mr-8 -mt-8 opacity-50"></div>
 
             <div>
-                <h3 className="text-xl font-bold text-slate-800">Tu grafica de la vida</h3>
+                <h3 className="text-xl font-bold text-slate-800">Tu Gráfica de la Vida</h3>
                 <div className="flex items-center gap-2 mt-1">
 
                 </div>
