@@ -123,7 +123,7 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
                     if (field.type === 'header') {
                         return (
                             <div key={field.id} className="mt-6 mb-2">
-                                <h3 className="text-md font-bold text-slate-800 whitespace-pre-wrap">{field.label}</h3>
+                                <h3 className="text-md text-slate-800 whitespace-pre-wrap">{field.label}</h3>
                                 {field.help_text && <p className="text-sm text-slate-500 mt-1">{field.help_text}</p>}
                             </div>
                         );

@@ -254,7 +254,7 @@ export default function ChallengeDetail() {
                             {/* Mission & Rewards Row */}
                             <div className="p-8 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                                 <div className="lg:col-span-2">
-                                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3">¿Qué es?</h3>
+                                    <h3 className="text-lg font-bold text-slate-900 uppercase tracking-wider mb-3">¿Qué es?</h3>
                                     <div
                                         className="text-slate-500 text-md leading-relaxed prose prose-slate"
                                         dangerouslySetInnerHTML={{ __html: challenge.que_es || '' }}
@@ -350,7 +350,7 @@ export default function ChallengeDetail() {
                                         </div>
                                     )}
                                 </div>
-                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 lg:col-span-1">
+                                {/* <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 lg:col-span-1">
                                     <div className="flex justify-between items-center mb-3">
                                         <span className="text-slate-400 text-sm">Recompensa</span>
                                         <div className="flex items-center text-emerald-500 font-bold">
@@ -362,7 +362,7 @@ export default function ChallengeDetail() {
                                         <span className="text-slate-400 text-sm">Dificultad</span>
                                         <span className="bg-white px-2 py-1 rounded border border-slate-200 text-xs font-bold text-slate-600">Media</span>
                                     </div>
-                                </div>
+                                </div> */}
                             </div>
                         </div>
                     </div>
@@ -371,25 +371,25 @@ export default function ChallengeDetail() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                         {challenge.para_que_sirve && (
                             <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                                <h4 className="font-bold text-slate-800 mb-2">¿Para qué sirve?</h4>
+                                <h4 className="font-bold text-lg text-slate-800 mb-2">¿Para qué sirve?</h4>
                                 <div className="text-slate-600 text-sm prose prose-sm" dangerouslySetInnerHTML={{ __html: challenge.para_que_sirve }} />
                             </div>
                         )}
                         {challenge.que_lograra && (
                             <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                                <h4 className="font-bold text-slate-800 mb-2">¿Qué lograrás?</h4>
+                                <h4 className="font-bold text-lg text-slate-800 mb-2">¿Qué lograrás?</h4>
                                 <div className="text-slate-600 text-sm prose prose-sm" dangerouslySetInnerHTML={{ __html: challenge.que_lograra }} />
                             </div>
                         )}
                         {challenge.tiempos && (
                             <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                                <h4 className="font-bold text-slate-800 mb-2">Tiempos</h4>
+                                <h4 className="font-bold text-lg text-slate-800 mb-2">Tiempos</h4>
                                 <div className="text-slate-600 text-sm prose prose-sm" dangerouslySetInnerHTML={{ __html: challenge.tiempos }} />
                             </div>
                         )}
                         {challenge.que_se_requiere && (
                             <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                                <h4 className="font-bold text-slate-800 mb-2">Alcance y entregable</h4>
+                                <h4 className="font-bold text-lg text-slate-800 mb-2">Alcance y entregable</h4>
                                 <div className="text-slate-600 text-sm prose prose-sm" dangerouslySetInnerHTML={{ __html: challenge.que_se_requiere }} />
                             </div>
                         )}
@@ -401,7 +401,7 @@ export default function ChallengeDetail() {
                         )} */}
                         {challenge.requerimientos && (
                             <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                                <h4 className="font-bold text-slate-800 mb-2">Requerimientos</h4>
+                                <h4 className="font-bold text-lg text-slate-800 mb-2">Requerimientos</h4>
                                 <div className="text-slate-600 text-sm prose prose-sm" dangerouslySetInnerHTML={{ __html: challenge.requerimientos }} />
                             </div>
                         )}
