@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, CircleQuestionMark, X } from 'lucide-react';
 
 export const PentagonChart = ({ data = [
     { label: "Salud", value: 8 },
@@ -87,8 +87,10 @@ export const PentagonChart = ({ data = [
                         e.stopPropagation();
                         setIsInfoOpen(true);
                     }}
-                    className="text-xs text-emerald-600 font-medium hover:underline relative z-10 cursor-pointer"
+
+                    className="flex items-center gap-1.5 bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-200 transition-colors whitespace-nowrap"
                 >
+                    <CircleQuestionMark size={14} />
                     Entiende tu gráfica
                 </button>
             </div>

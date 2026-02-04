@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ArrowLeft, CheckCircle2, FileText, Trophy, Zap, Download } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, FileText, Trophy, Zap, Download, ChevronDown, ChevronUp } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { HomeSidebar } from '../home/HomeSidebar';
 import DynamicForm from '../shared/DynamicForm';
@@ -30,6 +30,29 @@ interface ChallengeDetail {
     que_recibe?: string;
     requerimientos?: string;
 }
+
+const AccordionSection = ({ title, content }: { title: string, content: string }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    return (
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="w-full flex justify-between items-center p-6 text-left hover:bg-slate-50 transition-colors"
+            >
+                <h3 className="text-md font-bold text-slate-900 uppercase tracking-wider">{title}</h3>
+                {isOpen ? <ChevronUp className="text-slate-400" /> : <ChevronDown className="text-slate-400" />}
+            </button>
+            {isOpen && (
+                <div className="px-6 pb-6 animate-in slide-in-from-top-2 duration-200">
+                    <div
+                        className="text-slate-500 text-md leading-relaxed prose prose-slate max-w-none"
+                        dangerouslySetInnerHTML={{ __html: content }}
+                    />
+                </div>
+            )}
+        </div>
+    );
+};
 
 export default function ChallengeDetail() {
     const navigate = useNavigate();
@@ -252,105 +275,9 @@ export default function ChallengeDetail() {
                             </div>
 
                             {/* Mission & Rewards Row */}
-                            <div className="p-8 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                                <div className="lg:col-span-2">
-                                    <h3 className="text-lg font-bold text-slate-900 uppercase tracking-wider mb-3">¿Qué es?</h3>
-                                    <div
-                                        className="text-slate-500 text-md leading-relaxed prose prose-slate"
-                                        dangerouslySetInnerHTML={{ __html: challenge.que_es || '' }}
-                                    />
+                            {/* <div className="p-8 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start"> */}
 
-                                    {/* Conditional Financial Assessment Button */}
-                                    {challengeId === 'a3ae5adc-a689-4082-a691-4338000ced3a' && (
-                                        <div className="mt-6 space-y-6">
-                                            <button
-                                                onClick={() => navigate(`/challenges/financial-assessment?challengeId=${challengeId}`)}
-                                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-all flex items-center gap-2"
-                                            >
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-                                                {hasFinancialDraft ? 'Continuar Evaluación' : (financialSubmissions.length > 0 ? 'Nueva Evaluación' : 'Realizar Evaluación Financiera')}
-                                            </button>
-
-                                            {/* Financial Summary Slider */}
-                                            {financialSummary && (
-                                                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 shadow-sm">
-                                                    <div className="flex justify-between items-center mb-4">
-                                                        <h4 className="text-lg font-bold text-slate-800 flex items-center">
-                                                            <Trophy className="text-emerald-500 mr-2" size={20} />
-                                                            Tu Resultado Financiero
-                                                        </h4>
-
-                                                        {financialSubmissions.length > 1 && (
-                                                            <div className="flex items-center gap-2">
-                                                                <button
-                                                                    onClick={() => setCurrentFinancialIndex(prev => Math.min(prev + 1, financialSubmissions.length - 1))}
-                                                                    disabled={currentFinancialIndex === financialSubmissions.length - 1}
-                                                                    className="p-1 rounded-full hover:bg-slate-200 disabled:opacity-30 transition-colors"
-                                                                >
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
-                                                                </button>
-                                                                <span className="text-xs font-medium text-slate-500 whitespace-nowrap">
-                                                                    {financialSubmissions.length - currentFinancialIndex} / {financialSubmissions.length}
-                                                                </span>
-                                                                <button
-                                                                    onClick={() => setCurrentFinancialIndex(prev => Math.max(prev - 1, 0))}
-                                                                    disabled={currentFinancialIndex === 0}
-                                                                    className="p-1 rounded-full hover:bg-slate-200 disabled:opacity-30 transition-colors"
-                                                                >
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
-                                                                </button>
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                                        <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-                                                            <p className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Flujo de Caja Libre</p>
-                                                            <p className={`text-2xl font-bold ${financialSummary.flujoCaja >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-                                                                {formatCurrency(financialSummary.flujoCaja)}
-                                                            </p>
-                                                            <p className="text-[10px] text-slate-400 mt-1">Ingresos - Gastos - Deudas - Ahorro</p>
-                                                        </div>
-                                                        <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-                                                            <p className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Ratio de Ahorro</p>
-                                                            <p className={`text-2xl font-bold ${financialSummary.ratioAhorro > 0 ? 'text-emerald-600' : 'text-yellow-600'}`}>
-                                                                {formatPercent(financialSummary.ratioAhorro)}
-                                                            </p>
-                                                            <p className="text-[10px] text-slate-400 mt-1">Meta: &gt;20%</p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="grid grid-cols-2 gap-3 text-sm mb-4">
-                                                        <div className="p-3 bg-white rounded-lg border border-slate-100">
-                                                            <p className="text-slate-400 text-xs mb-1">{financialSummary.ingresoNetoMensual ? 'Ingreso Neto' : 'Ingresos'}</p>
-                                                            <p className="font-bold text-slate-700">{formatCurrency(financialSummary.ingresoNetoMensual || financialSummary.totalIngresos)}</p>
-                                                        </div>
-                                                        <div className="p-3 bg-white rounded-lg border border-slate-100">
-                                                            <p className="text-slate-400 text-xs mb-1">{financialSummary.totalGastosOperativos ? 'Gastos Oper.' : 'Gastos'}</p>
-                                                            <p className="font-bold text-slate-700">{formatCurrency(financialSummary.totalGastosOperativos || financialSummary.totalGastos)}</p>
-                                                        </div>
-                                                        <div className="p-3 bg-white rounded-lg border border-slate-100">
-                                                            <p className="text-slate-400 text-xs mb-1">Deudas</p>
-                                                            <p className="font-bold text-red-500">{formatCurrency(financialSummary.totalDeudas || 0)}</p>
-                                                        </div>
-                                                        <div className="p-3 bg-white rounded-lg border border-slate-100">
-                                                            <p className="text-slate-400 text-xs mb-1">Inversión/Ahorro</p>
-                                                            <p className="font-bold text-emerald-600">{formatCurrency(financialSummary.totalAhorroInversion || 0)}</p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="text-right">
-                                                        <span className="text-xs text-slate-400">
-                                                            Registrado el {new Date(currentFinancialSubmission.createdAt).toLocaleDateString()}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                                {/* <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 lg:col-span-1">
+                            {/* <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 lg:col-span-1">
                                     <div className="flex justify-between items-center mb-3">
                                         <span className="text-slate-400 text-sm">Recompensa</span>
                                         <div className="flex items-center text-emerald-500 font-bold">
@@ -363,52 +290,120 @@ export default function ChallengeDetail() {
                                         <span className="bg-white px-2 py-1 rounded border border-slate-200 text-xs font-bold text-slate-600">Media</span>
                                     </div>
                                 </div> */}
-                            </div>
+                            {/* </div> */}
                         </div>
                     </div>
 
+
+
                     {/* Details Grid - New Fields */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                        {challenge.para_que_sirve && (
-                            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                                <h4 className="font-bold text-lg text-slate-800 mb-2">¿Para qué sirve?</h4>
-                                <div className="text-slate-600 text-sm prose prose-sm" dangerouslySetInnerHTML={{ __html: challenge.para_que_sirve }} />
-                            </div>
-                        )}
-                        {challenge.que_lograra && (
-                            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                                <h4 className="font-bold text-lg text-slate-800 mb-2">¿Qué lograrás?</h4>
-                                <div className="text-slate-600 text-sm prose prose-sm" dangerouslySetInnerHTML={{ __html: challenge.que_lograra }} />
-                            </div>
-                        )}
-                        {challenge.tiempos && (
-                            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                                <h4 className="font-bold text-lg text-slate-800 mb-2">Tiempos</h4>
-                                <div className="text-slate-600 text-sm prose prose-sm" dangerouslySetInnerHTML={{ __html: challenge.tiempos }} />
-                            </div>
-                        )}
-                        {challenge.que_se_requiere && (
-                            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                                <h4 className="font-bold text-lg text-slate-800 mb-2">Alcance y entregable</h4>
-                                <div className="text-slate-600 text-sm prose prose-sm" dangerouslySetInnerHTML={{ __html: challenge.que_se_requiere }} />
-                            </div>
-                        )}
-                        {/* {challenge.que_recibe && (
-                            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                                <h4 className="font-bold text-slate-800 mb-2">¿Qué recibes?</h4>
-                                <div className="text-slate-600 text-sm prose prose-sm" dangerouslySetInnerHTML={{ __html: challenge.que_recibe }} />
-                            </div>
-                        )} */}
-                        {challenge.requerimientos && (
-                            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                                <h4 className="font-bold text-lg text-slate-800 mb-2">Requerimientos</h4>
-                                <div className="text-slate-600 text-sm prose prose-sm" dangerouslySetInnerHTML={{ __html: challenge.requerimientos }} />
-                            </div>
-                        )}
+                    <div className="flex flex-col gap-6 mb-8">
+
+                        <div className="lg:col-span-2">
+
+
+                            {/* Conditional Financial Assessment Button */}
+                            {challengeId === 'a3ae5adc-a689-4082-a691-4338000ced3a' && (
+                                <div className="mt-6 space-y-6">
+                                    <button
+                                        onClick={() => navigate(`/challenges/financial-assessment?challengeId=${challengeId}`)}
+                                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-all flex items-center gap-2"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                                        {hasFinancialDraft ? 'Continuar Evaluación' : (financialSubmissions.length > 0 ? 'Nueva Evaluación' : 'Realizar Evaluación Financiera')}
+                                    </button>
+
+                                    {/* Financial Summary Slider */}
+                                    {financialSummary && (
+                                        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 shadow-sm">
+                                            <div className="flex justify-between items-center mb-4">
+                                                <h4 className="text-lg font-bold text-slate-800 flex items-center">
+                                                    <Trophy className="text-emerald-500 mr-2" size={20} />
+                                                    Tu Resultado Financiero
+                                                </h4>
+
+                                                {financialSubmissions.length > 1 && (
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            onClick={() => setCurrentFinancialIndex(prev => Math.min(prev + 1, financialSubmissions.length - 1))}
+                                                            disabled={currentFinancialIndex === financialSubmissions.length - 1}
+                                                            className="p-1 rounded-full hover:bg-slate-200 disabled:opacity-30 transition-colors"
+                                                        >
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                                                        </button>
+                                                        <span className="text-xs font-medium text-slate-500 whitespace-nowrap">
+                                                            {financialSubmissions.length - currentFinancialIndex} / {financialSubmissions.length}
+                                                        </span>
+                                                        <button
+                                                            onClick={() => setCurrentFinancialIndex(prev => Math.max(prev - 1, 0))}
+                                                            disabled={currentFinancialIndex === 0}
+                                                            className="p-1 rounded-full hover:bg-slate-200 disabled:opacity-30 transition-colors"
+                                                        >
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                                <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                                                    <p className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Flujo de Caja Libre</p>
+                                                    <p className={`text-2xl font-bold ${financialSummary.flujoCaja >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                                                        {formatCurrency(financialSummary.flujoCaja)}
+                                                    </p>
+                                                    <p className="text-[10px] text-slate-400 mt-1">Ingresos - Gastos - Deudas - Ahorro</p>
+                                                </div>
+                                                <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                                                    <p className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Ratio de Ahorro</p>
+                                                    <p className={`text-2xl font-bold ${financialSummary.ratioAhorro > 0 ? 'text-emerald-600' : 'text-yellow-600'}`}>
+                                                        {formatPercent(financialSummary.ratioAhorro)}
+                                                    </p>
+                                                    <p className="text-[10px] text-slate-400 mt-1">Meta: &gt;20%</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-3 text-sm mb-4">
+                                                <div className="p-3 bg-white rounded-lg border border-slate-100">
+                                                    <p className="text-slate-400 text-xs mb-1">{financialSummary.ingresoNetoMensual ? 'Ingreso Neto' : 'Ingresos'}</p>
+                                                    <p className="font-bold text-slate-700">{formatCurrency(financialSummary.ingresoNetoMensual || financialSummary.totalIngresos)}</p>
+                                                </div>
+                                                <div className="p-3 bg-white rounded-lg border border-slate-100">
+                                                    <p className="text-slate-400 text-xs mb-1">{financialSummary.totalGastosOperativos ? 'Gastos Oper.' : 'Gastos'}</p>
+                                                    <p className="font-bold text-slate-700">{formatCurrency(financialSummary.totalGastosOperativos || financialSummary.totalGastos)}</p>
+                                                </div>
+                                                <div className="p-3 bg-white rounded-lg border border-slate-100">
+                                                    <p className="text-slate-400 text-xs mb-1">Deudas</p>
+                                                    <p className="font-bold text-red-500">{formatCurrency(financialSummary.totalDeudas || 0)}</p>
+                                                </div>
+                                                <div className="p-3 bg-white rounded-lg border border-slate-100">
+                                                    <p className="text-slate-400 text-xs mb-1">Inversión/Ahorro</p>
+                                                    <p className="font-bold text-emerald-600">{formatCurrency(financialSummary.totalAhorroInversion || 0)}</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="text-right">
+                                                <span className="text-xs text-slate-400">
+                                                    Registrado el {new Date(currentFinancialSubmission.createdAt).toLocaleDateString()}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {challenge.que_es && <AccordionSection title="¿Qué es?" content={challenge.que_es} />}
+                        {challenge.para_que_sirve && <AccordionSection title="¿Para qué sirve?" content={challenge.para_que_sirve} />}
+                        {challenge.que_lograra && <AccordionSection title="¿Qué lograrás?" content={challenge.que_lograra} />}
+                        {challenge.tiempos && <AccordionSection title="Tiempos" content={challenge.tiempos} />}
+                        {challenge.que_se_requiere && <AccordionSection title="Alcance y entregable" content={challenge.que_se_requiere} />}
+                        {challenge.requerimientos && <AccordionSection title="Requerimientos" content={challenge.requerimientos} />}
+
                     </div>
 
                     {/* Content Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="flex flex-col gap-6 mb-8">
 
                         {/* Left Column - Action Steps */}
                         <div className="lg:col-span-2">

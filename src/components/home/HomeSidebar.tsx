@@ -48,14 +48,14 @@ export const HomeSidebar = ({ activeTab }: HomeSidebarProps) => {
                         active={activeTab === 'Mi Viaje'}
                         // disabled={true}
                         onClick={() => navigate('/journey')}
-                    />
+                    /> */}
                     <SidebarItem
                         icon={Flag}
                         label="Mis Retos"
                         active={activeTab === 'Mis Retos'}
                         onClick={() => navigate('/challenges')}
                     />
-                    <SidebarItem
+                    {/* <SidebarItem
                         icon={BookOpen}
                         label="Mis Recursos"
                         active={activeTab === 'Mis Recursos'}

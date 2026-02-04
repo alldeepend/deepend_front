@@ -135,7 +135,7 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
                                 {field.label}
                                 {/* <span className="text-red-500 ml-1">*</span> */}
                             </label>
-                            {field.help_text && <p className="text-xs text-slate-400 mb-2 whitespace-pre-wrap">{field.help_text}</p>}
+                            {field.help_text && <p className="text-s text-[#202224] mb-2 whitespace-pre-wrap">{field.help_text}</p>}
 
                             {(field.type === 'text' || field.type === 'number') && (
                                 <input
