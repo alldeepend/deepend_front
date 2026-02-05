@@ -9,7 +9,8 @@ interface Field {
     options?: string[];
     condition?: {
         field: string;
-        value: string | any;
+        value?: string | any;
+        values?: string[];
     };
     validation?: {
         max_selection?: number;
@@ -54,7 +55,30 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
     const shouldShowField = (field: Field) => {
         if (!field.condition) return true;
         const dependentValue = formData[field.condition.field];
-        return dependentValue === field.condition.value;
+
+        if (!dependentValue) return false;
+
+        // 1. Array of allowed values (OR logic)
+        if (field.condition.values && Array.isArray(field.condition.values)) {
+            // Include logic: check if dependentValue matches ANY in the allowed list (trimmed)
+            return field.condition.values.some(allowed =>
+                String(allowed).trim() === String(dependentValue).trim()
+            );
+        }
+
+        // 2. Single Value Check
+        if (field.condition.value) {
+            // Case: Dependent is an Array (Multiselect), check if it INCLUDES the condition value
+            if (Array.isArray(dependentValue)) {
+                return dependentValue.some(item =>
+                    String(item).trim() === String(field.condition.value).trim()
+                );
+            }
+            // Case: Simple equality
+            return String(dependentValue).trim() === String(field.condition.value).trim();
+        }
+
+        return true;
     };
 
     const handleMultiSelect = (id: string, option: string, maxSelection?: number) => {

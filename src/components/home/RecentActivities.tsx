@@ -57,7 +57,7 @@ export const RecentActivities = ({ onAddActivity }: RecentActivitiesProps) => {
     if (!activities || activities.length === 0) return (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 mb-8 text-center">
             <h3 className="text-lg font-bold text-slate-800 mb-2">Comienza tu registro</h3>
-            <p className="text-slate-500 mb-6">Aún no tienes actividades registradas.</p>
+            <p className="text-slate-500 mb-6">Aún no tienes actividades físicas registradas.</p>
             <button
                 onClick={onAddActivity}
                 className="inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all"
@@ -73,14 +73,14 @@ export const RecentActivities = ({ onAddActivity }: RecentActivitiesProps) => {
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-8 relative overflow-hidden group/widget">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
-                    <h3 className="text-lg font-bold text-slate-800">Actividad Reciente</h3>
+                <div className="flex flex-col items-center gap-4 w-full md:w-auto justify-between md:justify-start">
+                    <h3 className="text-lg font-bold text-slate-800">Registro Actividad - Retos Físicos</h3>
                     <button
                         onClick={onAddActivity}
                         className="flex items-center gap-1.5 bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-200 transition-colors whitespace-nowrap"
                     >
                         <PlusCircle size={14} />
-                        Nueva
+                        Registrar Actividad
                     </button>
                 </div>
 
