@@ -125,7 +125,9 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (validate()) {
-            onSubmit(formData);
+            if (window.confirm("¿Estás seguro de que deseas enviar tus respuestas?")) {
+                onSubmit(formData);
+            }
         } else {
             // Optional: Alert or stick validation
             alert("Por favor completa todos los campos requeridos");
@@ -133,7 +135,15 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form
+            onSubmit={handleSubmit}
+            className="space-y-6"
+            onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                }
+            }}
+        >
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-slate-800">Completa el formulario</h2>
                 <button type="button" onClick={onCancel} className="text-slate-400 hover:text-slate-600">

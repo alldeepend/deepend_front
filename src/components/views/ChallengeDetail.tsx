@@ -73,7 +73,7 @@ export default function ChallengeDetail() {
     // Check for draft
     React.useEffect(() => {
         if (user?.id) {
-            const draft = localStorage.getItem(`financial_assessment_${user.id} _ingresos`);
+            const draft = localStorage.getItem(`financial_assessment_${user.id}_ingresos` || `financial_assessment_v2_${user.id}_ingresos`);
             if (draft) {
                 setHasFinancialDraft(true);
             }

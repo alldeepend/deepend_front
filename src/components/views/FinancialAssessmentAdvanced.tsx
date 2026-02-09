@@ -153,7 +153,7 @@ export default function FinancialAssessment() {
     const totalDeducciones = (ingresos.seguridad_social || 0) + (ingresos.pension || 0) + (ingresos.retenciones || 0) + sumOtrosDescuentos;
 
     const ingresoNetoMensual = totalIngresoBruto - totalDeducciones;
-    const pctDeducciones = totalIngresoBruto > 0 ? (totalDeducciones / totalIngresoBruto) * 100 : 0;
+    const pctDeducciones = ingresos.principal > 0 ? (totalDeducciones / ingresos.principal) * 100 : 0;
 
     // 2. AHORRO E INVERSION
     const sumOtrosAhorros = ahorros.otros_ahorros.reduce((a: number, b: NamedValue) => a + (b.value || 0), 0);
@@ -236,6 +236,10 @@ export default function FinancialAssessment() {
             return;
         }
 
+        if (!window.confirm("¿Estás seguro de que deseas guardar tu evaluación financiera?")) {
+            return;
+        }
+
         setIsSubmitting(true);
         const data = {
             v: 2, // Schema version
@@ -306,11 +310,18 @@ export default function FinancialAssessment() {
             <HomeSidebar activeTab="Mis Recursos" />
 
             <main className="flex-1 overflow-y-auto">
-                <div className="max-w-4xl mx-auto p-6 md:p-12 pb-32">
+                <div
+                    className="max-w-4xl mx-auto p-6 md:p-12 pb-32"
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                        }
+                    }}
+                >
                     <div className="flex justify-between items-start mb-8">
                         <div>
-                            <h1 className="text-3xl font-bold text-slate-800 mb-2">Evaluación Financiera 2.0</h1>
-                            <p className="text-slate-500">Diagnóstico avanzado de tu estructura financiera.</p>
+                            <h1 className="text-3xl font-bold text-slate-800 mb-2">Show me the Money</h1>
+                            <p className="text-slate-500">Aquí no importa si son muchos o pocos, lo que importa es que lo que registres sea real.</p>
                             {saveStatus === 'saved' && <span className="text-xs text-emerald-500 flex items-center mt-2"><CheckCircle size={12} className="mr-1" /> Guardado en borrador</span>}
                         </div>
                         <button
@@ -487,7 +498,10 @@ export default function FinancialAssessment() {
                                 <ResultCard label="Gastos Operativos" value={formatCurrency(totalGastosOperativos)} subtext={`${formatPercent(pctGastosOperativos)} del ingreso`} />
                                 <ResultCard label="Deudas" value={formatCurrency(totalDeudas)} subtext={`${formatPercent(pctDeudas)} del ingreso`} />
                                 <ResultCard label="Inversión/Ahorro" value={formatCurrency(totalAhorroInversion)} subtext={`${formatPercent(pctAhorro)} del ingreso`} color="text-blue-400" />
+                                <ResultCard label="Descuentos e Impuestos" value={formatCurrency(totalDeducciones)} subtext={`${formatPercent(pctDeducciones)} del ingreso`} />
                                 <ResultCard label="Gastos Básicos" value={formatCurrency(subtotalGastosBasicos)} subtext={`${formatPercent(pctGastosBasicos)} del ingreso`} />
+                                <ResultCard label="valor total otros gastos" value={formatCurrency(totalGastosOperativos - subtotalGastosBasicos)} subtext={`${formatPercent((totalGastosOperativos - subtotalGastosBasicos) / ingresoNetoMensual * 100)} del ingreso`} />
+                                <ResultCard label="Flujo de Caja Después de Deudas y/o Inversiones" value={formatCurrency(ingresoNetoMensual - totalDeudas - totalAhorroInversion)} subtext={`${formatPercent(((ingresoNetoMensual - totalDeudas - totalAhorroInversion) / ingresoNetoMensual) * 100)} del ingreso`} />
                             </div>
                         </section>
 

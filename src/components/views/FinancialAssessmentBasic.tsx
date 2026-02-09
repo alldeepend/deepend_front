@@ -144,10 +144,10 @@ export default function FinancialAssessmentBasic() {
 
     // BALANCE
     const flujoCaja = totalIngresos - totalGastos;
-    const gastosBasicos = totalVivienda + totalServicios + totalAlimentacion + totalTransporte + totalSalud; // "Gastos Básicos" usually includes Health
+    const gastosBasicos = totalVivienda + totalServicios + totalAlimentacion; // "Gastos Básicos" usually includes Health
     const pctGastosBasicos = totalIngresos > 0 ? (gastosBasicos / totalIngresos) * 100 : 0;
 
-    const gastosNoBasicos = totalEstiloVida + totalOtros;
+    const gastosNoBasicos = totalEstiloVida + totalOtros + totalTransporte + totalSalud;
 
     const ratioAhorro = totalIngresos > 0 ? (flujoCaja / totalIngresos) * 100 : 0;
 
@@ -171,6 +171,10 @@ export default function FinancialAssessmentBasic() {
     const handleSubmit = async () => {
         if (!challengeId) {
             alert("No se encontró el ID del reto. Asegúrate de acceder desde el detalle del reto.");
+            return;
+        }
+
+        if (!window.confirm("¿Estás seguro de que deseas guardar tu evaluación financiera?")) {
             return;
         }
 
@@ -249,7 +253,14 @@ export default function FinancialAssessmentBasic() {
             <HomeSidebar activeTab="Mis Recursos" />
 
             <main className="flex-1 overflow-y-auto">
-                <div className="max-w-4xl mx-auto p-6 md:p-12 pb-32">
+                <div
+                    className="max-w-4xl mx-auto p-6 md:p-12 pb-32"
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                        }
+                    }}
+                >
 
                     <div className="flex justify-between items-start mb-8">
                         <div>
