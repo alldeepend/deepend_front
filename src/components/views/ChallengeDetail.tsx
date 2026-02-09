@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { ArrowLeft, CheckCircle2, FileText, Trophy, Zap, Download, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Clock, Trophy, Upload, CheckCircle, Lock, Play, FileText, Download, Video, Link, ChevronUp, ChevronDown, CheckCircle2 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { HomeSidebar } from '../home/HomeSidebar';
 import DynamicForm from '../shared/DynamicForm';
@@ -303,15 +302,35 @@ export default function ChallengeDetail() {
 
 
                             {/* Conditional Financial Assessment Button */}
-                            {challengeId === 'a3ae5adc-a689-4082-a691-4338000ced3a' && (
-                                <div className="mt-6 space-y-6">
+                            {/* Check for "En la Orilla" ID or Title match for "En la Orilla" or "En Nado" */}
+                            {(challengeId === 'a3ae5adc-a689-4082-a691-4338000ced3a' || challenge?.title?.includes('En la Orilla') || challenge?.title?.includes('En Nado')) && (
+                                <div className="mt-6 space-y-4">
                                     <button
                                         onClick={() => navigate(`/challenges/financial-assessment?challengeId=${challengeId}`)}
-                                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-all flex items-center gap-2"
+                                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
                                         {hasFinancialDraft ? 'Continuar Evaluación' : (financialSubmissions.length > 0 ? 'Nueva Evaluación' : 'Realizar Evaluación Financiera')}
                                     </button>
+
+                                    <div className="text-center">
+                                        <p className="text-sm text-slate-500">
+                                            ¿No quieres registrar tus finanzas en la plataforma?{' '}
+                                            <a
+                                                href={(user as any)?.level === 'medio'
+                                                    ? "https://media.deepend.cloud/resources/2.%20%20En%20Nado%20-%20Plantila%20Registro%20Financiero%20Mensual%20-%20Show%20me%20the%20Money%20V1.xlsx"
+                                                    : "https://media.deepend.cloud/resources/1.%20%20En%20la%20Orilla%20-%20Plantila%20Registro%20Financiero%20Mensual%20-%20Show%20me%20the%20Money%20V1.xlsx"
+                                                }
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-emerald-600 hover:text-emerald-700 font-medium hover:underline transition-colors"
+                                            >
+                                                Descarga la plantilla en Excel
+                                            </a>
+                                            {' '}para hacerlo en tu dispositivo.
+                                        </p>
+                                    </div>
+
 
                                     {/* Financial Summary Slider */}
                                     {financialSummary && (
@@ -535,65 +554,111 @@ export default function ChallengeDetail() {
                         </div>
 
                         {/* Right Column - Resources & Badge */}
-                        {/* <div className="space-y-6">
-                            
+                        <div className="space-y-6">
+
                             <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
                                 <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">Recursos Útiles</h3>
                                 <div className="space-y-3">
-                                    <div className="flex items-start gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer">
-                                        <div className="bg-blue-50 text-blue-500 p-2 rounded-lg">
-                                            <FileText size={18} />
-                                        </div>
-                                        <div>
-                                            <h4 className="text-sm font-bold text-slate-700">Guía de Gastos</h4>
-                                            <p className="text-xs text-slate-400">Lectura de 3 min</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-start gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer">
-                                        <div className="bg-red-50 text-red-500 p-2 rounded-lg">
-                                            <Download size={18} />
-                                        </div>
-                                        <div>
-                                            <h4 className="text-sm font-bold text-slate-700">Plantilla Excel</h4>
-                                            <p className="text-xs text-slate-400">Descarga .xlsx</p>
-                                        </div>
-                                    </div>
+                                    {challenge.resources && challenge.resources.length > 0 ? (
+                                        challenge.resources.map((resource: any) => (
+                                            <a
+                                                key={resource.id}
+                                                href={resource.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-start gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer group"
+                                            >
+                                                <div className={`p-2 rounded-lg ${resource.type === 'video' ? 'bg-red-50 text-red-500' :
+                                                    resource.type === 'download' ? 'bg-green-50 text-green-500' :
+                                                        resource.type === 'link' ? 'bg-blue-50 text-blue-500' :
+                                                            'bg-slate-50 text-slate-500'
+                                                    }`}>
+                                                    {resource.type === 'video' ? <Video size={18} /> :
+                                                        resource.type === 'download' ? <Download size={18} /> :
+                                                            resource.type === 'link' ? <Link size={18} /> :
+                                                                <FileText size={18} />}
+                                                </div>
+                                                <div>
+                                                    <h4 className="text-sm font-bold text-slate-700 group-hover:text-emerald-600 transition-colors">{resource.title}</h4>
+                                                    <p className="text-xs text-slate-400">{resource.description || resource.category}</p>
+                                                </div>
+                                            </a>
+                                        ))
+                                    ) : (
+                                        <p className="text-xs text-slate-400 italic">No hay recursos disponibles para este reto.</p>
+                                    )}
                                 </div>
                             </div>
 
-                           
-                            <div className="bg-emerald-500 rounded-3xl shadow-lg shadow-emerald-200 p-6 text-center text-white relative overflow-hidden">
+                            {/* Allies Section */}
+                            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+                                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">Aliados</h3>
+                                <div className="space-y-3">
+                                    {challenge.allies && challenge.allies.length > 0 ? (
+                                        challenge.allies.map((ally: any) => (
+                                            <a
+                                                key={ally.id}
+                                                href={ally.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer group"
+                                            >
+                                                {ally.logoUrl ? (
+                                                    <div className="w-10 h-10 rounded-lg bg-slate-50 p-1 flex items-center justify-center border border-slate-100">
+                                                        <img src={ally.logoUrl} alt={ally.name} className="w-full h-full object-contain" />
+                                                    </div>
+                                                ) : (
+                                                    <div className="w-10 h-10 rounded-lg bg-emerald-50 p-1 flex items-center justify-center text-emerald-600 font-bold border border-emerald-100">
+                                                        {ally.name.charAt(0)}
+                                                    </div>
+                                                )}
+                                                <div>
+                                                    <h4 className="text-sm font-bold text-slate-700 group-hover:text-emerald-600 transition-colors">{ally.name}</h4>
+                                                    <p className="text-xs text-slate-400">{ally.category}</p>
+                                                </div>
+                                            </a>
+                                        ))
+                                    ) : (
+                                        <p className="text-xs text-slate-400 italic">No hay aliados asociados a este reto.</p>
+                                    )}
+                                </div>
+                            </div>
+
+
+                            {/* <div className="bg-emerald-500 rounded-3xl shadow-lg shadow-emerald-200 p-6 text-center text-white relative overflow-hidden">
                                 <div className="relative z-10">
                                     <Trophy size={32} className="mx-auto mb-3 opacity-90" />
                                     <h3 className="font-bold text-lg mb-1">Insignia: Halcón</h3>
                                     <p className="text-emerald-100 text-xs text-opacity-90">Completa este reto para ganar esta insignia.</p>
                                 </div>
-                                
+
                                 <div className="absolute top-0 right-0 w-24 h-24 bg-white opacity-10 rounded-full -mr-10 -mt-10"></div>
                                 <div className="absolute bottom-0 left-0 w-16 h-16 bg-white opacity-10 rounded-full -ml-8 -mb-8"></div>
-                            </div>
-                        </div> */}
+                            </div> */}
+                        </div>
 
                     </div>
 
                 </div>
 
                 {/* MODAL FORM OVERLAY */}
-                {activeTaskForm && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
-                            <div className="p-6 md:p-8 overflow-y-auto">
-                                <DynamicForm
-                                    schema={activeTaskForm.schema}
-                                    onSubmit={(data) => submitFormMutation.mutate({ taskId: activeTaskForm.id, data })}
-                                    onCancel={() => setActiveTaskForm(null)}
-                                    isSubmitting={submitFormMutation.isPending}
-                                />
+                {
+                    activeTaskForm && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+                                <div className="p-6 md:p-8 overflow-y-auto">
+                                    <DynamicForm
+                                        schema={activeTaskForm.schema}
+                                        onSubmit={(data) => submitFormMutation.mutate({ taskId: activeTaskForm.id, data })}
+                                        onCancel={() => setActiveTaskForm(null)}
+                                        isSubmitting={submitFormMutation.isPending}
+                                    />
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )}
-            </main>
+                    )
+                }
+            </main >
 
 
 
