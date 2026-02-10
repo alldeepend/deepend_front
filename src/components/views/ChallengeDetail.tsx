@@ -302,8 +302,8 @@ export default function ChallengeDetail() {
 
 
                             {/* Conditional Financial Assessment Button */}
-                            {/* Check for "En la Orilla" ID or Title match for "En la Orilla" or "En Nado" */}
-                            {(challengeId === 'a3ae5adc-a689-4082-a691-4338000ced3a' || challenge?.title?.includes('En la Orilla') || challenge?.title?.includes('En Nado')) && (
+                            {/* Check for "En la Orilla" ID or Title match for "En la Orilla" or "En Nado" AND 100% Completion */}
+                            {(challengeId === 'a3ae5adc-a689-4082-a691-4338000ced3a' || challenge?.title?.includes('En la Orilla') || challenge?.title?.includes('En Nado')) && isTotallyCompletedSafe && (
                                 <div className="mt-6 space-y-4">
                                     <button
                                         onClick={() => navigate(`/challenges/financial-assessment?challengeId=${challengeId}`)}
@@ -318,8 +318,8 @@ export default function ChallengeDetail() {
                                             ¿No quieres registrar tus finanzas en la plataforma?{' '}
                                             <a
                                                 href={(user as any)?.level === 'medio'
-                                                    ? "https://media.deepend.cloud/resources/2.%20%20En%20Nado%20-%20Plantila%20Registro%20Financiero%20Mensual%20-%20Show%20me%20the%20Money%20V1.xlsx"
-                                                    : "https://media.deepend.cloud/resources/1.%20%20En%20la%20Orilla%20-%20Plantila%20Registro%20Financiero%20Mensual%20-%20Show%20me%20the%20Money%20V1.xlsx"
+                                                    ? "https://media.deepend.cloud/resources/2.%20%20En%20Nado%20-%20Plantila%20Registro%20Financiero%20Mensual%20-%20Show%20me%20the%20Money%20V1%20(1).xlsx"
+                                                    : "https://media.deepend.cloud/resources/1.%20%20En%20la%20Orilla%20-%20Plantila%20Registro%20Financiero%20Mensual%20-%20Show%20me%20the%20Money%20V1%20(2).xlsx"
                                                 }
                                                 target="_blank"
                                                 rel="noopener noreferrer"

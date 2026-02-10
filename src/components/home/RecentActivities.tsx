@@ -107,12 +107,19 @@ export const RecentActivities = ({ onAddActivity }: RecentActivitiesProps) => {
 
                 {/* Slides */}
                 <div className="absolute inset-0">
-                    <img
-                        key={currentActivity.id} // Key change triggers animation if we add css animation, or just swap
-                        src={currentActivity.evidenceUrl}
-                        alt={currentActivity.activity}
-                        className="w-full h-full object-cover transition-transform duration-700 ease-in-out"
-                    />
+                    {currentActivity.evidenceUrl ? (
+                        <img
+                            key={currentActivity.id}
+                            src={currentActivity.evidenceUrl}
+                            alt={currentActivity.activity}
+                            className="w-full h-full object-cover transition-transform duration-700 ease-in-out"
+                        />
+                    ) : (
+                        <div key={currentActivity.id} className="w-full h-full bg-slate-200 flex flex-col items-center justify-center text-slate-400">
+                            <Clock size={48} className="mb-2" />
+                            <span className="text-3xl font-bold text-slate-500">{currentActivity.duration} min</span>
+                        </div>
+                    )}
 
                     {/* Overlay Content */}
                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-6 pt-20">

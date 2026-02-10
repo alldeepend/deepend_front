@@ -63,15 +63,17 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!activity || !duration || !selectedFile) {
-            alert("Por favor completa todos los campos y sube una foto.");
+        if (!activity || !duration) {
+            alert("Por favor completa la actividad y la duración.");
             return;
         }
 
         const formData = new FormData();
         formData.append('activity', activity);
         formData.append('duration', duration);
-        formData.append('evidence', selectedFile);
+        if (selectedFile) {
+            formData.append('evidence', selectedFile);
+        }
 
         logMutation.mutate(formData);
     };
@@ -123,7 +125,7 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
 
                     {/* Evidence Upload */}
                     <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-2">Evidencia (Foto)</label>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Evidencia (Foto - Opcional)</label>
                         <div
                             onClick={() => fileInputRef.current?.click()}
                             className="border-2 border-dashed border-slate-300 rounded-xl p-6 flex flex-col items-center justify-center text-slate-500 cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all"
@@ -138,7 +140,7 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
                             ) : (
                                 <>
                                     <Upload size={32} className="mb-2 text-slate-400" />
-                                    <p className="text-sm font-medium">Click para subir foto</p>
+                                    <p className="text-sm font-medium">Click para subir foto (Opcional)</p>
                                     <p className="text-xs text-slate-400 mt-1">JPG, PNG, WebP (Max 10MB)</p>
                                 </>
                             )}

@@ -63,11 +63,18 @@ export default function ActivityHistory() {
                         {activities.map((log) => (
                             <div key={log.id} className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-all group">
                                 <div className="aspect-[4/3] relative overflow-hidden bg-slate-100">
-                                    <img
-                                        src={log.evidenceUrl}
-                                        alt={log.activity}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                    />
+                                    {log.evidenceUrl ? (
+                                        <img
+                                            src={log.evidenceUrl}
+                                            alt={log.activity}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full bg-slate-200 flex flex-col items-center justify-center text-slate-400 group-hover:bg-slate-300 transition-colors">
+                                            <Clock size={32} className="mb-2" />
+                                            <span className="text-xl font-bold text-slate-500">{log.duration} min</span>
+                                        </div>
+                                    )}
                                     <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
                                         <Clock size={12} /> {log.duration}
                                     </div>
