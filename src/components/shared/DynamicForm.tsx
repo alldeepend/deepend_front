@@ -22,6 +22,7 @@ interface Field {
         min: string;
         max: string;
     };
+    required?: boolean;
 }
 
 interface FormSchema {
@@ -104,12 +105,15 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
             // Skip validation if field is hidden
             if (!shouldShowField(field)) return;
 
-            if (field.type !== 'header' && !formData[field.id] && formData[field.id] !== 0) { // Check for empty, allowing 0
-                // Simple required check for now (only if we enforce required)
-                // Assuming all questions are effectively required unless optional? 
-                // schema doesn't have explicit required flag in JSON provided, but usually yes.
-                // Let's hold off on strict required unless 'required: true' is passed or implied.
+            // Required field validation
+            if (field.required && field.type !== 'header') {
+                const value = formData[field.id];
+                if (value === undefined || value === null || value === '' || (Array.isArray(value) && value.length === 0)) {
+                    newErrors[field.id] = 'Este campo es obligatorio';
+                    isValid = false;
+                }
             }
+
             if (field.type === 'multiselect' && field.validation?.max_selection) {
                 if (formData[field.id]?.length > field.validation.max_selection) {
                     newErrors[field.id] = `Selecciona máximo ${field.validation.max_selection} opciones`;
@@ -168,7 +172,7 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
                         <div key={field.id} className="flex flex-col">
                             <label className="text-sm font-bold text-slate-700 mb-1 flex items-center whitespace-pre-wrap">
                                 {field.label}
-                                {/* <span className="text-red-500 ml-1">*</span> */}
+                                {field.required && <span className="text-red-500 ml-1">*</span>}
                             </label>
                             {field.help_text && <p className="text-s text-[#202224] mb-2 whitespace-pre-wrap">{field.help_text}</p>}
 
