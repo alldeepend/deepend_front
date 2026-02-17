@@ -314,7 +314,7 @@ export default function ChallengeDetail() {
                         <div className="lg:col-span-2">
 
                             {/* Custom Action for "My Money in Action" Challenge */}
-                            {challengeId === '4544a365-a761-4678-a420-ccf59eadb9c7' && (
+                            {challengeId === '4544a365-a761-4678-a420-ccf59eadb9c7' && isTotallyCompletedSafe && (
                                 <div className="mt-6 mb-8">
                                     <button
                                         onClick={() => navigate('/challenges/my-money-action')}
