@@ -746,7 +746,7 @@ export default function GastoHormiga() {
                 return (
                     <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 mb-6 space-y-6">
                         <div className="bg-emerald-100 p-4 rounded-lg border border-emerald-200 mb-6">
-                            <h3 className="font-bold text-emerald-800 text-lg mb-1">¡Entendido!</h3>
+                            <h3 className="font-bold text-emerald-800 text-lg mb-1">¡Entendido!!</h3>
                             <p className="text-emerald-700 text-sm">
                                 Consideramos muy valioso entender tu <strong>por qué</strong>.
                             </p>
