@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { HomeSidebar } from '../../home/HomeSidebar';
 import Header from '../../shared/Header';
-import { ArrowLeft, CheckCircle2, Share2, Bell, Wallet, PiggyBank, Globe } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Share2, Bell, Wallet, PiggyBank, Globe, MessageCircle } from 'lucide-react';
 import { useAuth } from '../../../store/useAuth';
 
 // Step Types based on flowcharts
@@ -565,11 +565,72 @@ export default function GastoHormiga() {
                                 <Globe size={24} />
                             </div>
                             <h2 className="text-2xl font-bold text-slate-800 mb-4">Tarjeta – Cuenta en Dólares Global 66</h2>
-                            <div className="text-slate-600 text-sm space-y-3 mb-6">
-                                <p><strong>¿Qué es?</strong> Una cuenta digital para mantener saldo en USD y generar rendimiento.</p>
-                                <p><strong>Liquidez:</strong> No publica de manera explícita cómo invierte los fondos.</p>
-                                <p><strong>Rentabilidad:</strong> Hasta 6% E.A. en dólares (variable).</p>
-                                <p><strong>Protección:</strong> Cuenta con respaldo Fogafin en Colombia (hasta 50M COP).</p>
+                            <div className="text-sm text-slate-600 space-y-4 mb-6">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">¿Qué es?</span>
+                                    <div className="md:col-span-2">
+                                        La <strong>Cuenta en Dólares</strong> de <em>Global66</em> es un <strong>producto digital</strong> que permite mantener saldo en <strong>USD</strong> y generar un rendimiento anual sobre ese dinero, mientras sigues teniendo disponibilidad para transferir o convertirlo cuando lo necesites.
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Tipo de producto</span>
+                                    <div className="md:col-span-2">Es un <strong>producto financiero de inversión</strong> o colocación de liquidez en USD, estructurado dentro de una <strong>plataforma fintech</strong>.</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Horizonte temporal</span>
+                                    <div className="md:col-span-2">Corto, mediano y largo plazo</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Activos subyacentes</span>
+                                    <div className="md:col-span-2"><strong>Global66</strong> no reporta información sobre esto*</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Liquidez</span>
+                                    <div className="md:col-span-2">
+                                        <em>Global66</em> no publica de manera detallada y explícita en sus sitios cómo invierte los fondos de la cuenta remunerada para generar el rendimiento, es decir, no describe los activos subyacentes específicos dentro de la documentación pública general.
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Rentabilidad</span>
+                                    <div className="md:col-span-2">Hasta <strong>6% de rentabilidad E.A</strong> en dólares. (<em>La tasa puede cambiar según condiciones del mercado</em>).</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Comisión</span>
+                                    <div className="md:col-span-2">
+                                        <strong>Comisión:</strong> No cobra cuota fija; la rentabilidad puede cambiar y los costos están implícitos en la estructura del producto y en el tipo de cambio.
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Inversión mínima</span>
+                                    <div className="md:col-span-2">Desde 1 Dólar</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Perfil de riesgo</span>
+                                    <div className="md:col-span-2"><strong>Conservador*</strong>; Está orientada a preservar capital en dólares</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Protección patrimonial</span>
+                                    <div className="md:col-span-2">
+                                        Cuenta con el <strong>respaldo del seguro de depósitos Fogafin</strong>. Este seguro garantiza la protección de los ahorros de sus clientes hasta un monto de <strong>COP $50.000.000</strong>, ofreciendo así una salvaguarda financiera sólida y confiable. (<em>En el caso de Colombia</em>)
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                    <span className="font-bold text-slate-700">Regulación</span>
+                                    <div className="md:col-span-2">
+                                        <strong>SFC:</strong> Superfinanciera Financiera de Colombia<br />
+                                        En Colombia Global opera como una <strong>SEDPE:</strong> Sociedad Especializada en Depósitos y Pagos Electrónicos.
+                                    </div>
+                                </div>
                             </div>
                             <button onClick={() => goToStep('GLOBAL66_DECISION')} className="w-full bg-purple-600 text-white py-3 rounded-xl font-bold">Continuar</button>
                         </div>
@@ -811,6 +872,17 @@ export default function GastoHormiga() {
                     </div>
                 </div>
             </main>
+
+            {/* WhatsApp Floating Button */}
+            <a
+                href="https://wa.me/+573173772122"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="fixed bottom-6 right-6 bg-emerald-500 text-white p-4 rounded-full shadow-lg hover:bg-emerald-600 transition-all z-50 flex items-center justify-center hover:scale-110"
+                title="Ayuda por WhatsApp"
+            >
+                <MessageCircle size={28} />  ¿Necesitas ayuda?
+            </a>
         </div>
     );
 }

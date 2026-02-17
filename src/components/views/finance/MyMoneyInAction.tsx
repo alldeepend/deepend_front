@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { HomeSidebar } from '../../home/HomeSidebar';
 import Header from '../../shared/Header';
-import { ArrowLeft, CheckCircle2, ShieldCheck, Share2, AlertTriangle, BookOpen, Bell } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ShieldCheck, Share2, AlertTriangle, BookOpen, Bell, MessageCircle } from 'lucide-react';
 import { useAuth } from '../../../store/useAuth';
 
 // Step Types
@@ -595,10 +595,74 @@ export default function MyMoneyInAction() {
                                 <ShieldCheck size={32} />
                             </div>
                             <h2 className="text-2xl font-bold text-slate-800 mb-4">Tarjeta – Mi Efectivo Rentable (Insights WM)</h2>
-                            <p className="text-slate-600 text-sm leading-relaxed mb-6">
-                                <strong>Mi Efectivo Rentable</strong> es un "bolsillo" en dólares dentro de tu cuenta de Insights que, al activarlo, pone automáticamente tu saldo a generar intereses en bonos del tesoro de EE.UU. (bajo riesgo). <br /><br />
-                                Ideal para: Fondo de emergencia o metas a corto plazo. Liquidez <em>"A la vista"</em>.
-                            </p>
+
+                            <div className="text-sm text-slate-600 space-y-4 mb-6">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">¿Qué es?</span>
+                                    <div className="md:col-span-2">
+                                        Mi Efectivo Rentable es un "bolsillo" en dólares dentro de tu cuenta de Insights que, al activarlo, pone automáticamente tu saldo de efectivo en el mercado monetario de muy corto plazo. Cada día genera intereses y los acredita al cierre de mes; puedes entrar o salir cuando quieras sin plazos de permanencia.
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Tipo de producto</span>
+                                    <div className="md:col-span-2">"Bolsillo" de inversión en USD, similar a un fondo monetario de muy corto plazo.</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Horizonte temporal</span>
+                                    <div className="md:col-span-2">Corto, mediano y largo plazo.</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Activos subyacentes</span>
+                                    <div className="md:col-span-2">ETFs / UCITs expuestos a tasas de interés de corto plazo de EE. UU. (por ej. letras del Tesoro y otros instrumentos money-market)</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Liquidez</span>
+                                    <div className="md:col-span-2">
+                                        "A la vista": Puedes añadir o retirar dinero en cualquier momento desde la app, sin plazos de permanencia.
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Rentabilidad</span>
+                                    <div className="md:col-span-2">Variable, referenciada a la Tasa Fed. Se acumula a diario y se abona mensualmente en el mismo bolsillo (re-inversión automática).</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Comisión</span>
+                                    <div className="md:col-span-2">0,10 % anual sobre saldo promedio mensual (se descuenta mensualmente). Sin comisión de compra/venta. Retiros ACH: USD 5–25</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Inversión mínima</span>
+                                    <div className="md:col-span-2 font-bold text-emerald-600">2 USD</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Perfil de riesgo</span>
+                                    <div className="md:col-span-2">Conservador; ideal para colchón de efectivo o metas de corto y mediano plazo.</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Protección patrimonial</span>
+                                    <div className="md:col-span-2">
+                                        SIPC: Valores segregados a nombre del cliente; cobertura hasta USD 500 000 (USD 250 000 en efectivo)
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                    <span className="font-bold text-slate-700">Custodia & regulación</span>
+                                    <div className="md:col-span-2">
+                                        RIA: Registered Investment Advisor. <br />
+                                        SEC: Securities and Exchange Commission. <br />
+                                        FINRA: los brokers con los que trabajan. <br />
+                                        SFC: Superfinanciera Financiera de Colombia.
+                                    </div>
+                                </div>
+                            </div>
                             <button
                                 onClick={() => goToStep('INSIGHTS_TEST')}
                                 className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700"
@@ -627,6 +691,14 @@ export default function MyMoneyInAction() {
                                         <input type="radio" name="q1" value="b" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q1: e.target.value })} />
                                         <span className="text-sm">El Sistema de la Reserva Federal (FED) de Estados Unidos</span>
                                     </label>
+                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
+                                        <input type="radio" name="q1" value="c" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q1: e.target.value })} />
+                                        <span className="text-sm">A y B son ciertas</span>
+                                    </label>
+                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
+                                        <input type="radio" name="q1" value="d" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q1: e.target.value })} />
+                                        <span className="text-sm">La plataforma de inversión</span>
+                                    </label>
                                 </div>
                             </div>
 
@@ -640,7 +712,15 @@ export default function MyMoneyInAction() {
                                     </label>
                                     <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
                                         <input type="radio" name="q2" value="b" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q2: e.target.value })} />
-                                        <span className="text-sm">Vale 10% más en pesos colombianos.</span>
+                                        <span className="text-sm">Vale 10% más en pesos colombianos y 10% menos en dolares</span>
+                                    </label>
+                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
+                                        <input type="radio" name="q2" value="c" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q2: e.target.value })} />
+                                        <span className="text-sm">Vale lo mismo en pesos Colombianos</span>
+                                    </label>
+                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
+                                        <input type="radio" name="q2" value="d" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q2: e.target.value })} />
+                                        <span className="text-sm">Mi inversión no se ve afectada</span>
                                     </label>
                                 </div>
                             </div>
@@ -655,7 +735,15 @@ export default function MyMoneyInAction() {
                                     </label>
                                     <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
                                         <input type="radio" name="q3" value="b" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q3: e.target.value })} />
-                                        <span className="text-sm">Que está supervisado por la SEC (EE.UU) y aprobado por la Superfinanciera (Colombia).</span>
+                                        <span className="text-sm">Que está supervisado tanto por la SEC en Estados Unidos (donde operan los activos) como aprobado por la Superfinanciera en Colombia (donde se promociona).</span>
+                                    </label>
+                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
+                                        <input type="radio" name="q3" value="c" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q3: e.target.value })} />
+                                        <span className="text-sm">Que es un activo seguro.</span>
+                                    </label>
+                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
+                                        <input type="radio" name="q3" value="d" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q3: e.target.value })} />
+                                        <span className="text-sm">Ninguna de las anteriores.</span>
                                     </label>
                                 </div>
                             </div>
@@ -680,13 +768,11 @@ export default function MyMoneyInAction() {
                                 <h3 className="font-bold text-lg">Parece que hay conceptos por reforzar</h3>
                             </div>
                             <p className="text-slate-700 mb-4 text-sm">
-                                Es crucial entender el producto antes de invertir. No te preocupes, revisa estos conceptos clave:
+                                Es crucial entender el producto antes de invertir. ¡No te preocupes!
                             </p>
-                            <div className="bg-white p-4 rounded-xl border border-yellow-100 mb-4 text-sm text-slate-600 space-y-2">
-                                <p>• <strong>Riesgo Cambiario:</strong> Si el dólar baja, tus pesos bajan, pero conservas tus dólares.</p>
-                                <p>• <strong>Regulación Dual:</strong> Doble capa de seguridad (EE.UU. y Colombia).</p>
-                                <p>• <strong>FED:</strong> Es quien define las tasas, no el banco central de Colombia.</p>
-                            </div>
+                            <p className="text-slate-700 mb-4 text-sm">
+                                Vamos a presentarte algunos conceptos para que los estudies y cuando finalices estarás list@ para intentar nuevamente. Haz clic aquí 👉 <a href="https://drive.google.com/file/d/1tuHayUSJ5yVUrc14KVsU8lH_yVZOZ1Ji/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="font-bold text-slate-700 underline hover:text-emerald-600">Conceptos Básicos</a>
+                            </p>
 
                             <label className="flex items-center gap-3 mb-6 cursor-pointer">
                                 <input type="checkbox" className="w-5 h-5 text-emerald-600 rounded" onChange={(e) => { if (e.target.checked) goToStep('INSIGHTS_TEST') }} />
@@ -808,10 +894,83 @@ export default function MyMoneyInAction() {
                                 <ShieldCheck size={32} />
                             </div>
                             <h2 className="text-2xl font-bold text-slate-800 mb-4">Tarjeta – Portafolios Gestionados (Insights WM)</h2>
-                            <p className="text-slate-600 text-sm leading-relaxed mb-6">
-                                Son <strong>portafolios</strong> conformados a partir de ETFs que cubren una amplia gama de clases de activo. Son gestionados por algoritmos y asset managers como BlackRock, Vanguard, etc.<br /><br />
-                                Ideal para: Protección contra inflación y crecimiento a corto, mediano y largo plazo.
-                            </p>
+
+                            <div className="text-sm text-slate-600 space-y-4 mb-6">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">¿Qué es?</span>
+                                    <div className="md:col-span-2">
+                                        Son <strong>portafolios</strong> conformados a partir de <strong>ETFs</strong> que cubren una amplia gama de clases de activo, sectores y geografías. Son gestionados por algoritmos que seleccionan tu portafolio a partir de un conjunto de más de <strong>55 ETFs</strong> altamente liquidos y administrados por los <em>asset managers</em> más importantes del mundo, dentro de los que se encuentran <strong>BlackRock, Vanguard y State Street Global Advisors e Invesco</strong>.
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Tipo de producto</span>
+                                    <div className="md:col-span-2">Portafolio de inversión en USD</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Horizonte temporal</span>
+                                    <div className="md:col-span-2">
+                                        Protección contra <strong>inflación</strong> y crecimiento a corto, mediano y largo plazo.
+                                        <p className="mt-2 text-xs text-slate-500 italic">
+                                            NOTA: Si necesitas el dinero en un periodo de tiempo menor a 3 meses sugerimos portafolios de bajo riesgo (1 y 2) y si no es así y el dinero puede estar en un producto financiero más de 6 meses e incluso años, los portafolios con mayor riesgo pero mayor retorno de inversión, pueden ser una mejor opción.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Activos subyacentes</span>
+                                    <div className="md:col-span-2"><strong>ETFs, Bonos</strong> como los emitidos por el Tesoro americano o por empresas Estadounidenses, Acciones en compañías de EEUU, Europa y de economías emergentes (<em>como Asia y Latinoamérica</em>).</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Liquidez</span>
+                                    <div className="md:col-span-2">
+                                        "<strong>A la vista</strong>": Puedes añadir o retirar dinero en cualquier momento desde la app, sin plazos de permanencia.
+                                        <p className="mt-1 text-xs text-slate-500">**Tener en cuenta la volatilidad del mercado</p>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Rentabilidad</span>
+                                    <div className="md:col-span-2">Variable de acuerdo al <strong>Portafolio</strong> seleccionado. Puedes escoger entre <strong>10 niveles de riesgo</strong>, del <strong>1</strong> (más bajo 3,2% Anual aprox.) al <strong>10</strong> (más alto), según tu perfil de riesgo.</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Comisión</span>
+                                    <div className="md:col-span-2">
+                                        <strong>1%</strong> Anual de los AUM promedios (<em>activos bajo administración, por sus siglas en ingles</em>) y se cobra de manera mensual calculandose así: el <strong>1%</strong> del balance promedio de tus <em>Portafolios Gestionados</em> durante el mes, dividido en 12.
+                                        <br />Retiros ACH: USD 5–25
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Inversión mínima</span>
+                                    <div className="md:col-span-2">200 USD (<em>Cada vez que quieras agregar dinero al portafolio debe ser a partir de 200 USD</em>).</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Perfil de riesgo</span>
+                                    <div className="md:col-span-2">Puedes escoger entre <strong>10 niveles</strong> de riesgo de conservadores a agresivos.</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Protección patrimonial</span>
+                                    <div className="md:col-span-2">
+                                        <strong>SIPC</strong>: Valores segregados a nombre del cliente; <strong>cobertura</strong> hasta USD 500.000 (USD 250.000 en efectivo)
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                    <span className="font-bold text-slate-700">Custodia & regulación</span>
+                                    <div className="md:col-span-2">
+                                        RIA: Registered Investment Advisor. <br />
+                                        SEC: Securities and Exchange Commission. <br />
+                                        FINRA: los brokers con los que trabajan. <br />
+                                        SFC: Superfinanciera Financiera de Colombia.
+                                    </div>
+                                </div>
+                            </div>
                             <button
                                 onClick={() => goToStep('HIGH_AMOUNT_TEST')}
                                 className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700"
@@ -834,11 +993,19 @@ export default function MyMoneyInAction() {
                                 <div className="space-y-2">
                                     <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
                                         <input type="radio" name="bq1" value="a" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q1: e.target.value })} />
-                                        <span className="text-sm">El inversionista elige cada acción.</span>
+                                        <span className="text-sm">El inversionista debe elegir manualmente cada acción o activo.</span>
                                     </label>
                                     <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
                                         <input type="radio" name="bq1" value="b" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q1: e.target.value })} />
-                                        <span className="text-sm">Un equipo profesional y algoritmos administran la inversión.</span>
+                                        <span className="text-sm">Un equipo profesional administra y rebalancea la inversión según una estrategia definida.</span>
+                                    </label>
+                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
+                                        <input type="radio" name="bq1" value="c" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q1: e.target.value })} />
+                                        <span className="text-sm">El dinero permanece en efectivo sin invertirse.</span>
+                                    </label>
+                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
+                                        <input type="radio" name="bq1" value="d" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q1: e.target.value })} />
+                                        <span className="text-sm">No existe diversificación porque todo se invierte en un solo activo.</span>
                                     </label>
                                 </div>
                             </div>
@@ -849,11 +1016,19 @@ export default function MyMoneyInAction() {
                                 <div className="space-y-2">
                                     <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
                                         <input type="radio" name="bq2" value="a" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q2: e.target.value })} />
-                                        <span className="text-sm">Tenga mayor potencial de retorno, pero mayor riesgo a corto plazo.</span>
+                                        <span className="text-sm">Tenga mayor potencial de retorno, pero también mayor posibilidad de fluctuaciones en el corto plazo.</span>
                                     </label>
                                     <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
                                         <input type="radio" name="bq2" value="b" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q2: e.target.value })} />
-                                        <span className="text-sm">Nunca tenga pérdidas.</span>
+                                        <span className="text-sm">No pueda tener pérdidas porque está diversificado.</span>
+                                    </label>
+                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
+                                        <input type="radio" name="bq2" value="c" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q2: e.target.value })} />
+                                        <span className="text-sm">Tenga rendimientos fijos y garantizados cada mes.</span>
+                                    </label>
+                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
+                                        <input type="radio" name="bq2" value="d" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q2: e.target.value })} />
+                                        <span className="text-sm">b y c son ciertas.</span>
                                     </label>
                                 </div>
                             </div>
@@ -864,11 +1039,19 @@ export default function MyMoneyInAction() {
                                 <div className="space-y-2">
                                     <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
                                         <input type="radio" name="bq3" value="a" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q3: e.target.value })} />
-                                        <span className="text-sm">Retirar inmediatamente para no perder más.</span>
+                                        <span className="text-sm">Retirar inmediatamente porque significa que el portafolio falló.</span>
                                     </label>
                                     <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
                                         <input type="radio" name="bq3" value="b" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q3: e.target.value })} />
-                                        <span className="text-sm">Entender que es normal y evaluar según mi horizonte de largo plazo.</span>
+                                        <span className="text-sm">Entender que las fluctuaciones son parte normal del mercado y evaluar según tu horizonte de inversión.</span>
+                                    </label>
+                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
+                                        <input type="radio" name="bq3" value="c" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q3: e.target.value })} />
+                                        <span className="text-sm">Asumir que el dinero se perdió definitivamente.</span>
+                                    </label>
+                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
+                                        <input type="radio" name="bq3" value="d" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q3: e.target.value })} />
+                                        <span className="text-sm">EPedir que te cambien a un portafolio sin riesgo ni variación.</span>
                                     </label>
                                 </div>
                             </div>
@@ -890,13 +1073,15 @@ export default function MyMoneyInAction() {
                         <div className="border border-yellow-200 bg-yellow-50 p-6 rounded-2xl mb-6">
                             <div className="flex items-center gap-3 mb-4 text-yellow-800">
                                 <AlertTriangle />
-                                <h3 className="font-bold text-lg">Conceptos Básicos (Ruta B)</h3>
+                                <h3 className="font-bold text-lg">Conceptos Básicos</h3>
                             </div>
-                            <ul className="text-slate-700 mb-6 text-sm space-y-2 list-disc pl-4">
-                                <li><strong>Portafolio Gestionado:</strong> No eliges acciones individuales, delegas la estrategia.</li>
-                                <li><strong>Riesgo/Retorno:</strong> A mayor riesgo (nivel 10), mayor volatilidad esperada a corto plazo.</li>
-                                <li><strong>Fluctuaciones:</strong> Son normales en el mercado. La clave es el largo plazo.</li>
-                            </ul>
+                            <p className="text-slate-700 mb-4 text-sm">
+                                Es crucial entender el producto antes de invertir. ¡No te preocupes!
+                            </p>
+                            <p className="text-slate-700 mb-4 text-sm">
+                                Vamos a presentarte algunos conceptos para que los estudies y cuando finalices estarás list@ para intentar nuevamente. Haz clic aquí 👉 <a href="https://drive.google.com/file/d/1tuHayUSJ5yVUrc14KVsU8lH_yVZOZ1Ji/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="font-bold text-slate-700 underline hover:text-emerald-600">Conceptos Básicos</a>
+                            </p>
+
                             <label className="flex items-center gap-3 mb-6 cursor-pointer">
                                 <input type="checkbox" className="w-5 h-5 text-emerald-600 rounded" onChange={(e) => { if (e.target.checked) goToStep('HIGH_AMOUNT_TEST') }} />
                                 <span className="font-bold text-slate-700">Ya leí los conceptos, intentar nuevamente.</span>
@@ -1014,7 +1199,74 @@ export default function MyMoneyInAction() {
                     <div className="max-w-xl mx-auto">
                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                             <h2 className="text-2xl font-bold text-slate-800 mb-4">Tarjeta – Cuenta en Dólares Global 66</h2>
-                            <p className="text-slate-600 mb-6">Cuenta global en dólares para proteger tu patrimonio de la devaluación. Producto digital que permite mantener saldo en USD.</p>
+
+                            <div className="text-sm text-slate-600 space-y-4 mb-6">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">¿Qué es?</span>
+                                    <div className="md:col-span-2">
+                                        La <strong>Cuenta en Dólares</strong> de <em>Global66</em> es un <strong>producto digital</strong> que permite mantener saldo en <strong>USD</strong> y generar un rendimiento anual sobre ese dinero, mientras sigues teniendo disponibilidad para transferir o convertirlo cuando lo necesites.
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Tipo de producto</span>
+                                    <div className="md:col-span-2">Es un <strong>producto financiero de inversión</strong> o colocación de liquidez en USD, estructurado dentro de una <strong>plataforma fintech</strong>.</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Horizonte temporal</span>
+                                    <div className="md:col-span-2">Corto, mediano y largo plazo</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Activos subyacentes</span>
+                                    <div className="md:col-span-2"><strong>Global66</strong> no reporta información sobre esto*</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Liquidez</span>
+                                    <div className="md:col-span-2">
+                                        <em>Global66</em> no publica de manera detallada y explícita en sus sitios cómo invierte los fondos de la cuenta remunerada para generar el rendimiento, es decir, no describe los activos subyacentes específicos dentro de la documentación pública general.
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Rentabilidad</span>
+                                    <div className="md:col-span-2">Hasta <strong>6% de rentabilidad E.A</strong> en dólares. (<em>La tasa puede cambiar según condiciones del mercado</em>).</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Comisión</span>
+                                    <div className="md:col-span-2">
+                                        <strong>Comisión:</strong> No cobra cuota fija; la rentabilidad puede cambiar y los costos están implícitos en la estructura del producto y en el tipo de cambio.
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Inversión mínima</span>
+                                    <div className="md:col-span-2">Desde 1 Dólar</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Perfil de riesgo</span>
+                                    <div className="md:col-span-2"><strong>Conservador*</strong>; Está orientada a preservar capital en dólares</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
+                                    <span className="font-bold text-slate-700">Protección patrimonial</span>
+                                    <div className="md:col-span-2">
+                                        Cuenta con el <strong>respaldo del seguro de depósitos Fogafin</strong>. Este seguro garantiza la protección de los ahorros de sus clientes hasta un monto de <strong>COP $50.000.000</strong>, ofreciendo así una salvaguarda financiera sólida y confiable. (<em>En el caso de Colombia</em>)
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                    <span className="font-bold text-slate-700">Regulación</span>
+                                    <div className="md:col-span-2">
+                                        <strong>SFC:</strong> Superfinanciera Financiera de Colombia<br />
+                                        En Colombia Global opera como una <strong>SEDPE:</strong> Sociedad Especializada en Depósitos y Pagos Electrónicos.
+                                    </div>
+                                </div>
+                            </div>
                             <button onClick={() => goToStep('GLOBAL66_TEST')} className="w-full bg-purple-600 text-white py-3 rounded-xl font-bold">Validar Conocimiento</button>
                         </div>
                     </div>
@@ -1037,12 +1289,20 @@ export default function MyMoneyInAction() {
                                         <input type="radio" name="gq1" value="b" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q1: e.target.value })} />
                                         <span className="text-sm">Diversificar moneda y reducir exposición a una sola economía.</span>
                                     </label>
+                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-purple-500">
+                                        <input type="radio" name="gq1" value="c" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q1: e.target.value })} />
+                                        <span className="text-sm">Obtener rentabilidad fija automática.</span>
+                                    </label>
+                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-purple-500">
+                                        <input type="radio" name="gq1" value="d" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q1: e.target.value })} />
+                                        <span className="text-sm">Evitar cualquier tipo de riesgo financiero.</span>
+                                    </label>
                                 </div>
                             </div>
 
                             {/* Q2 */}
                             <div className="p-4 bg-slate-50 rounded-xl">
-                                <p className="font-bold text-slate-800 mb-3 text-sm">2. Cuando usas una plataforma para enviar/recibir dinero intl, ten en cuenta:</p>
+                                <p className="font-bold text-slate-800 mb-3 text-sm">2. Cuando usas una plataforma para enviar o recibir dinero internacionalmente, debo tener en cuenta que:</p>
                                 <div className="space-y-2">
                                     <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-purple-500">
                                         <input type="radio" name="gq2" value="a" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q2: e.target.value })} />
@@ -1052,12 +1312,20 @@ export default function MyMoneyInAction() {
                                         <input type="radio" name="gq2" value="b" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q2: e.target.value })} />
                                         <span className="text-sm">El valor en otra moneda siempre es exacto al que envía.</span>
                                     </label>
+                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-purple-500">
+                                        <input type="radio" name="gq2" value="c" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q2: e.target.value })} />
+                                        <span className="text-sm">Las monedas no fluctúan entre sí.</span>
+                                    </label>
+                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-purple-500">
+                                        <input type="radio" name="gq2" value="d" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q2: e.target.value })} />
+                                        <span className="text-sm">No existe impacto del mercado cambiario.</span>
+                                    </label>
                                 </div>
                             </div>
 
                             {/* Q3 */}
                             <div className="p-4 bg-slate-50 rounded-xl">
-                                <p className="font-bold text-slate-800 mb-3 text-sm">3. Al invertir mi dinero en una cuenta en dólares rentable, entiendo que:</p>
+                                <p className="font-bold text-slate-800 mb-3 text-sm">3. Al invertir mi dinero en una cuenta en dólares que genera rentabilidad, es importante entender que:</p>
                                 <div className="space-y-2">
                                     <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-purple-500">
                                         <input type="radio" name="gq3" value="a" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q3: e.target.value })} />
@@ -1065,7 +1333,15 @@ export default function MyMoneyInAction() {
                                     </label>
                                     <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-purple-500">
                                         <input type="radio" name="gq3" value="b" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q3: e.target.value })} />
-                                        <span className="text-sm">Puede generar rendimiento, pero no es un producto bancario tradicional.</span>
+                                        <span className="text-sm">Puede generar rendimiento, pero no es un producto bancario tradicional ni necesariamente tiene tasa fija garantizada como un CDT.</span>
+                                    </label>
+                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-purple-500">
+                                        <input type="radio" name="gq3" value="c" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q3: e.target.value })} />
+                                        <span className="text-sm">Que es un activo seguro.</span>
+                                    </label>
+                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-purple-500">
+                                        <input type="radio" name="gq3" value="d" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q3: e.target.value })} />
+                                        <span className="text-sm">Está protegida por el mismo seguro de depósitos que un banco colombiano.</span>
                                     </label>
                                 </div>
                             </div>
@@ -1080,13 +1356,15 @@ export default function MyMoneyInAction() {
                     <div className="max-w-xl mx-auto text-center border p-8 rounded-2xl border-yellow-100 bg-yellow-50">
                         <div className="flex items-center justify-center gap-2 mb-4 text-yellow-700">
                             <BookOpen />
-                            <h3 className="font-bold">Repasemos conceptos (Global 66)</h3>
+                            <h3 className="font-bold">Repasemos conceptos</h3>
                         </div>
-                        <ul className="text-left text-sm space-y-2 mb-6 text-slate-700">
-                            <li>• <strong>Diversificación:</strong> Clave para reducir riesgos.</li>
-                            <li>• <strong>Tasa de Cambio:</strong> Siempre varía y afecta el monto final.</li>
-                            <li>• <strong>Naturaleza del Producto:</strong> Es fintech, no banco tradicional.</li>
-                        </ul>
+                        <p className="text-slate-700 mb-4 text-sm">
+                            Es crucial entender el producto antes de invertir. ¡No te preocupes!
+                        </p>
+                        <p className="text-slate-700 mb-4 text-sm">
+                            Vamos a presentarte algunos conceptos para que los estudies y cuando finalices estarás list@ para intentar nuevamente. Haz clic aquí 👉 <a href="https://drive.google.com/file/d/1IEbWSrHC9V39fJ2CxyjT353crlU3OiJU/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="font-bold text-slate-700 underline hover:text-emerald-600">Conceptos Básicos</a>
+                        </p>
+
                         <label className="flex items-center gap-3 mb-6 cursor-pointer justify-center">
                             <input type="checkbox" className="w-5 h-5 text-emerald-600 rounded" onChange={(e) => { if (e.target.checked) goToStep('GLOBAL66_TEST') }} />
                             <span className="font-bold text-slate-700">Ya leí los conceptos, intentar nuevamente.</span>
@@ -1307,6 +1585,17 @@ export default function MyMoneyInAction() {
                     </div>
                 </div>
             </main>
+
+            {/* WhatsApp Floating Button */}
+            <a
+                href="https://wa.me/+573173772122"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="fixed bottom-6 right-6 bg-emerald-500 text-white p-4 rounded-full shadow-lg hover:bg-emerald-600 transition-all z-50 flex items-center justify-center hover:scale-110"
+                title="Ayuda por WhatsApp"
+            >
+                <MessageCircle size={28} />  ¿Necesitas ayuda?
+            </a>
         </div>
     );
 }
