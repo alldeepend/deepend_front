@@ -6,7 +6,7 @@ interface Field {
     type: string;
     label: string;
     help_text?: string;
-    options?: string[];
+    options?: (string | { label: string; value: string })[];
     condition?: {
         field: string;
         value?: string | any;
@@ -237,11 +237,13 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
                             {field.type === 'multiselect' && (
                                 <div className="grid grid-cols-1 gap-2">
                                     {field.options?.map((opt) => {
-                                        const isSelected = (formData[field.id] || []).includes(opt);
+                                        const value = typeof opt === 'object' ? opt.value : opt;
+                                        const label = typeof opt === 'object' ? opt.label : opt;
+                                        const isSelected = (formData[field.id] || []).includes(value);
                                         return (
                                             <div
-                                                key={opt}
-                                                onClick={() => handleMultiSelect(field.id, opt, field.validation?.max_selection)}
+                                                key={value}
+                                                onClick={() => handleMultiSelect(field.id, value, field.validation?.max_selection)}
                                                 className={`flex items-center p-3 rounded-xl border cursor-pointer transition-all ${isSelected
                                                     ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
                                                     : 'bg-white border-slate-200 hover:border-emerald-200'
@@ -251,7 +253,7 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
                                                     }`}>
                                                     {isSelected && <Check size={14} className="text-white" />}
                                                 </div>
-                                                <span className="text-sm font-medium">{opt}</span>
+                                                <span className="text-sm font-medium">{label}</span>
                                             </div>
                                         );
                                     })}
