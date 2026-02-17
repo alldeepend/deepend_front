@@ -15,6 +15,7 @@ type User = {
   createdAt: string;
   membership: string;
   role?: string;
+  financeDisclaimerAccepted?: boolean;
 }
 
 type AppComment = {

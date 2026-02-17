@@ -130,7 +130,37 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
         e.preventDefault();
         if (validate()) {
             if (window.confirm("¿Estás seguro de que deseas enviar tus respuestas?")) {
-                onSubmit(formData);
+                // Transform to ordered array format
+                const orderedResponses = schema.fields
+                    .filter(field => shouldShowField(field) && field.type !== 'header')
+                    .map(field => {
+                        let answer = formData[field.id];
+
+                        // Format answer if array (multiselect)
+                        if (Array.isArray(answer)) {
+                            answer = answer.join(', ');
+                        }
+
+                        // Map select values to labels if option provides object
+                        if (field.type === 'select' && field.options) {
+                            // Check if options are objects
+                            const selectedOpt = field.options.find((o: any) =>
+                                (typeof o === 'object' ? o.value : o) === answer
+                            );
+                            if (selectedOpt && typeof selectedOpt === 'object') {
+                                answer = selectedOpt.label;
+                            }
+                        }
+
+                        return {
+                            question: field.label,
+                            answer: answer
+                        };
+                    })
+                    // Filter out undefined/null answers if desired, or keep them as empty
+                    .filter(item => item.answer !== undefined && item.answer !== null && item.answer !== '');
+
+                onSubmit(orderedResponses);
             }
         } else {
             // Optional: Alert or stick validation
@@ -194,9 +224,11 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
                                         className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all appearance-none bg-white"
                                     >
                                         <option value="" disabled>Selecciona una opción</option>
-                                        {field.options?.map((opt) => (
-                                            <option key={opt} value={opt}>{opt}</option>
-                                        ))}
+                                        {field.options?.map((opt: any) => {
+                                            const label = typeof opt === 'object' ? opt.label : opt;
+                                            const value = typeof opt === 'object' ? opt.value : opt;
+                                            return <option key={value} value={value}>{label}</option>;
+                                        })}
                                     </select>
                                     <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={20} />
                                 </div>

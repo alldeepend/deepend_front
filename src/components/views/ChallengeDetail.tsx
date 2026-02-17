@@ -6,6 +6,7 @@ import DynamicForm from '../shared/DynamicForm';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Header from '../../components/shared/Header';
 import { useAuth } from '../../store/useAuth';
+import myMoneyInActionSchema from '../../data/forms/finance/my_money_in_action.json';
 
 const host = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/api\/?$/, '');
 
@@ -28,6 +29,7 @@ interface ChallengeDetail {
     que_se_requiere?: string;
     que_recibe?: string;
     requerimientos?: string;
+    disclaimerAccepted?: boolean;
 }
 
 const AccordionSection = ({ title, content }: { title: string, content: string }) => {
@@ -116,6 +118,16 @@ export default function ChallengeDetail() {
             window.location.reload();
         }
     }, [shouldReloadOnComplete, isTotallyCompletedSafe]);
+
+    // 3. Security Check: Redirect if Finance Challenge and Disclaimer NOT accepted
+    React.useEffect(() => {
+        if (!isLoading && challenge) {
+            if (challenge.category === 'Finanzas' && challenge.disclaimerAccepted === false) {
+                // Redirect to challenges list where they can click and see the modal
+                navigate('/challenges');
+            }
+        }
+    }, [isLoading, challenge, navigate]);
 
     // Toggle Task Mutation
     const toggleTaskMutation = useMutation({
@@ -298,7 +310,24 @@ export default function ChallengeDetail() {
                     {/* Details Grid - New Fields */}
                     <div className="flex flex-col gap-6 mb-8">
 
+
                         <div className="lg:col-span-2">
+
+                            {/* Custom Action for "My Money in Action" Challenge */}
+                            {challengeId === '4544a365-a761-4678-a420-ccf59eadb9c7' && (
+                                <div className="mt-6 mb-8">
+                                    <button
+                                        onClick={() => navigate('/challenges/my-money-action')}
+                                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-emerald-200 transition-all flex items-center justify-center gap-3 text-lg animate-bounce-subtle"
+                                    >
+                                        <Play size={24} className="fill-current" />
+                                        Activa tu Reto 🎯
+                                    </button>
+                                    <p className="text-center text-sm text-slate-500 mt-3 max-w-lg mx-auto">
+                                        Haz clic aquí para iniciar tu plan de acción personalizado.
+                                    </p>
+                                </div>
+                            )}
 
 
                             {/* Conditional Financial Assessment Button */}
@@ -513,41 +542,72 @@ export default function ChallengeDetail() {
                                             const sub = currentGenericSubmission;
                                             try {
                                                 const parsed = JSON.parse(sub.content);
-                                                // Handle nested responses if standard dynamic form
-                                                const displayContent = parsed.responses || parsed;
+                                                // Handle varying structures
+                                                let displayContent: any[] = [];
 
-                                                if (typeof displayContent === 'object' && displayContent !== null) {
+                                                // Case 1: Wrapped in "responses" object (e.g., { responses: [...] })
+                                                const content = parsed.responses || parsed;
+
+                                                // Case 2: Array of objects (New Format: [{ question, answer }])
+                                                if (Array.isArray(content)) {
+                                                    displayContent = content;
+                                                }
+                                                // Case 3: Indexed Object (Legacy format: {"0": { question, answer }, "1": ...})
+                                                else if (typeof content === 'object' && content !== null) {
+                                                    // Check if keys are numeric indices (excluding system keys like taskId)
+                                                    const keys = Object.keys(content).filter(k => k !== 'taskId');
+                                                    const isIndexed = keys.length > 0 && keys.every(k => !isNaN(parseInt(k)));
+
+                                                    if (isIndexed) {
+                                                        // Sort by numeric key to ensure order
+                                                        displayContent = keys.sort((a, b) => parseInt(a) - parseInt(b)).map(k => content[k]);
+                                                    } else {
+                                                        // Fallback: Simple Key-Value Object (e.g., { "Question": "Answer" })
+                                                        displayContent = Object.entries(content).map(([key, value]) => {
+                                                            if (key === 'taskId') return null; // Skip taskId in fallback too
+                                                            return {
+                                                                question: key,
+                                                                answer: typeof value === 'object' ? JSON.stringify(value) : String(value)
+                                                            };
+                                                        }).filter(Boolean); // Remove nulls
+                                                    }
+                                                }
+
+                                                if (displayContent.length > 0) {
                                                     return (
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
-                                                            {Object.entries(displayContent).map(([key, value]) => {
-                                                                // Skip taskId
-                                                                if (key === 'taskId') return null;
+                                                        <div className="space-y-4">
+                                                            {displayContent.map((item: any, idx: number) => {
+                                                                // Handle if item is simple string (fallback)
+                                                                if (typeof item !== 'object') {
+                                                                    return <div key={idx} className="text-slate-600">{String(item)}</div>;
+                                                                }
+
+                                                                const question = item.question || item.label || `Pregunta ${idx + 1}`;
+                                                                const answer = item.answer || item.value || JSON.stringify(item);
 
                                                                 return (
-                                                                    <div key={key} className="flex flex-col border-b border-slate-100 last:border-0 pb-2 last:pb-0">
-                                                                        <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
-                                                                            {key.replace(/_/g, ' ')}
-                                                                        </span>
-                                                                        <span className="text-sm font-medium text-slate-700">
-                                                                            {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                                                                        </span>
+                                                                    <div key={idx} className="pb-3 border-b border-slate-200 last:border-0 last:pb-0">
+                                                                        <p className="font-bold text-slate-800 text-sm mb-1">{question}</p>
+                                                                        <p className="text-slate-600 text-sm whitespace-pre-wrap">{String(answer)}</p>
                                                                     </div>
                                                                 );
                                                             })}
                                                         </div>
                                                     );
                                                 }
-                                                return <p className="text-slate-600 text-sm whitespace-pre-wrap">{sub.content}</p>;
+
+                                                return <div className="text-slate-500 italic">Formato de respuesta no reconocido.</div>;
                                             } catch (e) {
-                                                return <p className="text-slate-600 text-sm whitespace-pre-wrap">{sub.content}</p>;
+                                                return <div className="text-slate-600">{sub.content}</div>;
                                             }
                                         })()}
+                                    </div>
 
-                                        <div className="mt-4 pt-4 border-t border-slate-200 text-right">
-                                            <span className="text-xs text-slate-400">
-                                                Enviado el {new Date(currentGenericSubmission.createdAt).toLocaleDateString()}
-                                            </span>
-                                        </div>
+
+                                    <div className="mt-4 pt-4 border-t border-slate-200 text-right">
+                                        <span className="text-xs text-slate-400">
+                                            Enviado el {new Date(currentGenericSubmission.createdAt).toLocaleDateString()}
+                                        </span>
                                     </div>
                                 </div>
                             )}
@@ -639,7 +699,7 @@ export default function ChallengeDetail() {
 
                     </div>
 
-                </div>
+                </div >
 
                 {/* MODAL FORM OVERLAY */}
                 {

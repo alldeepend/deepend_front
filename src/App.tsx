@@ -13,84 +13,96 @@ import ForgotPassword from './components/views/ForgotPassword';
 import ResetPassword from './components/views/ResetPassword';
 import FinancialAssessment from './components/views/FinancialAssessment';
 import ActivityHistory from './components/views/ActivityHistory';
+import MyMoneyInAction from './components/views/finance/MyMoneyInAction';
+import GastoHormiga from './components/views/finance/GastoHormiga';
 
 function App() {
-  const host = window.location.hostname;
-  const isApp = host.includes('app.');
+    const host = window.location.hostname;
+    const isApp = host.includes('app.');
 
-  return (
-    <>
-      <Routes>
-        <Route path="/" element={
-          <PublicRoute>
-            <Login />
-          </PublicRoute>
-        } />
-        <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <HomePage />
-          </ProtectedRoute>
-        } />
-        <Route path="/journey" element={
-          <ProtectedRoute>
-            <MyJourney />
-          </ProtectedRoute>
-        } />
-        <Route path="/challenges" element={
-          <ProtectedRoute>
-            <MisRetos />
-          </ProtectedRoute>
-        } />
-        <Route path="/challenges/detail" element={
-          <ProtectedRoute>
-            <ChallengeDetail />
-          </ProtectedRoute>
-        } />
-        <Route path="/resources" element={
-          <ProtectedRoute>
-            <MisRecursos />
-          </ProtectedRoute>
-        } />
-        <Route path="/profile" element={
-          <ProtectedRoute>
-            <Perfil />
-          </ProtectedRoute>
-        } />
-        <Route path="/challenges/financial-assessment" element={
-          <ProtectedRoute>
-            <FinancialAssessment />
-          </ProtectedRoute>
-        } />
-        <Route path="/activities" element={
-          <ProtectedRoute>
-            <ActivityHistory />
-          </ProtectedRoute>
-        } />
-        <Route path="/login" element={
-          <PublicRoute>
-            <Login />
-          </PublicRoute>
-        } />
-        <Route path="/register" element={
-          <PublicRoute>
-            <Register />
-          </PublicRoute>
-        } />
-        <Route path="/forgot-password" element={
-          <PublicRoute>
-            <ForgotPassword />
-          </PublicRoute>
-        } />
-        <Route path="/reset-password" element={
-          <PublicRoute>
-            <ResetPassword />
-          </PublicRoute>
-        } />
+    return (
+        <>
+            <Routes>
+                <Route path="/" element={
+                    <PublicRoute>
+                        <Login />
+                    </PublicRoute>
+                } />
+                <Route path="/dashboard" element={
+                    <ProtectedRoute>
+                        <HomePage />
+                    </ProtectedRoute>
+                } />
+                <Route path="/journey" element={
+                    <ProtectedRoute>
+                        <MyJourney />
+                    </ProtectedRoute>
+                } />
+                <Route path="/challenges" element={
+                    <ProtectedRoute>
+                        <MisRetos />
+                    </ProtectedRoute>
+                } />
+                <Route path="/challenges/detail" element={
+                    <ProtectedRoute>
+                        <ChallengeDetail />
+                    </ProtectedRoute>
+                } />
+                <Route path="/resources" element={
+                    <ProtectedRoute>
+                        <MisRecursos />
+                    </ProtectedRoute>
+                } />
+                <Route path="/profile" element={
+                    <ProtectedRoute>
+                        <Perfil />
+                    </ProtectedRoute>
+                } />
+                <Route path="/challenges/financial-assessment" element={
+                    <ProtectedRoute>
+                        <FinancialAssessment />
+                    </ProtectedRoute>
+                } />
+                <Route path="/challenges/gasto-hormiga" element={
+                    <ProtectedRoute>
+                        <GastoHormiga />
+                    </ProtectedRoute>
+                } />
+                <Route path="/challenges/my-money-action" element={
+                    <ProtectedRoute>
+                        <MyMoneyInAction />
+                    </ProtectedRoute>
+                } />
+                <Route path="/activities" element={
+                    <ProtectedRoute>
+                        <ActivityHistory />
+                    </ProtectedRoute>
+                } />
+                <Route path="/login" element={
+                    <PublicRoute>
+                        <Login />
+                    </PublicRoute>
+                } />
+                <Route path="/register" element={
+                    <PublicRoute>
+                        <Register />
+                    </PublicRoute>
+                } />
+                <Route path="/forgot-password" element={
+                    <PublicRoute>
+                        <ForgotPassword />
+                    </PublicRoute>
+                } />
+                <Route path="/reset-password" element={
+                    <PublicRoute>
+                        <ResetPassword />
+                    </PublicRoute>
+                } />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </>
-  )
+                <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+        </>
+    )
 }
 
 export default App

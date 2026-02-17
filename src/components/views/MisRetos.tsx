@@ -3,6 +3,8 @@ import { ArrowLeft, PlayCircle, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { HomeSidebar } from '../home/HomeSidebar';
 import { useQuery } from '@tanstack/react-query';
+import FinanceDisclaimerModal from '../modals/FinanceDisclaimerModal';
+import { useAuth } from '../../store/useAuth';
 
 const host = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/api\/?$/, '');
 
@@ -17,27 +19,33 @@ interface ChallengeCardData {
     bgClass: string;
     badgeClass: string;
     status: 'active' | 'locked' | 'completed'; // Added completed
+    disclaimerAccepted?: boolean;
+    disclaimerRejected?: boolean;
 }
 
 const ChallengeCard = ({ data, onClick }: { data: ChallengeCardData; onClick?: () => void }) => {
+    // Treat rejected as "visually locked" but "functionally active" (clickable)
+    const isVisuallyLocked = data.status === 'locked' || data.disclaimerRejected;
+    const isActuallyLocked = data.status === 'locked'; // Only status='locked' prevents click in logic, but we handle click in parent 
+
     return (
         <div
             onClick={onClick}
-            className={`bg-white border ${data.status === 'locked' ? 'border-slate-100 opacity-70' : 'border-slate-100 cursor-pointer'} rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative flex flex-col h-full`}
+            className={`bg-white border ${isVisuallyLocked ? 'border-slate-100 opacity-70' : 'border-slate-100 cursor-pointer'} rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative flex flex-col h-full`}
         >
 
             <div className="flex justify-between items-start mb-4">
-                <span className={`text-[10px] font-bold tracking-wider uppercase px-3 py-1 rounded-full ${data.status === 'active' ? 'text-[#ed2629]' : 'text-[#57ba47]'}`}>
+                <span className={`text-[10px] font-bold tracking-wider uppercase px-3 py-1 rounded-full ${data.status === 'active' && !data.disclaimerRejected ? 'text-[#ed2629]' : 'text-[#57ba47]'}`}>
                     {data.category}
                 </span>
-                {data.status === 'active' ? (
+                {data.status === 'active' && !data.disclaimerRejected ? (
                     <PlayCircle className={`w-6 h-6 text-[#ed2629] opacity-80 cursor-pointer hover:opacity-100 transition-opacity`} />
                 ) : (
                     <Lock className="w-5 h-5 text-[#57ba47]" />
                 )}
             </div>
 
-            <h3 className={`text-xl font-bold text-slate-800 mb-2 ${data.status === 'locked' ? 'text-slate-400' : ''}`}>
+            <h3 className={`text-xl font-bold text-slate-800 mb-2 ${isVisuallyLocked ? 'text-slate-400' : ''}`}>
                 {data.title}
             </h3>
 
@@ -45,7 +53,8 @@ const ChallengeCard = ({ data, onClick }: { data: ChallengeCardData; onClick?: (
                 {data.description}
             </p>
 
-            {data.status !== 'locked' ? (
+            {/* Show progress/stats ONLY if active AND accepted/not-rejected */}
+            {!isVisuallyLocked ? (
                 <div>
                     <div className="flex justify-between items-end mb-2">
                         <span className={`text-xs ${data.status === 'active' ? 'text-[#ed2629]' : 'text-[#57ba47]'} font-medium`}>
@@ -63,7 +72,11 @@ const ChallengeCard = ({ data, onClick }: { data: ChallengeCardData; onClick?: (
             ) : (
                 <div className="flex items-center gap-2 pt-2 border-t border-slate-50">
                     <Lock size={12} className="text-slate-400" />
-                    <span className="text-xs text-slate-400">Desbloquea al completar nivel actual</span>
+                    <span className="text-xs text-slate-400">
+                        {data.disclaimerRejected
+                            ? "Acceso restringido (Haz clic para habilitar)"
+                            : "Desbloquea al completar nivel actual"}
+                    </span>
                 </div>
             )}
         </div>
@@ -76,7 +89,7 @@ export default function MisRetos() {
     const navigate = useNavigate();
     const [filter, setFilter] = useState<'active' | 'completed'>('active');
 
-    const { data: challenges, isLoading } = useQuery<ChallengeCardData[]>({
+    const { data: challenges, isLoading, refetch } = useQuery<ChallengeCardData[]>({
         queryKey: ['challenges'],
         queryFn: async () => {
             const token = localStorage.getItem('token');
@@ -94,6 +107,8 @@ export default function MisRetos() {
                 description: c.description,
                 progress: c.progress || 0,
                 status: c.status,
+                disclaimerAccepted: c.disclaimerAccepted,
+                disclaimerRejected: c.disclaimerRejected,
                 // Color mapping logic could be moved to a helper
                 colorClass: c.category === 'Finanzas' ? 'text-emerald-500' : (c.category === 'Mindset' ? 'text-blue-500' : 'text-purple-500'),
                 bgClass: c.category === 'Finanzas' ? 'bg-emerald-500' : (c.category === 'Mindset' ? 'bg-blue-500' : 'bg-purple-500'),
@@ -105,6 +120,90 @@ export default function MisRetos() {
     const filteredChallenges = challenges?.filter(c =>
         filter === 'active' ? (c.status === 'active' || c.status === 'locked') : c.status === 'completed'
     );
+
+
+    // --- Disclaimer Logic ---
+    const [showDisclaimer, setShowDisclaimer] = useState(false);
+    const [pendingChallengeId, setPendingChallengeId] = useState<string | null>(null);
+    const { user } = useAuth(); // Need to update user context
+
+    const handleChallengeClick = (challenge: ChallengeCardData) => {
+        if (challenge.status === 'locked') return;
+
+        // Check PER CHALLENGE for Finanzas category
+        if (challenge.category === 'Finanzas' && !challenge.disclaimerAccepted) {
+            setPendingChallengeId(challenge.id);
+            setShowDisclaimer(true);
+            return;
+        }
+
+        navigate(`/challenges/detail?id=${challenge.id}`);
+    };
+
+    const handleAcceptDisclaimer = async () => {
+        if (!pendingChallengeId) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${host}/api/user/accept-finance-disclaimer`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    challengeId: pendingChallengeId,
+                    accepted: true
+                })
+            });
+
+            if (res.ok) {
+                // Refresh challenges to update status
+                await refetch();
+                setShowDisclaimer(false);
+                if (pendingChallengeId) {
+                    navigate(`/challenges/detail?id=${pendingChallengeId}`);
+                }
+            } else {
+                console.error("Failed to accept disclaimer");
+            }
+        } catch (error) {
+            console.error("Error accepting disclaimer", error);
+        }
+    };
+
+    const handleRejectDisclaimer = async () => {
+        if (!pendingChallengeId) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            // Check if we should call backend for rejection (to record it)
+            // YES, per requirements: "debe quedar false en la db"
+            await fetch(`${host}/api/user/accept-finance-disclaimer`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    challengeId: pendingChallengeId,
+                    accepted: false
+                })
+            });
+
+            // Just close, stay here
+            setShowDisclaimer(false);
+            setPendingChallengeId(null);
+
+            // Optionally refetch to ensure local state matches DB (in case we show "Rejected" status in UI later)
+            await refetch();
+
+        } catch (error) {
+            console.error("Error rejecting disclaimer", error);
+            setShowDisclaimer(false);
+            setPendingChallengeId(null);
+        }
+    };
 
     return (
         <div className="flex flex-col md:flex-row h-screen bg-slate-50 font-sans overflow-hidden">
@@ -163,11 +262,7 @@ export default function MisRetos() {
                                     <ChallengeCard
                                         key={index}
                                         data={challenge}
-                                        onClick={() => {
-                                            if (challenge.status !== 'locked') {
-                                                navigate(`/challenges/detail?id=${challenge.id}`);
-                                            }
-                                        }}
+                                        onClick={() => handleChallengeClick(challenge)}
                                     />
                                 ))}
                                 {filteredChallenges?.length === 0 && (
@@ -178,11 +273,15 @@ export default function MisRetos() {
                             </div>
                         )}
                     </div>
-
                 </div>
             </main>
 
-
+            <FinanceDisclaimerModal
+                isOpen={showDisclaimer}
+                onClose={() => setShowDisclaimer(false)}
+                onAccept={handleAcceptDisclaimer}
+                onReject={handleRejectDisclaimer}
+            />
 
         </div>
     );

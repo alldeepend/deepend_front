@@ -1,0 +1,248 @@
+{
+    "form_id": "reto_financial_action",
+    "form_title": "Activa tu Reto: Ahorra con Propósito, Invierte con Decisión 🎯💰",
+    "fields": [
+        {
+            "id": "p1_decision",
+            "type": "select",
+            "label": "1. ¿Decides participar en el reto MY MONEY IN ACTION este mes?*",
+            "required": true,
+            "help_text": "La claridad financiera es fundamental, pero empieza cuando tú decides hacerlo.",
+            "options": [
+                "a. ✅ Sí, acepto el reto",
+                "b. ❌ No, por ahora no"
+            ]
+        },
+        {
+            "id": "p2_opcion",
+            "type": "select",
+            "label": "2. ¿Para cuál de las opciones estás list@ hoy?*",
+            "help_text": "Como todo DEEPENDE, tod@s partimos de puntos diferentes. Por eso puedes elegir cómo completar este reto según tu situación actual 👇",
+            "condition": {
+                "field": "p1_decision",
+                "value": "a. ✅ Sí, acepto el reto"
+            },
+            "required": true,
+            "options": [
+                {
+                    "label": "a. Opción 1: Tengo liquidez hoy y estoy list@ para que mi dinero rente. (Puede ser desde 5USD)",
+                    "value": "opcion_1"
+                },
+                {
+                    "label": "b. Opción 2: No tengo excedente y quiero crearlo (Ir a Gasto Hormiga)",
+                    "value": "opcion_2"
+                }
+            ]
+        },
+        {
+            "id": "info_gasto_hormiga",
+            "type": "header",
+            "label": "🔄 Gasto Hormiga: Generar liquidez",
+            "help_text": "👉 Muy bien, podemos tomar acción y generar algo de liquidez. Te recomendamos ir al reto de 'Gasto Hormiga' para empezar.",
+            "condition": {
+                "field": "p2_opcion",
+                "value": "opcion_2"
+            }
+        },
+        {
+            "id": "p4_fecha_accion",
+            "type": "date",
+            "label": "4. 📅 ¿Qué día vas a hacer tu acción de esta semana?*",
+            "help_text": "Elige una fecha aquí abajo ↓ que esté dentro de los próximos 7 días",
+            "condition": {
+                "field": "p2_opcion",
+                "value": "opcion_1"
+            },
+            "required": true
+        },
+        {
+            "id": "p5_momento_dia",
+            "type": "select",
+            "label": "5. ⌚ ¿En qué momento del día te queda mejor el recordatorio?",
+            "condition": {
+                "field": "p2_opcion",
+                "value": "opcion_1"
+            },
+            "options": [
+                "Mañana",
+                "Tarde",
+                "Noche"
+            ]
+        },
+        {
+            "id": "p6_fecha_plan_b",
+            "type": "date",
+            "label": "📆 Si ese día se te complica cumplirte, ¿qué fecha sería tu Plan B?",
+            "help_text": "Elige una fecha aquí abajo ↓ que esté dentro de los próximos 7 días",
+            "condition": {
+                "field": "p2_opcion",
+                "value": "opcion_1"
+            }
+        },
+        {
+            "id": "p7_rango_monto",
+            "type": "select",
+            "label": "Pensando en el monto que estás dispuesto a mover en este reto, ¿En qué rango se encuentra ese valor?",
+            "help_text": "El monto es solo una referencia para ver la posible mejor ruta.",
+            "condition": {
+                "field": "p2_opcion",
+                "value": "opcion_1"
+            },
+            "options": [
+                "💵 Menos de 200 USD",
+                "💰 200 USD o más"
+            ]
+        },
+        {
+            "id": "info_menos_200",
+            "type": "header",
+            "label": "Tarjeta – Mi Efectivo Rentable (Insights WM)",
+            "help_text": "Descripción del producto...",
+            "condition": {
+                "field": "p7_rango_monto",
+                "value": "💵 Menos de 200 USD"
+            }
+        },
+        {
+            "id": "p3_objetivo_smart",
+            "type": "text",
+            "label": "🎯 Antes de entrar en acción, pongámosle un objetivo claro a esa inversión, escríbelo aquí abajo ↓",
+            "help_text": "Recuerda que tu objetivo debe ser: Específico, Medible, Alcanzable, Relevante y con Plazo definido (SMART)",
+            "condition": {
+                "field": "p2_opcion",
+                "value": "opcion_1"
+            },
+            "required": true
+        },
+        {
+            "id": "p8_listo_accion",
+            "type": "select",
+            "label": "¿List@ para tomar Acción? 🚀",
+            "condition": {
+                "field": "p3_objetivo_smart",
+                "value": "*"
+            },
+            "options": [
+                "Si, quiero hacerlo con el producto presentado",
+                "Si, quiero hacerlo pero usaré otro producto",
+                "No, no me interesa"
+            ]
+        },
+        {
+            "id": "p9_otro_producto",
+            "type": "text",
+            "label": "¿Podrías indicarnos qué plataforma o herramienta usarás?",
+            "help_text": "Es importante que te asegures que la plataforma, herramienta o producto que uses, le hagas la debida diligencia y entiendas los riesgos que implica 🚧",
+            "condition": {
+                "field": "p8_listo_accion",
+                "value": "Si, quiero hacerlo pero usaré otro producto"
+            }
+        },
+        {
+            "id": "info_link_insights",
+            "type": "header",
+            "label": "🔗 Abre YA tu cuenta gratis en Insights WM",
+            "help_text": "Haz clic en este enlace 👉 DeepEnd con Insights WM que te lleva de forma segura a la plataforma. Si te pide algún código, solo debes escribir DEEPEND.",
+            "condition": {
+                "field": "p8_listo_accion",
+                "value": "Si, quiero hacerlo con el producto presentado"
+            }
+        },
+        {
+            "id": "info_no_interesa",
+            "type": "select",
+            "label": "Entendemos que esta no es una opción de invertir para ti. ¿Quieres saber cuál es la otra opción?",
+            "condition": {
+                "field": "p8_listo_accion",
+                "value": "No, no me interesa"
+            },
+            "options": [
+                "Quiero ver una opción que no implique invertir",
+                "Si, quiero ver otra opción de inversión",
+                "No quiero ninguna opción"
+            ]
+        },
+        {
+            "id": "info_global66",
+            "type": "header",
+            "label": "Tarjeta – Cuenta en Dolares Global 66",
+            "help_text": "Descripción de Global 66...",
+            "condition": {
+                "field": "info_no_interesa",
+                "value": "Si, quiero ver otra opción de inversión"
+            }
+        },
+        {
+            "id": "p13_listo_accion_2",
+            "type": "select",
+            "label": "¿List@ para tomar Acción? 🚀",
+            "condition": {
+                "field": "info_no_interesa",
+                "value": "Si, quiero ver otra opción de inversión"
+            },
+            "options": [
+                "Si, quiero hacerlo con el producto presentado",
+                "Si, quiero hacerlo pero usaré otro producto",
+                "No quiero ninguna opción"
+            ]
+        },
+        {
+            "id": "link_global66",
+            "type": "header",
+            "label": "🔗 Abre YA tu cuenta gratis en Global66",
+            "help_text": "Para depositar allí tu dinero el día 10 y toma acción, haz clic en este enlace 🔗👉 DeepEnd con Global66.",
+            "condition": {
+                "field": "p13_listo_accion_2",
+                "value": "Si, quiero hacerlo con el producto presentado"
+            }
+        },
+        {
+            "id": "info_share",
+            "type": "header",
+            "label": "🗣️ Comparte el registro y tus avances con tu tribu",
+            "help_text": "Eso es tener accountability. Tus acciones pueden ser inspiración para otras personas.",
+            "condition": {
+                "field": "p8_listo_accion",
+                "value": "Si, quiero hacerlo con el producto presentado"
+            }
+        },
+        {
+            "id": "p11_recordatorios",
+            "type": "select",
+            "label": "👉 Para este reto, ¿Deseas activar los recordatorios por parte de DeepEnd?",
+            "help_text": "No te preocupes, los recordatorios sólo serán en tus fechas programadas, estamos contigo ✅",
+            "condition": {
+                "field": "p2_opcion",
+                "value": "opcion_1"
+            },
+            "options": [
+                "Sí, activar",
+                "No, gracias"
+            ]
+        },
+        {
+            "id": "cierre_motivo",
+            "type": "select",
+            "label": "¿Qué te impide dar el paso ahora?",
+            "condition": {
+                "field": "p1_decision",
+                "value": "b. ❌ No, por ahora no"
+            },
+            "options": [
+                "No tengo dinero extra",
+                "No tengo tiempo",
+                "Miedo a perder dinero",
+                "Otro"
+            ]
+        },
+        {
+            "id": "cierre_feedback",
+            "type": "text",
+            "label": "¿Hay algo que podamos aclarar o simplificar para el futuro?",
+            "condition": {
+                "field": "p1_decision",
+                "value": "b. ❌ No, por ahora no"
+            }
+        }
+    ]
+}
