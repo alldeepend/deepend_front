@@ -103,7 +103,24 @@ export default function ChallengeDetail() {
     });
 
     const stepsSafe = challenge?.tasks || [];
-    const isTotallyCompletedSafe = stepsSafe.length > 0 && stepsSafe.every((s: any) => s.completed);
+    const areTasksCompleted = stepsSafe.length > 0 && stepsSafe.every((s: any) => s.completed);
+
+    // Special Logic for My Money In Action (4544a365-a761-4678-a420-ccf59eadb9c7)
+    // Needs both Tasks + Submission
+    const hasSubmission = challenge?.submissions && challenge.submissions.length > 0;
+    const isSpecialChallenge = challengeId === '4544a365-a761-4678-a420-ccf59eadb9c7';
+
+    const isTotallyCompletedSafe = isSpecialChallenge
+        ? areTasksCompleted && hasSubmission
+        : areTasksCompleted;
+
+    /* DEBUG: Remove later */
+    React.useEffect(() => {
+        if (isSpecialChallenge) {
+            console.log("DEBUG: MyMoney Status", { areTasksCompleted, hasSubmission, isTotallyCompletedSafe, subsLength: challenge?.submissions?.length });
+            // alert(`DEBUG: Tasks: ${areTasksCompleted}, HasSub: ${hasSubmission}, Complete: ${isTotallyCompletedSafe}`);
+        }
+    }, [isSpecialChallenge, areTasksCompleted, hasSubmission, isTotallyCompletedSafe, challenge]);
 
     // 1. Enable reload trigger ONLY if we start with an incomplete challenge
     React.useEffect(() => {
@@ -314,7 +331,7 @@ export default function ChallengeDetail() {
                         <div className="lg:col-span-2">
 
                             {/* Custom Action for "My Money in Action" Challenge */}
-                            {challengeId === '4544a365-a761-4678-a420-ccf59eadb9c7' && isTotallyCompletedSafe && (
+                            {challengeId === '4544a365-a761-4678-a420-ccf59eadb9c7' && areTasksCompleted && !isTotallyCompletedSafe && (
                                 <div className="mt-6 mb-8">
                                     <button
                                         onClick={() => navigate('/challenges/my-money-action')}

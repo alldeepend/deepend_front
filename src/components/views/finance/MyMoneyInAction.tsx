@@ -478,8 +478,10 @@ export default function MyMoneyInAction() {
 
                             <button
                                 onClick={() => {
-                                    handleAnswer('p2_option', 'no_surplus');
-                                    navigate('/challenges/gasto-hormiga');
+                                    if (window.confirm("¿Estás seguro de que deseas ir al reto Gasto Hormiga?")) {
+                                        handleAnswer('p2_option', 'no_surplus');
+                                        navigate('/challenges/gasto-hormiga');
+                                    }
                                 }}
                                 className="p-6 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition-all text-left group"
                             >
@@ -771,7 +773,7 @@ export default function MyMoneyInAction() {
                                 Es crucial entender el producto antes de invertir. ¡No te preocupes!
                             </p>
                             <p className="text-slate-700 mb-4 text-sm">
-                                Vamos a presentarte algunos conceptos para que los estudies y cuando finalices estarás list@ para intentar nuevamente. Haz clic aquí 👉 <a href="https://drive.google.com/file/d/1tuHayUSJ5yVUrc14KVsU8lH_yVZOZ1Ji/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="font-bold text-slate-700 underline hover:text-emerald-600">Conceptos Básicos</a>
+                                Vamos a presentarte algunos conceptos para que los estudies y cuando finalices estarás list@ para intentar nuevamente. Haz clic aquí 👉 <a href="https://drive.google.com/file/d/1KPtExJXGokKayCA6-qXmhusehyLdLkYt/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="font-bold text-slate-700 underline hover:text-emerald-600">Conceptos Básicos</a>
                             </p>
 
                             <label className="flex items-center gap-3 mb-6 cursor-pointer">
@@ -869,8 +871,10 @@ export default function MyMoneyInAction() {
                                 <span className="text-xs text-slate-500">Cuenta en dólares para proteger patrimonio.</span>
                             </button>
                             <button onClick={() => {
-                                handleAnswer('alternative_choice', 'Gasto Hormiga');
-                                navigate('/challenges/gasto-hormiga');
+                                if (window.confirm("¿Estás seguro de que deseas ir al reto Gasto Hormiga?")) {
+                                    handleAnswer('alternative_choice', 'Gasto Hormiga');
+                                    navigate('/challenges/gasto-hormiga');
+                                }
                             }} className="p-4 border rounded-xl text-left hover:bg-slate-50">
                                 <span className="font-bold block text-slate-800">Ver opción sin inversión (Gasto Hormiga)</span>
                             </button>
@@ -1079,7 +1083,7 @@ export default function MyMoneyInAction() {
                                 Es crucial entender el producto antes de invertir. ¡No te preocupes!
                             </p>
                             <p className="text-slate-700 mb-4 text-sm">
-                                Vamos a presentarte algunos conceptos para que los estudies y cuando finalices estarás list@ para intentar nuevamente. Haz clic aquí 👉 <a href="https://drive.google.com/file/d/1tuHayUSJ5yVUrc14KVsU8lH_yVZOZ1Ji/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="font-bold text-slate-700 underline hover:text-emerald-600">Conceptos Básicos</a>
+                                Vamos a presentarte algunos conceptos para que los estudies y cuando finalices estarás list@ para intentar nuevamente. Haz clic aquí 👉 <a href="https://drive.google.com/file/d/1ipQRIbIuBV05d4sm0KBKIQzBY7Yq0NTO/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="font-bold text-slate-700 underline hover:text-emerald-600">Conceptos Básicos</a>
                             </p>
 
                             <label className="flex items-center gap-3 mb-6 cursor-pointer">
@@ -1176,8 +1180,10 @@ export default function MyMoneyInAction() {
                                 <span className="font-bold text-slate-800 block">a. Ver otra opción de inversión (Global 66)</span>
                             </button>
                             <button onClick={() => {
-                                handleAnswer('alternative_choice_high', 'Gasto Hormiga');
-                                navigate('/challenges/gasto-hormiga');
+                                if (window.confirm("¿Estás seguro de que deseas ir al reto Gasto Hormiga?")) {
+                                    handleAnswer('alternative_choice_high', 'Gasto Hormiga');
+                                    navigate('/challenges/gasto-hormiga');
+                                }
                             }} className="p-4 border rounded-xl text-left hover:bg-slate-50">
                                 <span className="font-bold text-slate-800 block">b. Ver una opción que no implique invertir</span>
                                 <span className="text-xs text-slate-500">Ir a Reto Gasto Hormiga</span>
@@ -1405,7 +1411,7 @@ export default function MyMoneyInAction() {
                             <p>Abre YA tu cuenta gratis en Global66.</p>
                         </div>
                         <h2 className="text-2xl font-bold text-slate-800 mb-4">Abre tu cuenta en Global 66 🔗</h2>
-                        <a href="https://global66.com" target="_blank" className="block w-full bg-purple-600 text-white py-4 rounded-xl font-bold mb-4">Ir a Global 66</a>
+                        <a href="https://share.global66.com/KARCEL411" target="_blank" className="block w-full bg-purple-600 text-white py-4 rounded-xl font-bold mb-4">Ir a Global 66</a>
                         <button onClick={() => goToStep('SHARE_ACCOUNTABILITY')} className="text-slate-500 underline font-medium">Ya abrí la cuenta, Continuar</button>
                     </div>
                 );
@@ -1477,8 +1483,8 @@ export default function MyMoneyInAction() {
                         <div className="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
                             <CheckCircle2 size={48} />
                         </div>
-                        <h2 className="text-3xl font-bold text-slate-800 mb-4">¡Reto Activado! 🚀</h2>
-                        <p className="text-slate-600 mb-8">Has dado un gran paso hacia tu claridad financiera.</p>
+                        <h2 className="text-3xl font-bold text-slate-800 mb-4">¡Gracias! 🚀</h2>
+                        <p className="text-slate-600 mb-8">Recuerda: El Activo más importante eres TÚ 🟢</p>
                         <button onClick={() => navigate('/challenges')} className="bg-slate-800 text-white px-8 py-3 rounded-xl font-bold">Volver a mis Retos</button>
                     </div>
                 );
