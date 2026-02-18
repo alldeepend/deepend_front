@@ -21,6 +21,7 @@ interface ChallengeCardData {
     status: 'active' | 'locked' | 'completed'; // Added completed
     disclaimerAccepted?: boolean;
     disclaimerRejected?: boolean;
+    createdAt?: string;
 }
 
 const ChallengeCard = ({ data, onClick }: { data: ChallengeCardData; onClick?: () => void }) => {
@@ -56,12 +57,12 @@ const ChallengeCard = ({ data, onClick }: { data: ChallengeCardData; onClick?: (
             {/* Show progress/stats ONLY if active AND accepted/not-rejected */}
             {!isVisuallyLocked ? (
                 <div>
-                    <div className="flex justify-between items-end mb-2">
+                    {/* <div className="flex justify-between items-end mb-2">
                         <span className={`text-xs ${data.status === 'active' ? 'text-[#ed2629]' : 'text-[#57ba47]'} font-medium`}>
                             {data.status === 'completed' ? 'Completado' : 'Progreso'}
                         </span>
                         <span className={`text-xs font-bold ${data.status === 'active' ? 'text-[#ed2629]' : 'text-[#57ba47]'}`}>{data.progress}%</span>
-                    </div>
+                    </div> */}
                     <div className="w-full bg-slate-100 rounded-full h-1.5">
                         <div
                             className={`h-1.5 rounded-full ${data.status === 'active' ? 'bg-[#ed2629]' : 'bg-[#57ba47]'}`}
@@ -109,6 +110,7 @@ export default function MisRetos() {
                 status: c.status,
                 disclaimerAccepted: c.disclaimerAccepted,
                 disclaimerRejected: c.disclaimerRejected,
+                createdAt: c.createdAt,
                 // Color mapping logic could be moved to a helper
                 colorClass: c.category === 'Finanzas' ? 'text-emerald-500' : (c.category === 'Mindset' ? 'text-blue-500' : 'text-purple-500'),
                 bgClass: c.category === 'Finanzas' ? 'bg-emerald-500' : (c.category === 'Mindset' ? 'bg-blue-500' : 'bg-purple-500'),
@@ -118,8 +120,8 @@ export default function MisRetos() {
     });
 
     const filteredChallenges = challenges?.filter(c =>
-        filter === 'active' ? (c.status === 'active' || c.status === 'locked') : c.status === 'completed'
-    );
+        filter === 'active' ? (c.status === 'active' || c.status === 'locked' || c.status === 'completed') : c.status === 'completed'
+    ).sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
 
 
     // --- Disclaimer Logic ---
@@ -231,7 +233,7 @@ export default function MisRetos() {
                             </div>
 
                             {/* Toggle Switch */}
-                            <div className="bg-white p-1 rounded-lg border border-slate-200 inline-flex self-start md:self-auto">
+                            {/* <div className="bg-white p-1 rounded-lg border border-slate-200 inline-flex self-start md:self-auto">
                                 <button
                                     onClick={() => setFilter('active')}
                                     className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${filter === 'active'
@@ -250,7 +252,7 @@ export default function MisRetos() {
                                 >
                                     Completados
                                 </button>
-                            </div>
+                            </div> */}
                         </div>
 
                         {/* Grid */}
