@@ -169,7 +169,7 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
                 <div className="flex justify-between items-center p-4 border-b border-slate-100">
                     <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
                         <Activity className="text-emerald-500" size={20} />
-                        Registrar Actividad
+                        Registrar Actividad Fisica
                     </h3>
                     <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
                         <X size={24} />
@@ -185,7 +185,7 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
                             type="text"
                             value={activity}
                             onChange={(e) => setActivity(e.target.value)}
-                            placeholder="Ej: Correr, Yoga, Lectura..."
+                            placeholder="Ej: Correr, Yoga"
                             className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
                         />
                     </div>
