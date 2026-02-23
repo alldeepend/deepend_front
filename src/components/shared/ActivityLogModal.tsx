@@ -48,16 +48,98 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
             alert("Actividad registrada con éxito!");
         },
         onError: (err: any) => {
-            alert(err.message);
+            alert(err.message === "Unexpected token '<', \"<html>...\" is not valid JSON"
+                ? "Error de conexión o archivo demasiado grande. Por favor intenta de nuevo."
+                : err.message);
         }
     });
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Helper for client-side image compression
+    const compressImage = (file: File, maxWidth = 1200, maxHeight = 1200, quality = 0.8): Promise<File> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target?.result as string;
+                img.onload = () => {
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height = Math.round((height *= maxWidth / width));
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width = Math.round((width *= maxHeight / height));
+                            height = maxHeight;
+                        }
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) {
+                        resolve(file); // Fallback to original
+                        return;
+                    }
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    canvas.toBlob(
+                        (blob) => {
+                            if (!blob) {
+                                resolve(file); // Fallback to original
+                                return;
+                            }
+                            const compressedFile = new File([blob], file.name, {
+                                type: 'image/jpeg',
+                                lastModified: Date.now(),
+                            });
+                            resolve(compressedFile);
+                        },
+                        'image/jpeg',
+                        quality
+                    );
+                };
+                img.onerror = (error) => reject(error);
+            };
+            reader.onerror = (error) => reject(error);
+        });
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            setSelectedFile(file);
-            const url = URL.createObjectURL(file);
-            setPreviewUrl(url);
+
+            // Validar tamaño máximo (10MB)
+            const maxSize = 10 * 1024 * 1024;
+            if (file.size > maxSize) {
+                alert(`La imagen que intentas subir pesa ${(file.size / (1024 * 1024)).toFixed(2)}MB. El tamaño máximo permitido es 10MB. Por favor elige una imagen más ligera o comprímela.`);
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
+                return;
+            }
+
+            // Compress the image before setting it
+            try {
+                // Show a temporary preview or loading state if needed, but this is usually fast enough
+                const compressedFile = await compressImage(file, 1200, 1200, 0.8);
+                setSelectedFile(compressedFile);
+
+                // Use the compressed file for the preview to accurately reflect what will be uploaded
+                const url = URL.createObjectURL(compressedFile);
+                setPreviewUrl(url);
+            } catch (error) {
+                console.error("Error compressing image:", error);
+                // Fallback to original file
+                setSelectedFile(file);
+                const url = URL.createObjectURL(file);
+                setPreviewUrl(url);
+            }
         }
     };
 

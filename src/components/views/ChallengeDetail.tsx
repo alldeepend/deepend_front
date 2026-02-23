@@ -525,9 +525,7 @@ export default function ChallengeDetail() {
                                         {genericSubmissions.length > 1 && (
                                             <div className="flex items-center gap-2">
                                                 <button
-                                                    onClick={() => setCurrentResponseIndex(prev => Math.min(prev + 1, genericSubmissions.length - 1))} // Note: "Previous" in time means higher index in filtered/sorted array usually? Wait, genericSubmissions is raw from API potentially unsorted or sorted by backend.
-                                                    // Assuming backend returns newest last? or usually newest first? Let's assume standard array order.
-                                                    // Actually, let's implement safe bounds for generic carousel.
+                                                    onClick={() => setCurrentResponseIndex(prev => Math.min(prev + 1, genericSubmissions.length - 1))}
                                                     disabled={currentResponseIndex === genericSubmissions.length - 1}
                                                     className="p-1 rounded-full hover:bg-slate-100 disabled:opacity-30 transition-colors"
                                                 >
