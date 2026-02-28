@@ -15,10 +15,13 @@ import FinancialAssessment from './components/views/FinancialAssessment';
 import ActivityHistory from './components/views/ActivityHistory';
 import MyMoneyInAction from './components/views/finance/MyMoneyInAction';
 import GastoHormiga from './components/views/finance/GastoHormiga';
+import { usePageTracking } from './hooks/usePageTracking';
 
 function App() {
     const host = window.location.hostname;
     const isApp = host.includes('app.');
+
+    usePageTracking();
 
     return (
         <>

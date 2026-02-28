@@ -18,6 +18,27 @@ export default function LoginForm() {
     setLoading(true);
     const result = await login(email, password);
     if (result.success) {
+      // Track login event
+      try {
+        const token = localStorage.getItem('token');
+        const envUrl = import.meta.env.VITE_API_URL;
+        const API_URL = (envUrl && typeof envUrl === 'string') ? envUrl.replace(/\/$/, '') : 'http://localhost:3000';
+
+        await fetch(`${API_URL}/api/analytics/track`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            action: 'LOGIN',
+            path: '/login'
+          })
+        });
+      } catch (err) {
+        console.error("Failed to track login:", err);
+      }
+
       navigate('/dashboard');
       setLoading(false);
     } else {
