@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Edit2, Save, X, User as UserIcon, Calendar, MapPin, Phone, RefreshCw, Trash2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Edit2, Save, X, User as UserIcon, Calendar, MapPin, Phone, RefreshCw, Trash2, AlertTriangle, Camera, Loader2, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { HomeSidebar } from '../home/HomeSidebar';
 import { useAuth } from '../../store/useAuth';
@@ -11,7 +11,7 @@ const getApiUrl = () => {
     if (envUrl && typeof envUrl === 'string') {
         return envUrl.replace(/\/$/, '');
     }
-    return 'http://localhost:3000'; // Fallback
+    return 'http://localhost:3000/api'; // Fallback
 };
 
 const API_URL = getApiUrl();
@@ -34,6 +34,8 @@ export default function Perfil() {
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     // Initial state matching the requested fields
     const [formData, setFormData] = useState<ProfileData>({
@@ -139,6 +141,46 @@ export default function Perfil() {
         fetchProfile(); // Revert changes
     };
 
+    const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploadingAvatar(true);
+        const formData = new FormData();
+        formData.append('avatar', file);
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_URL}/user/avatar`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                // Update local storage and context
+                const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+                const updatedUser = { ...storedUser, avatar: data.avatar };
+                localStorage.setItem('user', JSON.stringify(updatedUser));
+                setUser(updatedUser);
+            } else {
+                alert('Error al subir la imagen');
+            }
+        } catch (error) {
+            console.error('Error uploading avatar:', error);
+            alert('Error al conectar con el servidor');
+        } finally {
+            setUploadingAvatar(false);
+        }
+    };
+
+    const triggerFileSelect = () => {
+        fileInputRef.current?.click();
+    };
+
     const handleClearData = async () => {
         if (!window.confirm("¿Estás seguro de que deseas eliminar todos los datos técnicos? Se cerrará tu sesión y se limpiará el cache del navegador.")) {
             return;
@@ -238,8 +280,43 @@ export default function Perfil() {
                                 <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
 
                                 <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-                                    <div className="w-24 h-24 rounded-full bg-emerald-500 flex items-center justify-center text-3xl font-bold shadow-lg ring-4 ring-white/10">
-                                        {formData.firstName?.[0] || formData.username?.[1] || 'U'}
+                                    <div className="relative">
+                                        <div
+                                            onClick={isEditing ? triggerFileSelect : undefined}
+                                            className={`relative w-24 h-24 rounded-full bg-emerald-500 flex items-center justify-center text-3xl font-bold shadow-lg ring-4 ring-white/10 ${isEditing ? 'cursor-pointer group overflow-hidden' : ''}`}
+                                        >
+                                            {uploadingAvatar ? (
+                                                <Loader2 size={32} className="animate-spin text-white" />
+                                            ) : user?.avatar ? (
+                                                <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover transition-transform group-hover:scale-110 rounded-full" />
+                                            ) : (
+                                                formData.firstName?.[0] || formData.username?.[1] || 'U'
+                                            )}
+
+                                            {isEditing && (
+                                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <Camera size={24} className="text-white" />
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Badge de "+" - Solo visible en edición y fuera del overflow */}
+                                        {isEditing && (
+                                            <div
+                                                onClick={triggerFileSelect}
+                                                className="absolute -bottom-1 -right-1 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg border-2 border-slate-900 z-30 cursor-pointer"
+                                            >
+                                                <Plus size={20} className="text-slate-900" />
+                                            </div>
+                                        )}
+
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            onChange={handleAvatarChange}
+                                            className="hidden"
+                                            accept="image/*"
+                                        />
                                     </div>
                                     <div className="text-center md:text-left">
                                         <h3 className="text-2xl font-bold mb-1">

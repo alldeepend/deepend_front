@@ -15,7 +15,7 @@ const getApiUrl = (): string => {
   }
 
   // Fallback: siempre retornar una URL absoluta
-  return 'http://localhost:3000'
+  return 'http://localhost:3000/api'; // Fallback
 };
 
 const API_URL = getApiUrl();

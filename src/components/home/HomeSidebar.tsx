@@ -19,7 +19,7 @@ interface HomeSidebarProps {
 
 export const HomeSidebar = ({ activeTab }: HomeSidebarProps) => {
     const navigate = useNavigate();
-    const { logout } = useAuth();
+    const { user, logout } = useAuth();
 
     return (
         <aside className="w-64 bg-white border-r border-slate-100 flex flex-col justify-between hidden md:flex flex-shrink-0 z-20">
@@ -73,25 +73,33 @@ export const HomeSidebar = ({ activeTab }: HomeSidebarProps) => {
             </div>
 
             {/* Footer Sidebar */}
-            <div className="p-6 space-y-2">
-                {/* <button className="w-full bg-slate-900 hover:bg-slate-800 text-white p-4 rounded-xl flex items-center justify-between group transition-all shadow-lg shadow-slate-200">
-                    <div className="flex items-center gap-3">
-                        <div className="bg-emerald-500/20 p-1.5 rounded-lg">
-                            <ShieldCheck size={18} className="text-emerald-400" />
-                        </div>
-                        <span className="text-sm font-medium">Pasaporte DeepEnd</span>
+            <div className="p-6 border-t border-slate-50">
+                <div className="flex items-center gap-3 mb-4 p-2 rounded-xl bg-slate-50/50 border border-slate-100/50">
+                    <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white text-sm font-bold shadow-sm overflow-hidden flex-shrink-0">
+                        {user?.avatar ? (
+                            <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                        ) : (
+                            (user?.preferredName || user?.firstName || 'U')[0].toUpperCase()
+                        )}
                     </div>
-                    <ArrowRight size={16} className="text-slate-400 group-hover:translate-x-1 transition-transform" />
-                </button> */}
+                    <div className="min-w-0">
+                        <p className="text-sm font-bold text-slate-800 truncate">
+                            {user?.preferredName || user?.firstName || 'Usuario'}
+                        </p>
+                        <p className="text-[10px] text-slate-400 truncate uppercase tracking-wider font-medium">
+                            {user?.membership?.replace('_', ' ') || 'Free'}
+                        </p>
+                    </div>
+                </div>
 
                 <button
                     onClick={() => {
                         logout();
                         navigate('/');
                     }}
-                    className="w-full text-slate-500 hover:text-rose-500 p-3 rounded-xl flex items-center justify-center gap-2 transition-colors text-sm font-medium"
+                    className="w-full text-slate-400 hover:text-rose-500 p-3 rounded-xl flex items-center justify-center gap-2 transition-all hover:bg-rose-50/50 text-xs font-bold uppercase tracking-widest"
                 >
-                    <LogOut size={18} />
+                    <LogOut size={16} />
                     Cerrar Sesión
                 </button>
             </div>

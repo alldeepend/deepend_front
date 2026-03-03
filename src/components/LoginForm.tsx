@@ -22,9 +22,9 @@ export default function LoginForm() {
       try {
         const token = localStorage.getItem('token');
         const envUrl = import.meta.env.VITE_API_URL;
-        const API_URL = (envUrl && typeof envUrl === 'string') ? envUrl.replace(/\/$/, '') : 'http://localhost:3000';
+        const API_URL = (envUrl && typeof envUrl === 'string') ? envUrl.replace(/\/$/, '') : 'http://localhost:3000/api';
 
-        await fetch(`${API_URL}/api/analytics/track`, {
+        await fetch(`${API_URL}/analytics/track`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -4,8 +4,11 @@ import { useLocation } from 'react-router';
 // Helper to get API URL
 const getApiUrl = () => {
     const envUrl = import.meta.env.VITE_API_URL;
-    // Sanitize to get host only, no trailing /api
-    return (envUrl || 'http://localhost:3000').replace(/\/api\/?$/, '').replace(/\/$/, '');
+    if (envUrl && typeof envUrl === 'string') {
+        const cleaned = envUrl.trim().replace(/\/$/, '');
+        return cleaned.endsWith('/api') ? cleaned : `${cleaned}/api`;
+    }
+    return 'http://localhost:3000/api';
 };
 
 export const usePageTracking = () => {
@@ -18,7 +21,7 @@ export const usePageTracking = () => {
         const trackPageView = async () => {
             try {
                 const API_URL = getApiUrl();
-                await fetch(`${API_URL}/api/analytics/track`, {
+                await fetch(`${API_URL}/analytics/track`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
