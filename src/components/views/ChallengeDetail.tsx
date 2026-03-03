@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Clock, Trophy, Upload, CheckCircle, Lock, Play, FileText, Download, Video, Link, ChevronUp, ChevronDown, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Clock, Trophy, Upload, CheckCircle, Lock, Play, FileText, Download, Video, Link, ChevronUp, ChevronDown, CheckCircle2, Loader2 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { HomeSidebar } from '../home/HomeSidebar';
 import DynamicForm from '../shared/DynamicForm';
@@ -46,8 +46,8 @@ const AccordionSection = ({ title, content }: { title: string, content: string }
             {isOpen && (
                 <div className="px-6 pb-6 animate-in slide-in-from-top-2 duration-200">
                     <div
-                        className="text-slate-500 text-md leading-relaxed prose prose-slate max-w-none"
-                        dangerouslySetInnerHTML={{ __html: content }}
+                        className="prose prose-slate max-w-none text-slate-600"
+                        dangerouslySetInnerHTML={{ __html: content.replaceAll('&nbsp;', ' ') }}
                     />
                 </div>
             )}
@@ -144,7 +144,7 @@ export default function ChallengeDetail() {
     const toggleTaskMutation = useMutation({
         mutationFn: async (taskId: string) => {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${host} /api/challenges / ${challengeId} /tasks/${taskId}/toggle`, {
+            const res = await fetch(`${host}/api/challenges/${challengeId}/tasks/${taskId}/toggle`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -482,35 +482,42 @@ export default function ChallengeDetail() {
 
                                 {/* Steps List */}
                                 <div className="space-y-4">
-                                    {steps.map((step: any) => (
-                                        <div
-                                            key={step.id}
-                                            onClick={() => handleTaskClick(step)}
-                                            className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center gap-4 ${step.completed
-                                                ? 'bg-white border-emerald-100 shadow-none'
-                                                : 'bg-white border-slate-100 hover:border-emerald-200 hover:shadow-sm'
-                                                }`}
-                                        >
-                                            <div className={`flex-shrink-0 w-6 h-6 rounded flex items-center justify-center transition-colors ${step.completed ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-[#ed2629]'
-                                                }`}>
-                                                <CheckCircle2 size={16} />
-                                            </div>
-                                            <div className="flex-1">
-                                                <span className={`text-sm font-medium transition-colors ${step.completed ? 'text-slate-400 line-through' : 'text-slate-700'
+                                    {steps.map((step: any) => {
+                                        const isPending = toggleTaskMutation.isPending && toggleTaskMutation.variables === step.id;
+                                        return (
+                                            <div
+                                                key={step.id}
+                                                onClick={() => !isPending && handleTaskClick(step)}
+                                                className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center gap-4 ${step.completed
+                                                    ? 'bg-white border-emerald-100 shadow-none'
+                                                    : 'bg-white border-slate-100 hover:border-emerald-200 hover:shadow-sm'
+                                                    } ${isPending ? 'opacity-70 cursor-wait' : ''}`}
+                                            >
+                                                <div className={`flex-shrink-0 w-6 h-6 rounded flex items-center justify-center transition-colors ${step.completed ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-[#ed2629]'
                                                     }`}>
-                                                    {step.text}
-                                                </span>
-                                                {step.formSchema && !step.completed && (
-                                                    <span className="block text-xs text-[#ed2629] font-bold mt-1">Requiere completar formulario</span>
+                                                    {isPending ? (
+                                                        <Loader2 size={16} className="animate-spin" />
+                                                    ) : (
+                                                        <CheckCircle2 size={16} />
+                                                    )}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <span className={`text-sm font-medium transition-colors ${step.completed ? 'text-slate-400 line-through' : 'text-slate-700'
+                                                        }`}>
+                                                        {step.text}
+                                                    </span>
+                                                    {step.formSchema && !step.completed && (
+                                                        <span className="block text-xs text-[#ed2629] font-bold mt-1">Requiere completar formulario</span>
+                                                    )}
+                                                </div>
+                                                {step.formSchema && (
+                                                    <div className="text-slate-400">
+                                                        <FileText size={16} />
+                                                    </div>
                                                 )}
                                             </div>
-                                            {step.formSchema && (
-                                                <div className="text-slate-400">
-                                                    <FileText size={16} />
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                     {steps.length === 0 && <p className="text-slate-400 text-sm">No hay pasos definidos para este reto aún.</p>}
                                 </div>
                             </div>

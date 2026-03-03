@@ -11,6 +11,7 @@ interface Field {
         field: string;
         value?: string | any;
         values?: string[];
+        rules?: { field: string, value?: any, values?: string[] }[];
     };
     validation?: {
         max_selection?: number;
@@ -41,6 +42,79 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
     const [formData, setFormData] = useState<any>(initialData);
     const [errors, setErrors] = useState<any>({});
 
+    const shouldShowField = (field: Field) => {
+        const { condition } = field;
+        if (!condition) return true;
+
+        // Support for new multi-rule logic
+        if ('rules' in condition && Array.isArray(condition.rules)) {
+            // Field is shown if ANY rule matches (OR logic)
+            return condition.rules.some(rule => {
+                const dependentValue = formData[rule.field];
+                if (dependentValue === undefined || dependentValue === null || dependentValue === '') return false;
+
+                // 1. Array of allowed values (OR logic within one rule)
+                const allowedValues = rule.values || (rule.value ? [rule.value] : []);
+
+                if (Array.isArray(dependentValue)) {
+                    // If dependent is multi-select, check if ANY of its values match ANY allowed values
+                    return dependentValue.some(item =>
+                        allowedValues.some((allowed: any) => String(allowed).trim() === String(item).trim())
+                    );
+                }
+
+                // Simple equality check against any allowed value
+                return allowedValues.some((allowed: any) =>
+                    String(allowed).trim() === String(dependentValue).trim()
+                );
+            });
+        }
+
+        // Fallback for legacy single-rule logic (if any exists in DB)
+        const legacyField = (condition as any).field;
+        if (!legacyField) return true;
+
+        const dependentValue = formData[legacyField];
+        if (dependentValue === undefined || dependentValue === null || dependentValue === '') return false;
+
+        const condVal = (condition as any).value;
+        const condVals = (condition as any).values;
+
+        if (condVals && Array.isArray(condVals)) {
+            return condVals.some(allowed =>
+                String(allowed).trim() === String(dependentValue).trim()
+            );
+        }
+
+        if (condVal) {
+            if (Array.isArray(dependentValue)) {
+                return dependentValue.some(item =>
+                    String(item).trim() === String(condVal).trim()
+                );
+            }
+            return String(dependentValue).trim() === String(condVal).trim();
+        }
+
+        return true;
+    };
+
+    // Auto-clear hidden fields values to maintain data integrity and trigger cascading visibility
+    React.useEffect(() => {
+        let changed = false;
+        const newFormData = { ...formData };
+
+        schema.fields.forEach(field => {
+            if (field.type !== 'header' && formData[field.id] !== undefined && !shouldShowField(field)) {
+                delete newFormData[field.id];
+                changed = true;
+            }
+        });
+
+        if (changed) {
+            setFormData(newFormData);
+        }
+    }, [formData, schema.fields]);
+
     const handleChange = (id: string, value: any) => {
         setFormData((prev: any) => ({ ...prev, [id]: value }));
         // Clear error if exists
@@ -53,35 +127,7 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
         }
     };
 
-    const shouldShowField = (field: Field) => {
-        const { condition } = field;
-        if (!condition) return true;
-        const dependentValue = formData[condition.field];
 
-        if (!dependentValue) return false;
-
-        // 1. Array of allowed values (OR logic)
-        if (condition.values && Array.isArray(condition.values)) {
-            // Include logic: check if dependentValue matches ANY in the allowed list (trimmed)
-            return condition.values.some(allowed =>
-                String(allowed).trim() === String(dependentValue).trim()
-            );
-        }
-
-        // 2. Single Value Check
-        if (condition.value) {
-            // Case: Dependent is an Array (Multiselect), check if it INCLUDES the condition value
-            if (Array.isArray(dependentValue)) {
-                return dependentValue.some(item =>
-                    String(item).trim() === String(condition.value).trim()
-                );
-            }
-            // Case: Simple equality
-            return String(dependentValue).trim() === String(condition.value).trim();
-        }
-
-        return true;
-    };
 
     const handleMultiSelect = (id: string, option: string, maxSelection?: number) => {
         const current = formData[id] || [];
@@ -192,8 +238,16 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
                     if (field.type === 'header') {
                         return (
                             <div key={field.id} className="mt-6 mb-2">
-                                <h3 className="text-md text-slate-800 whitespace-pre-wrap">{field.label}</h3>
-                                {field.help_text && <p className="text-sm text-slate-500 mt-1">{field.help_text}</p>}
+                                <h3
+                                    className="text-md text-slate-800 whitespace-pre-wrap rich-text-content"
+                                    dangerouslySetInnerHTML={{ __html: field.label }}
+                                />
+                                {field.help_text && (
+                                    <div
+                                        className="text-sm text-slate-500 mt-1 rich-text-content"
+                                        dangerouslySetInnerHTML={{ __html: field.help_text.replaceAll('&nbsp;', ' ') }}
+                                    />
+                                )}
                             </div>
                         );
                     }
@@ -204,7 +258,12 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
                                 {field.label}
                                 {field.required && <span className="text-red-500 ml-1">*</span>}
                             </label>
-                            {field.help_text && <p className="text-s text-[#202224] mb-2 whitespace-pre-wrap">{field.help_text}</p>}
+                            {field.help_text && (
+                                <p
+                                    className="text-s text-[#202224] mb-2 whitespace-pre-wrap rich-text-content"
+                                    dangerouslySetInnerHTML={{ __html: field.help_text }}
+                                />
+                            )}
 
                             {(field.type === 'text' || field.type === 'number') && (
                                 <input

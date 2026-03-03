@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Edit2, Save, X, User as UserIcon, Calendar, MapPin, Phone, Mail } from 'lucide-react';
+import { ArrowLeft, Edit2, Save, X, User as UserIcon, Calendar, MapPin, Phone, RefreshCw, Trash2, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { HomeSidebar } from '../home/HomeSidebar';
 import { useAuth } from '../../store/useAuth';
@@ -137,6 +137,40 @@ export default function Perfil() {
     const handleCancel = () => {
         setIsEditing(false);
         fetchProfile(); // Revert changes
+    };
+
+    const handleClearData = async () => {
+        if (!window.confirm("¿Estás seguro de que deseas eliminar todos los datos técnicos? Se cerrará tu sesión y se limpiará el cache del navegador.")) {
+            return;
+        }
+
+        try {
+            // 1. Unregister Service Workers
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (const registration of registrations) {
+                    await registration.unregister();
+                }
+            }
+
+            // 2. Clear Cache Storage
+            if ('caches' in window) {
+                const cacheNames = await caches.keys();
+                for (const name of cacheNames) {
+                    await caches.delete(name);
+                }
+            }
+
+            // 3. Clear Storage
+            localStorage.clear();
+            sessionStorage.clear();
+
+            // 4. Reload
+            window.location.href = '/';
+        } catch (error) {
+            console.error('Error clearing data:', error);
+            alert('Hubo un error al limpiar los datos. Por favor, intenta de nuevo.');
+        }
     };
 
     return (
@@ -298,6 +332,31 @@ export default function Perfil() {
                                     isEditing={isEditing}
                                     onChange={handleInputChange}
                                 />
+                            </div>
+
+                            {/* Advanced Settings / Cache Clearing */}
+                            <div className="mt-12 pt-8 border-t border-slate-100 mb-20">
+                                <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 pl-1">Ajustes Avanzados</h4>
+                                <div className="bg-amber-50 rounded-2xl p-6 border border-amber-100">
+                                    <div className="flex flex-col md:flex-row items-center gap-6">
+                                        <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-amber-500 shadow-sm shrink-0">
+                                            <AlertTriangle size={24} />
+                                        </div>
+                                        <div className="flex-1 text-center md:text-left">
+                                            <h5 className="text-slate-800 font-bold mb-1">Mantenimiento de la aplicación</h5>
+                                            <p className="text-slate-500 text-xs leading-relaxed">
+                                                Si experimentas problemas visuales o de carga, puedes limpiar los datos técnicos guardados en tu navegador (Cache, Service Workers y Almacenamiento local). Se cerrará tu sesión actual.
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={handleClearData}
+                                            className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-red-500 rounded-xl text-sm font-bold hover:bg-red-50 hover:border-red-100 hover:text-red-600 transition-all shadow-sm active:scale-95 whitespace-nowrap"
+                                        >
+                                            <RefreshCw size={16} />
+                                            Limpiar Cache y Datos
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}

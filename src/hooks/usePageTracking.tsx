@@ -4,10 +4,8 @@ import { useLocation } from 'react-router';
 // Helper to get API URL
 const getApiUrl = () => {
     const envUrl = import.meta.env.VITE_API_URL;
-    if (envUrl && typeof envUrl === 'string') {
-        return envUrl.replace(/\/$/, '');
-    }
-    return 'http://localhost:3000'; // Fallback
+    // Sanitize to get host only, no trailing /api
+    return (envUrl || 'http://localhost:3000').replace(/\/api\/?$/, '').replace(/\/$/, '');
 };
 
 export const usePageTracking = () => {

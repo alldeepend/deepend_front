@@ -57,12 +57,12 @@ const ChallengeCard = ({ data, onClick }: { data: ChallengeCardData; onClick?: (
             {/* Show progress/stats ONLY if active AND accepted/not-rejected */}
             {!isVisuallyLocked ? (
                 <div>
-                    {/* <div className="flex justify-between items-end mb-2">
+                    <div className="flex justify-between items-end mb-2">
                         <span className={`text-xs ${data.status === 'active' ? 'text-[#ed2629]' : 'text-[#57ba47]'} font-medium`}>
                             {data.status === 'completed' ? 'Completado' : 'Progreso'}
                         </span>
                         <span className={`text-xs font-bold ${data.status === 'active' ? 'text-[#ed2629]' : 'text-[#57ba47]'}`}>{data.progress}%</span>
-                    </div> */}
+                    </div>
                     <div className="w-full bg-slate-100 rounded-full h-1.5">
                         <div
                             className={`h-1.5 rounded-full ${data.status === 'active' ? 'bg-[#ed2629]' : 'bg-[#57ba47]'}`}
@@ -88,7 +88,7 @@ import Header from '../../components/shared/Header';
 
 export default function MisRetos() {
     const navigate = useNavigate();
-    const [filter, setFilter] = useState<'active' | 'completed'>('active');
+    const [filter, setFilter] = useState<'active' | 'in-progress' | 'completed'>('active');
 
     const { data: challenges, isLoading, refetch } = useQuery<ChallengeCardData[]>({
         queryKey: ['challenges'],
@@ -119,9 +119,13 @@ export default function MisRetos() {
         }
     });
 
-    const filteredChallenges = challenges?.filter(c =>
-        filter === 'active' ? (c.status === 'active' || c.status === 'locked' || c.status === 'completed') : c.status === 'completed'
-    ).sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+    const filteredChallenges = challenges?.filter(c => {
+        const progress = c.progress || 0;
+        if (filter === 'active') return progress === 0 && c.status !== 'completed';
+        if (filter === 'in-progress') return progress > 0 && progress < 100 && c.status !== 'completed';
+        if (filter === 'completed') return c.status === 'completed' || progress === 100;
+        return true;
+    }).sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
 
 
     // --- Disclaimer Logic ---
@@ -233,7 +237,7 @@ export default function MisRetos() {
                             </div>
 
                             {/* Toggle Switch */}
-                            {/* <div className="bg-white p-1 rounded-lg border border-slate-200 inline-flex self-start md:self-auto">
+                            <div className="bg-white p-1 rounded-lg border border-slate-200 inline-flex self-start md:self-auto">
                                 <button
                                     onClick={() => setFilter('active')}
                                     className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${filter === 'active'
@@ -244,6 +248,15 @@ export default function MisRetos() {
                                     Activos
                                 </button>
                                 <button
+                                    onClick={() => setFilter('in-progress')}
+                                    className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${filter === 'in-progress'
+                                        ? 'bg-slate-900 text-white shadow-sm'
+                                        : 'text-slate-500 hover:text-slate-700'
+                                        }`}
+                                >
+                                    En Progreso
+                                </button>
+                                <button
                                     onClick={() => setFilter('completed')}
                                     className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${filter === 'completed'
                                         ? 'bg-slate-900 text-white shadow-sm'
@@ -252,7 +265,7 @@ export default function MisRetos() {
                                 >
                                     Completados
                                 </button>
-                            </div> */}
+                            </div>
                         </div>
 
                         {/* Grid */}
