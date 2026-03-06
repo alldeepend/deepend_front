@@ -15,6 +15,9 @@ export const DashboardContent = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isRecognitionOpen, setIsRecognitionOpen] = useState(false);
 
+    const targetChallengeId = '6cae6006-7b14-42ba-ba21-b6f4aeb6fd7c';
+    const targetTaskId = 'd9f07188-27fd-4252-a2ff-9d61806374f9';
+
     const { data: challenges } = useQuery({
         queryKey: ['challenges'],
         queryFn: async () => {
@@ -27,8 +30,20 @@ export const DashboardContent = () => {
         }
     });
 
-    const targetChallengeId = '6cae6006-7b14-42ba-ba21-b6f4aeb6fd7c';
+    const { data: taskStatus } = useQuery({
+        queryKey: ['task-status', targetTaskId],
+        queryFn: async () => {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${host}/api/tasks/${targetTaskId}/status`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error('Failed to fetch task status');
+            return await res.json();
+        }
+    });
+
     const hasActiveChallenge = challenges?.some((c: any) => c.status === 'active' && c.id === targetChallengeId);
+    const isTaskCompleted = taskStatus?.completed === true;
 
     return (
         <>
@@ -39,7 +54,7 @@ export const DashboardContent = () => {
                 {/* <SocialProfileCard /> */}
             </div>
 
-            {hasActiveChallenge && (
+            {hasActiveChallenge && isTaskCompleted && (
                 <div className="mb-8">
                     <button
                         onClick={() => setIsRecognitionOpen(true)}
