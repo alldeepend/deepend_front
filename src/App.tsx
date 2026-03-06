@@ -13,6 +13,7 @@ import ForgotPassword from './components/views/ForgotPassword';
 import ResetPassword from './components/views/ResetPassword';
 import FinancialAssessment from './components/views/FinancialAssessment';
 import ActivityHistory from './components/views/ActivityHistory';
+import ChallengeLogs from './components/views/ChallengeLogs';
 import MyMoneyInAction from './components/views/finance/MyMoneyInAction';
 import GastoHormiga from './components/views/finance/GastoHormiga';
 import { usePageTracking } from './hooks/usePageTracking';
@@ -79,6 +80,11 @@ function App() {
                 <Route path="/activities" element={
                     <ProtectedRoute>
                         <ActivityHistory />
+                    </ProtectedRoute>
+                } />
+                <Route path="/challenge-logs" element={
+                    <ProtectedRoute>
+                        <ChallengeLogs />
                     </ProtectedRoute>
                 } />
                 <Route path="/login" element={

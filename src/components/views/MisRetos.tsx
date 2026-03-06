@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, PlayCircle, Lock } from 'lucide-react';
+import { ArrowLeft, PlayCircle, Lock, Star } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { HomeSidebar } from '../home/HomeSidebar';
 import { useQuery } from '@tanstack/react-query';
@@ -236,6 +236,20 @@ export default function MisRetos() {
                                 <h2 className="text-3xl font-light text-slate-800">Mis Retos</h2>
                             </div>
 
+                            {/* Full-width Logs Button */}
+                            <button
+                                onClick={() => navigate('/challenge-logs')}
+                                className="w-full mb-8 bg-gradient-to-r from-emerald-600 to-emerald-800 text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-emerald-100 hover:shadow-xl hover:scale-[1.005] transition-all flex items-center justify-center gap-3 group"
+                            >
+                                <div className="bg-white/20 p-2 rounded-xl group-hover:rotate-12 transition-transform">
+                                    <Star size={24} className="fill-white" />
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-lg leading-tight">Registros de Retos</p>
+                                    <p className="text-emerald-100 text-xs font-normal">Consulta tu historial de disciplina y momentos de valor</p>
+                                </div>
+                            </button>
+
                             {/* Toggle Switch */}
                             <div className="bg-white p-1 rounded-lg border border-slate-200 inline-flex self-start md:self-auto">
                                 <button
@@ -267,6 +281,8 @@ export default function MisRetos() {
                                 </button>
                             </div>
                         </div>
+
+
 
                         {/* Grid */}
                         {isLoading ? (
