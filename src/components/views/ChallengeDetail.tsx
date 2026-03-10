@@ -498,7 +498,7 @@ export default function ChallengeDetail() {
                                 </div>
 
                                 {/* Restart Challenge Button (Visible when complete) */}
-                                {(challenge.status === 'completed' || isTotallyCompletedSafe) && (
+                                {/* {(challenge.status === 'completed' || isTotallyCompletedSafe) && (
                                     <div className="mb-6 flex justify-end">
                                         <button
                                             onClick={() => setIsRestartDialogOpen(true)}
@@ -508,7 +508,7 @@ export default function ChallengeDetail() {
                                             Reiniciar Reto
                                         </button>
                                     </div>
-                                )}
+                                )} */}
 
 
                                 {/* Steps List */}

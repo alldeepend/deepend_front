@@ -89,13 +89,13 @@ export default function ChallengeLogs() {
                                 <h1 className="text-3xl font-light text-slate-800">Registros de Retos</h1>
                                 <p className="text-slate-500 mt-2">Consulta tu historial de progreso y momentos de valor.</p>
                             </div>
-                            <button
+                            {/* <button
                                 onClick={() => setIsHabitModalOpen(true)}
                                 className="bg-emerald-600 text-white px-6 py-4 rounded-2xl font-bold shadow-xl shadow-emerald-100 hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 min-w-[220px] active:scale-95"
                             >
                                 <TrendingUp size={20} />
                                 {habitData ? 'Ver Mis Metas Físicas' : 'Configurar Reto Especial'}
-                            </button>
+                            </button> */}
                         </div>
                     </header>
 
@@ -104,8 +104,8 @@ export default function ChallengeLogs() {
                         <button
                             onClick={() => setActiveTab('physical')}
                             className={`pb-4 px-2 text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'physical'
-                                    ? 'text-emerald-600 border-b-2 border-emerald-600'
-                                    : 'text-slate-400 hover:text-slate-600'
+                                ? 'text-emerald-600 border-b-2 border-emerald-600'
+                                : 'text-slate-400 hover:text-slate-600'
                                 }`}
                         >
                             <Activity size={18} />
@@ -114,8 +114,8 @@ export default function ChallengeLogs() {
                         <button
                             onClick={() => setActiveTab('recognition')}
                             className={`pb-4 px-2 text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'recognition'
-                                    ? 'text-emerald-600 border-b-2 border-emerald-600'
-                                    : 'text-slate-400 hover:text-slate-600'
+                                ? 'text-emerald-600 border-b-2 border-emerald-600'
+                                : 'text-slate-400 hover:text-slate-600'
                                 }`}
                         >
                             <Star size={18} />
@@ -205,7 +205,7 @@ export default function ChallengeLogs() {
                 </div>
             </main>
 
-            <PhysicalHabitSetupModal 
+            <PhysicalHabitSetupModal
                 isOpen={isHabitModalOpen}
                 initialData={habitData}
                 onClose={() => setIsHabitModalOpen(false)}
