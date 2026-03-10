@@ -5,6 +5,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Clock, Calendar, ArrowLeft, Star, Heart, Activity } from 'lucide-react';
 import { Link } from 'react-router';
 import Header from '../shared/Header';
+import PhysicalHabitSetupModal from '../shared/PhysicalHabitSetupModal';
+import { TrendingUp } from 'lucide-react';
 
 const host = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/api\/?$/, '');
 
@@ -25,6 +27,19 @@ interface Recognition {
 
 export default function ChallengeLogs() {
     const [activeTab, setActiveTab] = useState<'physical' | 'recognition'>('physical');
+    const [isHabitModalOpen, setIsHabitModalOpen] = useState(false);
+
+    const { data: habitData } = useQuery({
+        queryKey: ['physical-habit'],
+        queryFn: async () => {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${host}/api/physical-activity-habit`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) return null;
+            return await res.json();
+        }
+    });
 
     const { data: activities, isLoading: loadingActivities } = useQuery({
         queryKey: ['all-activities'],
@@ -69,8 +84,19 @@ export default function ChallengeLogs() {
                         <Link to="/challenges" className="inline-flex items-center gap-2 text-slate-400 hover:text-slate-600 mb-4 transition-colors group">
                             <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" /> Volver a Mis Retos
                         </Link>
-                        <h1 className="text-3xl font-light text-slate-800">Registros de Retos</h1>
-                        <p className="text-slate-500 mt-2">Consulta tu historial de progreso y momentos de valor.</p>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                            <div>
+                                <h1 className="text-3xl font-light text-slate-800">Registros de Retos</h1>
+                                <p className="text-slate-500 mt-2">Consulta tu historial de progreso y momentos de valor.</p>
+                            </div>
+                            <button
+                                onClick={() => setIsHabitModalOpen(true)}
+                                className="bg-emerald-600 text-white px-6 py-4 rounded-2xl font-bold shadow-xl shadow-emerald-100 hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 min-w-[220px] active:scale-95"
+                            >
+                                <TrendingUp size={20} />
+                                {habitData ? 'Ver Mis Metas Físicas' : 'Configurar Reto Especial'}
+                            </button>
+                        </div>
                     </header>
 
                     {/* Tabs */}
@@ -178,6 +204,12 @@ export default function ChallengeLogs() {
                     )}
                 </div>
             </main>
+
+            <PhysicalHabitSetupModal 
+                isOpen={isHabitModalOpen}
+                initialData={habitData}
+                onClose={() => setIsHabitModalOpen(false)}
+            />
         </div>
     );
 }

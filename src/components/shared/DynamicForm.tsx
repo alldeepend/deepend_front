@@ -32,7 +32,7 @@ interface FormSchema {
 
 interface DynamicFormProps {
     schema: FormSchema;
-    onSubmit: (data: any) => void;
+    onSubmit: (data: any, rawData?: any) => void;
     onCancel: () => void;
     initialData?: any;
     isSubmitting?: boolean;
@@ -206,7 +206,7 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
                     // Filter out undefined/null answers if desired, or keep them as empty
                     .filter(item => item.answer !== undefined && item.answer !== null && item.answer !== '');
 
-                onSubmit(orderedResponses);
+                onSubmit(orderedResponses, formData);
             }
         } else {
             // Optional: Alert or stick validation
@@ -261,7 +261,7 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
                             {field.help_text && (
                                 <p
                                     className="text-s text-[#202224] mb-2 whitespace-pre-wrap rich-text-content"
-                                    dangerouslySetInnerHTML={{ __html: field.help_text }}
+                                    dangerouslySetInnerHTML={{ __html: field.help_text.replaceAll('&nbsp;', ' ') }}
                                 />
                             )}
 

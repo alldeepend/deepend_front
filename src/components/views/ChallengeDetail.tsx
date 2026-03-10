@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Clock, Trophy, Upload, CheckCircle, Lock, Play, FileText, Download, Video, Link, ChevronUp, ChevronDown, CheckCircle2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Clock, Trophy, Upload, CheckCircle, Lock, Play, FileText, Download, Video, Link, ChevronUp, ChevronDown, CheckCircle2, Loader2, RotateCcw } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { HomeSidebar } from '../home/HomeSidebar';
 import DynamicForm from '../shared/DynamicForm';
@@ -64,6 +64,7 @@ export default function ChallengeDetail() {
     const [currentResponseIndex, setCurrentResponseIndex] = useState(0);
     const { user } = useAuth();
     const [hasFinancialDraft, setHasFinancialDraft] = useState(false);
+    const [isRestartDialogOpen, setIsRestartDialogOpen] = useState(false);
 
     // --- Auto Reload Logic (Moved to Top) ---
     const [shouldReloadOnComplete, setShouldReloadOnComplete] = useState(false);
@@ -161,7 +162,7 @@ export default function ChallengeDetail() {
     const [activeTaskForm, setActiveTaskForm] = useState<{ id: string, schema: any } | null>(null);
 
     const submitFormMutation = useMutation({
-        mutationFn: async ({ taskId, data }: { taskId: string, data: any }) => {
+        mutationFn: async ({ taskId, data, rawData }: { taskId: string, data: any, rawData?: any }) => {
             const token = localStorage.getItem('token');
 
             // 1. Save Submission
@@ -174,7 +175,8 @@ export default function ChallengeDetail() {
                 body: JSON.stringify({
                     responses: {
                         taskId: taskId,
-                        ...data
+                        ...rawData, // Priority to rawData (readable IDs)
+                        ordered: data // Still keep ordered for UI display if needed
                     }
                 })
             });
@@ -194,6 +196,30 @@ export default function ChallengeDetail() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['challenge', challengeId] });
             setActiveTaskForm(null);
+        }
+    });
+
+    // --- Restart Challenge Logic ---
+    const restartChallengeMutation = useMutation({
+        mutationFn: async () => {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${host}/api/challenges/${challengeId}/restart`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.error || 'Failed to restart challenge');
+            }
+            return await res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['challenge', challengeId] });
+            queryClient.invalidateQueries({ queryKey: ['challenges'] });
+            setIsRestartDialogOpen(false);
+        },
+        onError: (error: any) => {
+            alert(error.message || 'Error al reiniciar el reto');
         }
     });
 
@@ -277,14 +303,6 @@ export default function ChallengeDetail() {
                                 {/* Gradient Overlay */}
                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent z-10"></div>
 
-                                {/* <div className="absolute right-10 top-1/2 -translate-y-1/2 w-64 h-64 opacity-90">
-                                  
-                                    <img
-                                        src="https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=800"
-                                        alt={challenge.title}
-                                        className="object-cover w-full h-full rounded-full"
-                                    />
-                                </div> */}
 
                                 <div className="absolute bottom-8 left-8 z-20">
                                     <span className="inline-block px-3 py-1 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 text-white text-[10px] font-bold tracking-wider uppercase mb-3">
@@ -315,7 +333,6 @@ export default function ChallengeDetail() {
                             {/* </div> */}
                         </div>
                     </div>
-
 
 
                     {/* Details Grid - New Fields */}
@@ -480,6 +497,20 @@ export default function ChallengeDetail() {
                                     ></div>
                                 </div>
 
+                                {/* Restart Challenge Button (Visible when complete) */}
+                                {(challenge.status === 'completed' || isTotallyCompletedSafe) && (
+                                    <div className="mb-6 flex justify-end">
+                                        <button
+                                            onClick={() => setIsRestartDialogOpen(true)}
+                                            className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-emerald-600 transition-colors bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm hover:border-emerald-200 hover:shadow-emerald-100"
+                                        >
+                                            <RotateCcw size={16} />
+                                            Reiniciar Reto
+                                        </button>
+                                    </div>
+                                )}
+
+
                                 {/* Steps List */}
                                 <div className="space-y-4">
                                     {steps.map((step: any) => {
@@ -487,10 +518,10 @@ export default function ChallengeDetail() {
                                         return (
                                             <div
                                                 key={step.id}
-                                                onClick={() => !isPending && handleTaskClick(step)}
-                                                className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center gap-4 ${step.completed
-                                                    ? 'bg-white border-emerald-100 shadow-none'
-                                                    : 'bg-white border-slate-100 hover:border-emerald-200 hover:shadow-sm'
+                                                onClick={() => !isPending && !step.completed && handleTaskClick(step)}
+                                                className={`p-4 rounded-xl border transition-all flex items-center gap-4 ${step.completed
+                                                    ? 'bg-white border-emerald-100 shadow-none cursor-default'
+                                                    : 'bg-white border-slate-100 hover:border-emerald-200 hover:shadow-sm cursor-pointer'
                                                     } ${isPending ? 'opacity-70 cursor-wait' : ''}`}
                                             >
                                                 <div className={`flex-shrink-0 w-6 h-6 rounded flex items-center justify-center transition-colors ${step.completed ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-[#ed2629]'
@@ -568,7 +599,11 @@ export default function ChallengeDetail() {
                                                 if (Array.isArray(content)) {
                                                     displayContent = content;
                                                 }
-                                                // Case 3: Indexed Object (Legacy format: {"0": { question, answer }, "1": ...})
+                                                // Case 3: Object with an 'ordered' property (The new hybrid format for Life Chart)
+                                                else if (typeof content === 'object' && content !== null && Array.isArray(content.ordered)) {
+                                                    displayContent = content.ordered;
+                                                }
+                                                // Case 4: Indexed Object (Legacy format: {"0": { question, answer }, "1": ...})
                                                 else if (typeof content === 'object' && content !== null) {
                                                     // Check if keys are numeric indices (excluding system keys like taskId)
                                                     const keys = Object.keys(content).filter(k => k !== 'taskId');
@@ -725,7 +760,7 @@ export default function ChallengeDetail() {
                                 <div className="p-6 md:p-8 overflow-y-auto">
                                     <DynamicForm
                                         schema={activeTaskForm.schema}
-                                        onSubmit={(data) => submitFormMutation.mutate({ taskId: activeTaskForm.id, data })}
+                                        onSubmit={(data, rawData) => submitFormMutation.mutate({ taskId: activeTaskForm.id, data, rawData })}
                                         onCancel={() => setActiveTaskForm(null)}
                                         isSubmitting={submitFormMutation.isPending}
                                     />
@@ -734,6 +769,44 @@ export default function ChallengeDetail() {
                         </div>
                     )
                 }
+
+                {/* Restart Confirmation Modal */}
+                {isRestartDialogOpen && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative">
+                            <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mb-4 mx-auto">
+                                <RotateCcw size={24} />
+                            </div>
+                            <h3 className="text-xl font-bold text-center text-slate-900 mb-2">
+                                ¿Reiniciar este reto?
+                            </h3>
+                            <p className="text-slate-600 text-center mb-6">
+                                Al reiniciar, volverás a tener el progreso en 0% para poder hacer todas las tareas nuevamente.
+                                Tus respuestas anteriores se guardarán en tu historial de forma segura.
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setIsRestartDialogOpen(false)}
+                                    className="flex-1 py-3 px-4 rounded-xl font-bold text-slate-600 hover:bg-slate-100 transition-colors"
+                                    disabled={restartChallengeMutation.isPending}
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={() => restartChallengeMutation.mutate()}
+                                    className="flex-1 py-3 px-4 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold shadow-lg shadow-orange-200 transition-all flex items-center justify-center disabled:opacity-50"
+                                    disabled={restartChallengeMutation.isPending}
+                                >
+                                    {restartChallengeMutation.isPending ? (
+                                        <Loader2 size={20} className="animate-spin" />
+                                    ) : (
+                                        'Sí, reiniciar'
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </main >
 
 
