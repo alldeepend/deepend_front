@@ -29,7 +29,7 @@ export const usePageTracking = () => {
                     },
                     body: JSON.stringify({
                         action: 'PAGE_VIEW',
-                        path: location.pathname
+                        path: location.pathname + location.search
                     })
                 });
             } catch (error) {

@@ -5,6 +5,7 @@ import ProtectedRoute from './components/shared/ProtectedRoute'
 import PublicRoute from './components/shared/PublicRoute'
 import HomePage from './components/views/HomePage';
 import MyJourney from './components/views/MyJourney';
+import WorldPlayer from './components/views/WorldPlayer';
 import MisRetos from './components/views/MisRetos';
 import MisRecursos from './components/views/MisRecursos';
 import Perfil from './components/views/Perfil';
@@ -40,6 +41,11 @@ function App() {
                 <Route path="/journey" element={
                     <ProtectedRoute>
                         <MyJourney />
+                    </ProtectedRoute>
+                } />
+                <Route path="/journey/:journeyId/world/:worldId" element={
+                    <ProtectedRoute>
+                        <WorldPlayer />
                     </ProtectedRoute>
                 } />
                 <Route path="/challenges" element={
