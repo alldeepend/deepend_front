@@ -29,14 +29,15 @@ export const usePageTracking = () => {
                     },
                     body: JSON.stringify({
                         action: 'PAGE_VIEW',
-                        path: location.pathname
+                        path: location.pathname + location.search
                     })
                 });
+                console.log(`[TRACKING] Sent ${location.pathname + location.search}`);
             } catch (error) {
                 console.error("Failed to track page view:", error);
             }
         };
 
         trackPageView();
-    }, [location.pathname]);
+    }, [location.pathname, location.search]);
 };
