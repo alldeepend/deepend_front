@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ChevronDown, ChevronUp, CircleQuestionMark, X } from 'lucide-react';
+
 
 export const PentagonChart = ({ data = [
     { label: "Salud", value: 8 },
@@ -9,37 +10,45 @@ export const PentagonChart = ({ data = [
     { label: "Familia", value: 6 },
     { label: "Ocio", value: 8 },
     { label: "Mente", value: 7 }
-] }) => {
+], compact = false }: { data?: { label: string; value: number }[]; compact?: boolean }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [isInfoOpen, setIsInfoOpen] = useState(false);
 
-    // Configuraciones de geometría
     const size = 100;
     const center = size / 2;
-    const radius = 45; // El alcance máximo (valor 10)
+    const radius = 45;
     const sides = 7;
 
-    // Función para calcular coordenadas (x, y) según el valor (1-10) y el índice del lado
-    const getPoint = (value: any, index: any) => {
+    const getPoint = (value: number, index: number) => {
         const angle = (Math.PI * 2 / sides) * index - Math.PI / 2;
-        // Normalizamos el valor: (valor / 10) * radio máximo
         const r = (value / 10) * radius;
         const x = center + r * Math.cos(angle);
         const y = center + r * Math.sin(angle);
         return `${x.toFixed(2)},${y.toFixed(2)}`;
     };
 
-    // Calculamos los puntos para el fondo (Heptágono perfecto escala 10)
     const outerPoints = [...Array(sides)].map((_, i) => getPoint(10, i)).join(" ");
+    const dataPoints  = data.map((val, i) => getPoint(val.value, i)).join(" ");
 
-    // Calculamos los puntos basados en los datos reales pasados por props
-    const dataPoints = data.map((val, i) => getPoint(val.value, i)).join(" ");
+    if (compact) {
+        return (
+            <div className="flex flex-col items-center">
+                <svg viewBox={`0 0 ${size} ${size}`} className="w-28 h-28 drop-shadow-sm">
+                    <polygon points={outerPoints} fill="none" stroke="#10b981" strokeWidth="0.5" className="opacity-30" />
+                    {[...Array(sides)].map((_, i) => {
+                        const [px, py] = getPoint(10, i).split(',');
+                        return <line key={i} x1={center} y1={center} x2={px} y2={py} stroke="#10b981" strokeWidth="0.2" className="opacity-20" />;
+                    })}
+                    <polygon points={dataPoints} fill="#ecfdf5" fillOpacity="0.8" stroke="#10b981" strokeWidth="2" strokeLinejoin="round" className="transition-all duration-500 ease-in-out" />
+                </svg>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col items-center">
             <div className="relative w-48 h-48 mx-auto my-4 flex flex-col items-center justify-center">
                 <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-full drop-shadow-sm">
-                    {/* Heptágono externo de guía */}
                     <polygon
                         points={outerPoints}
                         fill="none"
@@ -48,7 +57,6 @@ export const PentagonChart = ({ data = [
                         className="opacity-30"
                     />
 
-                    {/* Líneas de ejes opcionales (del centro a cada esquina) */}
                     {[...Array(sides)].map((_, i) => {
                         const [px, py] = getPoint(10, i).split(',');
                         return (
@@ -63,7 +71,6 @@ export const PentagonChart = ({ data = [
                         );
                     })}
 
-                    {/* Polígono de datos dinámico */}
                     <polygon
                         points={dataPoints}
                         fill="#ecfdf5"
@@ -73,21 +80,18 @@ export const PentagonChart = ({ data = [
                         strokeLinejoin="round"
                         className="transition-all duration-500 ease-in-out"
                     />
+
+
                 </svg>
 
-                {/* Icono central preservado */}
                 <div className="absolute inset-0 flex items-center justify-center text-emerald-500 pointer-events-none">
                     <div className="bg-white/80 p-2 rounded-full shadow-sm backdrop-blur-sm">
                         <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
                     </div>
                 </div>
-                {/* Link to open info modal */}
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setIsInfoOpen(true);
-                    }}
 
+                <button
+                    onClick={(e) => { e.stopPropagation(); setIsInfoOpen(true); }}
                     className="flex items-center gap-1.5 bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-200 transition-colors whitespace-nowrap"
                 >
                     <CircleQuestionMark size={14} />
@@ -102,8 +106,6 @@ export const PentagonChart = ({ data = [
                 {isOpen ? 'Ocultar detalles' : 'Ver detalles'}
                 {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             </button>
-
-
 
             {isOpen && (
                 <div className="w-full grid grid-cols-1 gap-2 mt-2 px-2 animate-fade-in-down">
@@ -124,27 +126,16 @@ export const PentagonChart = ({ data = [
                 </div>
             )}
 
-            {/* Info Modal */}
             {isInfoOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsInfoOpen(false)}>
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative animate-fade-in-up" onClick={e => e.stopPropagation()}>
-                        <button
-                            onClick={() => setIsInfoOpen(false)}
-                            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
-                        >
+                        <button onClick={() => setIsInfoOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
                             <X size={20} />
                         </button>
-
                         <h3 className="text-lg font-bold text-slate-800 mb-4">Entiende tu Gráfica</h3>
-
                         <div className="space-y-4 text-slate-600 text-sm leading-relaxed">
-                            <p>
-                                Esta gráfica es una fotografía de cómo te sientes <strong className="text-slate-800">HOY</strong> en las áreas clave de tu vida. No mide quién eres ni tu valor; muestra dónde estás en este momento.
-                            </p>
-                            <p>
-                                Las calificaciones van del 1 al 10, según tu percepción actual, y no tienen juicios:
-                            </p>
-
+                            <p>Esta gráfica es una fotografía de cómo te sientes <strong className="text-slate-800">HOY</strong> en las áreas clave de tu vida. No mide quién eres ni tu valor; muestra dónde estás en este momento.</p>
+                            <p>Las calificaciones van del 1 al 10, según tu percepción actual, y no tienen juicios:</p>
                             <ul className="space-y-3 mt-4">
                                 <li className="flex items-start gap-3">
                                     <span className="w-3 h-3 rounded-full bg-red-500 mt-1 shrink-0"></span>

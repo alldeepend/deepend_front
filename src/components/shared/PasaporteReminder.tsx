@@ -6,57 +6,46 @@ import { X, Trophy, ArrowRight } from 'lucide-react';
 
 const host = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/api\/?$/, '');
 
+const ORDINALS: Record<number, string> = {
+    1: 'Primera', 2: 'Segunda', 3: 'Tercera', 4: 'Cuarta', 5: 'Quinta',
+    6: 'Sexta', 7: 'Séptima', 8: 'Octava', 9: 'Novena', 10: 'Décima'
+};
+const toOrdinal = (n: number) => ORDINALS[n] ?? `${n}ª`;
+
 export default function PasaporteReminder() {
     const { user } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const [isOpen, setIsOpen] = useState(false);
 
-    // Fetch challenges to check Pasaporte status
-    const { data: pasaporteStatus, isLoading } = useQuery({
-        queryKey: ['pasaporte-status', user?.id],
+    const { data: passport, isLoading } = useQuery({
+        queryKey: ['passport-current', user?.id],
         queryFn: async () => {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${host}/api/challenges`, {
+            const res = await fetch(`${host}/api/passport/current`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (!res.ok) return null;
-            const challenges = await res.json();
-            const pasaporte = challenges.find((c: any) => c.title.toLowerCase().includes('pasaporte'));
-            return pasaporte ? { status: pasaporte.status, id: pasaporte.id } : null;
+            return res.json();
         },
         enabled: !!user,
-        staleTime: 1000 * 60 * 5 // 5 minutes
+        staleTime: 1000 * 60 * 5
     });
 
     useEffect(() => {
-        // Log for debugging
-        /* console.log("--- PasaporteReminder Debug ---");
-        console.log("User:", user);
-        console.log("Membership:", user?.membership);
-        console.log("Pasaporte Status:", pasaporteStatus);
-        console.log("Is Loading:", isLoading);
-        console.log("Location:", location.pathname); */
-
-        // Logic:
-        // 1. User logged in
-        // 2. Membership is 'free_trial'
-        // 3. Pasaporte NOT completed
-
         if (
             user &&
-            user.membership === 'free_trial' &&
-            pasaporteStatus?.status &&
-            pasaporteStatus.status !== 'completed' &&
+            passport?.isAvailable &&
+            passport?.challenge &&
+            passport.challenge.status !== 'completed' &&
             !isLoading &&
             !location.pathname.includes('/challenges/detail')
         ) {
-            /* console.log(">>> OPENING REMINDER <<<"); */
             setIsOpen(true);
         } else {
-            console.log("Conditions not met for reminder (or already on challenge page)");
+            setIsOpen(false);
         }
-    }, [user, pasaporteStatus, isLoading, location.pathname]);
+    }, [user, passport, isLoading, location.pathname]);
 
     const handleClose = () => {
         setIsOpen(false);
@@ -65,8 +54,8 @@ export default function PasaporteReminder() {
 
     const handleGoToChallenge = () => {
         setIsOpen(false);
-        if (pasaporteStatus?.id) {
-            navigate(`/challenges/detail?id=${pasaporteStatus.id}`);
+        if (passport?.challenge?.id) {
+            navigate(`/challenges/detail?id=${passport.challenge.id}`);
         } else {
             navigate('/challenges');
         }
@@ -89,13 +78,25 @@ export default function PasaporteReminder() {
                         <Trophy className="text-white w-8 h-8" />
                     </div>
 
-                    <h3 className="text-2xl font-bold text-slate-800 mb-2">
-                        ¡Completa tu Pasaporte!
-                    </h3>
-
-                    <p className="text-slate-600 mb-8 leading-relaxed">
-                        Para desbloquear todo el potencial de DeepEnd y personalizar tu experiencia, necesitas completar el reto <span className="font-semibold text-[#57ba47]">Pasaporte Deepend</span>.
-                    </p>
+                    {passport?.challenge?.passportStep === 1 ? (
+                        <>
+                            <h3 className="text-2xl font-bold text-slate-800 mb-2">
+                                ¡Completa tu {passport.challenge.title ?? 'Pasaporte'}!
+                            </h3>
+                            <p className="text-slate-600 mb-8 leading-relaxed">
+                                Para desbloquear todo el potencial de DeepEnd y personalizar tu experiencia, necesitas completar el reto <span className="font-semibold text-[#57ba47]">{passport.challenge.title ?? 'Pasaporte Deepend'}</span>.
+                            </p>
+                        </>
+                    ) : (
+                        <>
+                            <h3 className="text-2xl font-bold text-slate-800 mb-2">
+                                Tu {toOrdinal(passport?.challenge?.passportStep ?? 2)} Mirada ya está disponible.
+                            </h3>
+                            <p className="text-slate-600 mb-8 leading-relaxed">
+                                Da el siguiente paso y sigue avanzando en tu camino con el reto <span className="font-semibold text-[#57ba47]">{passport?.challenge?.title}</span>.
+                            </p>
+                        </>
+                    )}
 
                     <button
                         onClick={handleGoToChallenge}
