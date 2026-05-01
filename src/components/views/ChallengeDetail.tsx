@@ -16,12 +16,18 @@ interface ChallengeStep {
     completed: boolean;
 }
 
+interface ContentBlock {
+    id: string;
+    title: string;
+    type: 'text' | 'video';
+    content: string;
+}
+
 interface ChallengeDetail {
     id: string;
     title: string;
     tasks: ChallengeStep[];
     submissions: any[];
-    // New fields
     que_es?: string;
     para_que_sirve?: string;
     que_lograra?: string;
@@ -29,6 +35,7 @@ interface ChallengeDetail {
     que_se_requiere?: string;
     que_recibe?: string;
     requerimientos?: string;
+    content_blocks?: ContentBlock[];
     disclaimerAccepted?: boolean;
 }
 
@@ -49,6 +56,61 @@ const AccordionSection = ({ title, content }: { title: string, content: string }
                         className="prose prose-slate max-w-none text-slate-600"
                         dangerouslySetInnerHTML={{ __html: content.replaceAll('&nbsp;', ' ') }}
                     />
+                </div>
+            )}
+        </div>
+    );
+};
+
+function getYouTubeEmbedUrl(url: string): string | null {
+    try {
+        const u = new URL(url);
+        let videoId: string | null = null;
+        if (u.hostname === 'youtu.be') {
+            videoId = u.pathname.slice(1).split('?')[0];
+        } else if (u.hostname.includes('youtube.com')) {
+            if (u.pathname.startsWith('/embed/')) {
+                videoId = u.pathname.split('/embed/')[1].split('?')[0];
+            } else {
+                videoId = u.searchParams.get('v');
+            }
+        }
+        return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+    } catch {
+        return null;
+    }
+}
+
+const VideoAccordionSection = ({ title, url }: { title: string, url: string }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const embedUrl = getYouTubeEmbedUrl(url);
+    return (
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="w-full flex justify-between items-center p-6 text-left hover:bg-slate-50 transition-colors"
+            >
+                <h3 className="text-md font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                    <Video size={16} className="text-slate-400" />
+                    {title}
+                </h3>
+                {isOpen ? <ChevronUp className="text-slate-400" /> : <ChevronDown className="text-slate-400" />}
+            </button>
+            {isOpen && (
+                <div className="px-6 pb-6 animate-in slide-in-from-top-2 duration-200">
+                    {embedUrl ? (
+                        <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                            <iframe
+                                src={embedUrl}
+                                title={title}
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                className="absolute inset-0 w-full h-full rounded-xl"
+                            />
+                        </div>
+                    ) : (
+                        <p className="text-sm text-slate-400">URL de video no válida.</p>
+                    )}
                 </div>
             )}
         </div>
@@ -469,12 +531,24 @@ export default function ChallengeDetail() {
                             )}
                         </div>
 
-                        {challenge.que_es && <AccordionSection title="¿Qué es?" content={challenge.que_es} />}
-                        {challenge.para_que_sirve && <AccordionSection title="¿Para qué sirve?" content={challenge.para_que_sirve} />}
-                        {challenge.que_lograra && <AccordionSection title="¿Qué lograrás?" content={challenge.que_lograra} />}
-                        {challenge.tiempos && <AccordionSection title="Tiempos" content={challenge.tiempos} />}
-                        {challenge.que_se_requiere && <AccordionSection title="Alcance y entregable" content={challenge.que_se_requiere} />}
-                        {challenge.requerimientos && <AccordionSection title="Requerimientos" content={challenge.requerimientos} />}
+                        {challenge.content_blocks && challenge.content_blocks.length > 0 ? (
+                            challenge.content_blocks.map(block =>
+                                block.type === 'video' ? (
+                                    <VideoAccordionSection key={block.id} title={block.title} url={block.content} />
+                                ) : (
+                                    <AccordionSection key={block.id} title={block.title} content={block.content} />
+                                )
+                            )
+                        ) : (
+                            <>
+                                {challenge.que_es && <AccordionSection title="¿Qué es?" content={challenge.que_es} />}
+                                {challenge.para_que_sirve && <AccordionSection title="¿Para qué sirve?" content={challenge.para_que_sirve} />}
+                                {challenge.que_lograra && <AccordionSection title="¿Qué lograrás?" content={challenge.que_lograra} />}
+                                {challenge.tiempos && <AccordionSection title="Tiempos" content={challenge.tiempos} />}
+                                {challenge.que_se_requiere && <AccordionSection title="Alcance y entregable" content={challenge.que_se_requiere} />}
+                                {challenge.requerimientos && <AccordionSection title="Requerimientos" content={challenge.requerimientos} />}
+                            </>
+                        )}
 
                     </div>
 
