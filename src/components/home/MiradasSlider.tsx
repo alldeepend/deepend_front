@@ -30,7 +30,14 @@ export const MiradasSlider = ({ miradas }: { miradas: MiradaData[] }) => {
     if (miradas.length === 0) return null;
 
     if (miradas.length === 1) {
-        return <PentagonChart data={miradas[0].data} />;
+        return (
+            <div className="flex flex-col items-center">
+                <span className="text-[11px] font-medium text-emerald-500 mb-1">
+                    {stepLabel(miradas[0].step)}
+                </span>
+                <PentagonChart data={miradas[0].data} />
+            </div>
+        );
     }
 
     const pairs = miradas.slice(0, -1).map((m, i) => [m, miradas[i + 1]] as const);
