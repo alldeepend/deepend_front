@@ -534,7 +534,7 @@ export default function ChallengeDetail() {
                         </div>
 
                         {challenge.content_blocks && challenge.content_blocks.length > 0 ? (
-                            challenge.content_blocks.map(block =>
+                            challenge.content_blocks.map((block: ContentBlock) =>
                                 block.type === 'video' ? (
                                     <VideoAccordionSection key={block.id} title={block.title} url={block.content} />
                                 ) : (
