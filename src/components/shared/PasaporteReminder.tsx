@@ -37,7 +37,7 @@ export default function PasaporteReminder() {
             user &&
             passport?.isAvailable &&
             passport?.challenge &&
-            passport.challenge.status !== 'completed' &&
+            passport.challenge.status !== 'completado' &&
             !isLoading &&
             !location.pathname.includes('/challenges/detail')
         ) {

@@ -217,6 +217,7 @@ export default function ChallengeDetail() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['challenge', challengeId] });
             queryClient.invalidateQueries({ queryKey: ['challenges'] });
+            queryClient.invalidateQueries({ queryKey: ['passport-current', user?.id] });
         }
     });
 
@@ -257,6 +258,7 @@ export default function ChallengeDetail() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['challenge', challengeId] });
+            queryClient.invalidateQueries({ queryKey: ['passport-current', user?.id] });
             setActiveTaskForm(null);
         }
     });
