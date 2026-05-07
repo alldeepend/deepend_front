@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
+import { Sparkles, Award, Flame } from 'lucide-react'
 import { journeyApi } from '../../../services/journey'
 import type { Block, BlockInteractResult, JourneyDetailsResponse, Station } from '../../../types/journey'
 
@@ -14,6 +15,7 @@ const C = {
     green:    '#52B788',
     border:   '#333330',
 }
+
 
 const BLOCK_LABELS: Record<string, string> = {
     punto_partida:      'Punto de Partida',
@@ -56,6 +58,16 @@ export default function WorldsStation() {
 
     useEffect(() => {
         if (!journeyId) return
+        // Reset all transient state when navigating to a new station
+        setLoading(true)
+        setShowCelebration(false)
+        setShowWorldCompletion(false)
+        setCompletionResult(null)
+        setWorldCompletionData(null)
+        setXpFlash(null)
+        setBlockIndex(0)
+        setCompletedBlockIds(new Set())
+        setResponses({})
         journeyApi.getJourneyDetails(journeyId)
             .then(d => {
                 setData(d)
@@ -191,6 +203,7 @@ export default function WorldsStation() {
             setSubmitting(false)
         }
     }
+
 
     if (loading) {
         return (
@@ -447,7 +460,7 @@ function BlockPlayer({
     canGoNext,
     isLast,
     nextStationId,
-    journeyId,
+    journeyId: _journeyId,
     onCierreSubmit,
 }: {
     block: Block
@@ -581,6 +594,7 @@ function PuntoPartida({ content }: { content: any }) {
                     )}
                 </blockquote>
             )}
+            <img src="/2 (2).jpg" alt="" className="w-full rounded-2xl object-cover object-bottom" style={{ height: '530px' }} />
         </div>
     )
 }
@@ -1016,46 +1030,71 @@ function Refuerzo({ content, station }: { content: any; station: Station }) {
     const embedUrl = content.videoUrl ? getYouTubeEmbedUrl(content.videoUrl) : null
 
     return (
-        <div className="space-y-6">
-            {/* XP + station completed */}
-            <div className="flex flex-col items-center gap-3 py-2">
-                <div
-                    className="w-24 h-24 rounded-full flex flex-col items-center justify-center"
-                    style={{ background: C.surface1, border: `2px solid ${C.amber}40` }}
-                >
-                    <span className="text-2xl font-bold font-mono" style={{ color: C.amber }}>
-                        +{station.xp}
-                    </span>
-                    <span className="text-[10px] tracking-widest uppercase" style={{ color: C.amber }}>
-                        XP
-                    </span>
+        <div className="space-y-8">
+            {/* Header */}
+            <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                    {/* XP circle */}
+                    <div
+                        className="flex-none w-16 h-16 rounded-full flex flex-col items-center justify-center"
+                        style={{
+                            background: `radial-gradient(circle at 40% 35%, ${C.amber}22, ${C.surface1})`,
+                            border: `1.5px solid ${C.amber}55`,
+                            boxShadow: `0 0 18px ${C.amber}30, inset 0 0 12px ${C.amber}10`,
+                        }}
+                    >
+                        <span className="text-lg font-bold font-mono leading-none" style={{ color: C.amber }}>
+                            +{station.xp}
+                        </span>
+                        <span className="text-[9px] tracking-widest uppercase font-semibold" style={{ color: `${C.amber}90` }}>
+                            XP
+                        </span>
+                    </div>
+                    {/* Title + label */}
+                    <div className="space-y-0.5">
+                        <p className="text-[10px] tracking-[0.2em] uppercase font-semibold" style={{ color: C.green }}>
+                            Refuerzo
+                        </p>
+                        <h2
+                            className="text-2xl font-bold leading-tight"
+                            style={{ fontFamily: 'Georgia, "Times New Roman", serif', color: C.text }}
+                        >
+                            {station.title}
+                        </h2>
+                    </div>
                 </div>
-                <p className="text-sm font-semibold" style={{ color: C.green }}>
-                    {station.title} completada
-                </p>
+                <div style={{ height: '1px', background: `linear-gradient(to right, ${C.green}60, transparent)` }} />
             </div>
+
+            {/* Image */}
+            <img
+                src="/a-c-lj0BHb9llUY-unsplash.jpg"
+                alt=""
+                className="w-full rounded-2xl object-cover"
+                style={{ height: '220px' }}
+            />
 
             {/* Refuerzo messages */}
             {(msg1 || msg2) && (
-                <div
-                    className="rounded-xl p-4 space-y-3"
-                    style={{ background: C.surface1, border: `1px solid ${C.green}40` }}
-                >
-                    <p className="text-[10px] tracking-[0.18em] uppercase font-semibold" style={{ color: C.green }}>
-                        Refuerzo
-                    </p>
+                <div className="space-y-5">
                     {msg1 && (
-                        <p className="text-sm leading-relaxed" style={{ color: C.text }}>
-                            "{parseBold(msg1)}"
-                        </p>
-                    )}
-                    {msg1 && msg2 && (
-                        <div style={{ height: '1px', background: `${C.green}20` }} />
+                        <div className="flex gap-3">
+                            <div className="flex-none w-0.5 rounded-full mt-1" style={{ background: C.green }} />
+                            <p
+                                className="text-base leading-relaxed"
+                                style={{ fontFamily: 'Georgia, "Times New Roman", serif', color: C.text }}
+                            >
+                                {parseBold(msg1)}
+                            </p>
+                        </div>
                     )}
                     {msg2 && (
-                        <p className="text-sm leading-relaxed" style={{ color: C.text }}>
-                            "{parseBold(msg2)}"
-                        </p>
+                        <div className="flex gap-3">
+                            <div className="flex-none w-0.5 rounded-full mt-1" style={{ background: `${C.green}50` }} />
+                            <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>
+                                {parseBold(msg2)}
+                            </p>
+                        </div>
                     )}
                 </div>
             )}
@@ -1180,7 +1219,7 @@ function WorldCompletionScreen({
     data: { world: any; nextWorld: any; xpEarned: number; badges: string[]; currentBadge: string | null; streak: number }
     onContinue: () => void
 }) {
-    const { world, nextWorld, xpEarned, badges, currentBadge, streak } = data
+    const { world, nextWorld, xpEarned, badges, streak } = data
     const worldNum = world.orderIndex ?? 1
 
     return (
@@ -1233,19 +1272,26 @@ function WorldCompletionScreen({
                             {badges.map((b, i) => (
                                 <span
                                     key={i}
-                                    className="text-xs px-3 py-1.5 rounded-full font-semibold"
+                                    className="text-xs px-3 py-2 rounded-full font-semibold flex items-center gap-1.5 flex-none"
                                     style={{
-                                        border: `1px solid ${b === currentBadge ? C.red : C.border}`,
-                                        color: b === currentBadge ? C.red : C.textMuted,
-                                        background: C.surface1,
+                                        border: `1px solid ${C.red}`,
+                                        color: C.red,
+                                        background: `${C.red}10`,
                                     }}
                                 >
+                                    <Award size={14} />
                                     {b}
                                 </span>
                             ))}
                         </div>
                     </div>
                 )}
+
+                <img
+                    src="/1 16 marzo portada.jpg"
+                    alt="Portada"
+                    className="w-full rounded-xl object-cover"
+                />
 
                 {/* CTA */}
                 <div className="space-y-3 pt-2">
@@ -1268,6 +1314,7 @@ function WorldCompletionScreen({
     )
 }
 
+
 // ─── Celebration screen ───────────────────────────────────────────────────────
 
 function CelebrationScreen({
@@ -1289,7 +1336,9 @@ function CelebrationScreen({
             style={{ background: C.bg, color: C.text, fontFamily: 'Montserrat, sans-serif' }}
         >
             <div className="space-y-6 max-w-sm mx-auto">
-                <div className="text-5xl">🎉</div>
+                <div className="flex items-center justify-center w-16 h-16 rounded-full mx-auto" style={{ background: `${C.amber}20`, border: `1.5px solid ${C.amber}` }}>
+                    <Sparkles size={32} style={{ color: C.amber }} />
+                </div>
 
                 <h1
                     className="text-3xl font-bold leading-tight"
@@ -1319,7 +1368,7 @@ function CelebrationScreen({
                             className="rounded-lg px-4 py-2 text-sm"
                             style={{ background: C.amber + '15', color: C.amber }}
                         >
-                            🔥 Bonus racha: +{result.streakBonus} XP
+                            <Flame size={14} className="inline mr-1" /> Bonus racha: +{result.streakBonus} XP
                         </div>
                     )}
 
@@ -1334,7 +1383,7 @@ function CelebrationScreen({
                             className="rounded-lg px-4 py-2 text-sm"
                             style={{ background: C.green + '15', color: C.green }}
                         >
-                            🏅 ¡Obtuviste el badge "{result.badgeEarned}"!
+                            <Award size={14} className="inline mr-1" /> ¡Obtuviste el badge "{result.badgeEarned}"!
                         </div>
                     )}
                 </div>
