@@ -46,6 +46,10 @@ export default function WorldsStation() {
     const [completedBlockIds, setCompletedBlockIds] = useState<Set<string>>(new Set())
     const [completionResult, setCompletionResult] = useState<BlockInteractResult | null>(null)
     const [showCelebration, setShowCelebration] = useState(false)
+    const [showWorldCompletion, setShowWorldCompletion] = useState(false)
+    const [worldCompletionData, setWorldCompletionData] = useState<{
+        world: any; nextWorld: any; xpEarned: number; badges: string[]; currentBadge: string | null; streak: number
+    } | null>(null)
     const [xpFlash, setXpFlash] = useState<number | null>(null)
 
     const topRef = useRef<HTMLDivElement>(null)
@@ -92,15 +96,26 @@ export default function WorldsStation() {
         ? Math.floor((station?.xp ?? 0) / eligibleBlocks.length)
         : 0
 
-    const allStationsOrdered = data
-        ? data.journey.worlds
-            .slice().sort((a, b) => a.orderIndex - b.orderIndex)
-            .flatMap(w => w.stations.slice().sort((a, b) => a.orderIndex - b.orderIndex))
+    const sortedWorlds = data
+        ? data.journey.worlds.slice().sort((a, b) => a.orderIndex - b.orderIndex)
         : []
+    const allStationsOrdered = sortedWorlds.flatMap(w =>
+        w.stations.slice().sort((a, b) => a.orderIndex - b.orderIndex)
+    )
     const currentStationIdx = allStationsOrdered.findIndex(s => s.id === stationId)
     const nextStation = currentStationIdx >= 0 && currentStationIdx < allStationsOrdered.length - 1
         ? allStationsOrdered[currentStationIdx + 1]
         : null
+
+    const currentWorld = sortedWorlds.find(w => w.stations.some(s => s.id === stationId)) ?? null
+    const nextStationWorld = nextStation
+        ? sortedWorlds.find(w => w.stations.some(s => s.id === nextStation.id)) ?? null
+        : null
+    const nextStationIsNewWorld = !!nextStation && !!nextStationWorld && nextStationWorld.id !== currentWorld?.id
+
+    const stationAlreadyCompleted = data
+        ? data.progress.stationProgress.some(sp => sp.stationId === stationId && sp.isCompleted)
+        : false
 
     const handleSubmitBlock = async (skipCelebration = false): Promise<BlockInteractResult | null> => {
         if (!currentBlock || submitting) return null
@@ -120,8 +135,47 @@ export default function WorldsStation() {
             }
 
             if (result.stationCompleted && !skipCelebration) {
-                setCompletionResult(result)
-                setShowCelebration(true)
+                // Check if the whole world is now complete
+                const sortedWorlds = data!.journey.worlds
+                    .slice().sort((a, b) => a.orderIndex - b.orderIndex)
+                const currentWorld = sortedWorlds.find(w =>
+                    w.stations.some((s: any) => s.id === stationId)
+                )
+                const prevCompleted = new Set(
+                    data!.progress.stationProgress
+                        .filter((sp: any) => sp.isCompleted)
+                        .map((sp: any) => sp.stationId)
+                )
+                prevCompleted.add(stationId!)
+
+                const worldComplete = currentWorld &&
+                    currentWorld.stations.every((s: any) => prevCompleted.has(s.id))
+
+                if (worldComplete && currentWorld) {
+                    const worldIdx = sortedWorlds.findIndex((w: any) => w.id === currentWorld.id)
+                    const nextWorld = sortedWorlds[worldIdx + 1] ?? null
+
+                    const prevXp = data!.progress.stationProgress
+                        .filter((sp: any) => sp.isCompleted && currentWorld.stations.some((s: any) => s.id === sp.stationId))
+                        .reduce((sum: number, sp: any) => sum + (sp.xpEarned ?? 0), 0)
+
+                    const worldBadges = currentWorld.stations
+                        .map((s: any) => s.badgeName)
+                        .filter(Boolean) as string[]
+
+                    setWorldCompletionData({
+                        world: currentWorld,
+                        nextWorld,
+                        xpEarned: prevXp + (result.xpEarned ?? 0),
+                        badges: worldBadges,
+                        currentBadge: result.badgeEarned ?? null,
+                        streak: result.newStreak ?? 0,
+                    })
+                    setShowWorldCompletion(true)
+                } else {
+                    setCompletionResult(result)
+                    setShowCelebration(true)
+                }
             } else if (!result.stationCompleted) {
                 const next = blockIndex + 1
                 if (next < blocks.length) {
@@ -160,8 +214,91 @@ export default function WorldsStation() {
             <CelebrationScreen
                 station={station}
                 result={completionResult}
+                nextStation={nextStation}
+                onGoToNext={nextStation
+                    ? () => navigate(`/worlds/${journeyId}/station/${nextStation.id}`)
+                    : undefined}
                 onContinue={() => navigate(`/worlds/${journeyId}`)}
             />
+        )
+    }
+
+    if (showWorldCompletion && worldCompletionData) {
+        return (
+            <WorldCompletionScreen
+                data={worldCompletionData}
+                onContinue={() => navigate(`/worlds/${journeyId}`)}
+            />
+        )
+    }
+
+    if (stationAlreadyCompleted) {
+        const xpEarned = data?.progress.stationProgress
+            .find(sp => sp.stationId === stationId)?.xpEarned ?? 0
+
+        return (
+            <div
+                className="min-h-screen flex flex-col items-center justify-center px-6 text-center"
+                style={{ background: C.bg, color: C.text, fontFamily: 'Montserrat, sans-serif' }}
+            >
+                <div className="space-y-6 max-w-sm mx-auto w-full">
+                    <div
+                        className="w-16 h-16 rounded-full flex items-center justify-center mx-auto"
+                        style={{ background: `${C.green}20`, border: `2px solid ${C.green}` }}
+                    >
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: C.green }}>
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                    </div>
+
+                    <div>
+                        <h2 className="text-lg font-bold" style={{ fontFamily: 'Georgia, serif' }}>
+                            {station.title}
+                        </h2>
+                        <p className="text-sm mt-1" style={{ color: C.textMuted }}>
+                            Ya completaste esta estación
+                        </p>
+                    </div>
+
+                    {xpEarned > 0 && (
+                        <div
+                            className="rounded-xl px-5 py-3 flex items-center justify-between"
+                            style={{ background: C.surface1, border: `1px solid ${C.border}` }}
+                        >
+                            <span className="text-xs tracking-widest uppercase" style={{ color: C.textMuted }}>XP ganado</span>
+                            <span className="font-bold font-mono text-xl" style={{ color: C.amber }}>+{xpEarned}</span>
+                        </div>
+                    )}
+
+                    <div className="space-y-3">
+                        {nextStationIsNewWorld && nextStationWorld && (
+                            <button
+                                onClick={() => navigate(`/worlds/${journeyId}/station/${nextStation!.id}`)}
+                                className="w-full py-3.5 rounded-xl font-semibold text-sm"
+                                style={{ background: C.red, color: '#fff' }}
+                            >
+                                Continuar al Mundo {nextStationWorld.orderIndex} →
+                            </button>
+                        )}
+                        {!nextStationIsNewWorld && nextStation && (
+                            <button
+                                onClick={() => navigate(`/worlds/${journeyId}/station/${nextStation.id}`)}
+                                className="w-full py-3.5 rounded-xl font-semibold text-sm"
+                                style={{ background: C.red, color: '#fff' }}
+                            >
+                                Siguiente estación →
+                            </button>
+                        )}
+                        <button
+                            onClick={() => navigate(`/worlds/${journeyId}`)}
+                            className="w-full py-3.5 rounded-xl text-sm"
+                            style={{ background: C.surface2, color: C.textMuted, border: `1px solid ${C.border}` }}
+                        >
+                            ← Volver al mundo
+                        </button>
+                    </div>
+                </div>
+            </div>
         )
     }
 
@@ -387,7 +524,7 @@ function BlockPlayer({
                 <div className="space-y-2 pt-1">
                     {!alreadyDone && (
                         <button
-                            onClick={onSubmit}
+                            onClick={() => onSubmit()}
                             disabled={submitting}
                             className="w-full py-3.5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90 active:opacity-80"
                             style={{ background: C.red, color: '#fff', opacity: submitting ? 0.6 : 1 }}
@@ -1034,15 +1171,116 @@ function Cierre({
     )
 }
 
+// ─── World completion screen ──────────────────────────────────────────────────
+
+function WorldCompletionScreen({
+    data,
+    onContinue,
+}: {
+    data: { world: any; nextWorld: any; xpEarned: number; badges: string[]; currentBadge: string | null; streak: number }
+    onContinue: () => void
+}) {
+    const { world, nextWorld, xpEarned, badges, currentBadge, streak } = data
+    const worldNum = world.orderIndex ?? 1
+
+    return (
+        <div
+            className="min-h-screen flex flex-col"
+            style={{ background: C.bg, color: C.text, fontFamily: 'Montserrat, sans-serif' }}
+        >
+            {/* Red header */}
+            <div
+                className="flex flex-col items-center justify-center gap-3 px-6 pt-12 pb-10"
+                style={{ background: C.red }}
+            >
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#231F20' }}>
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                <h1
+                    className="text-2xl font-bold text-center leading-tight"
+                    style={{ fontFamily: 'Georgia, "Times New Roman", serif', color: '#fff' }}
+                >
+                    {world.title}
+                </h1>
+                <p className="text-xs text-center" style={{ color: 'rgba(255,255,255,0.75)' }}>
+                    Mundo {worldNum} completado
+                    {streak > 0 ? ` · ${streak} días · racha intacta` : ''}
+                </p>
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 px-6 py-8 max-w-sm mx-auto w-full space-y-6">
+                {/* XP total */}
+                <div
+                    className="rounded-xl px-5 py-4 flex items-center justify-between"
+                    style={{ background: C.surface1, border: `1px solid ${C.border}` }}
+                >
+                    <span className="text-xs tracking-[0.14em] uppercase" style={{ color: C.textMuted }}>
+                        XP Total
+                    </span>
+                    <span className="text-3xl font-bold font-mono" style={{ color: C.amber }}>
+                        {xpEarned}
+                    </span>
+                </div>
+
+                {/* Badges */}
+                {badges.length > 0 && (
+                    <div className="space-y-3">
+                        <p className="text-[10px] tracking-[0.18em] uppercase" style={{ color: C.textMuted }}>
+                            Insignias ganadas
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                            {badges.map((b, i) => (
+                                <span
+                                    key={i}
+                                    className="text-xs px-3 py-1.5 rounded-full font-semibold"
+                                    style={{
+                                        border: `1px solid ${b === currentBadge ? C.red : C.border}`,
+                                        color: b === currentBadge ? C.red : C.textMuted,
+                                        background: C.surface1,
+                                    }}
+                                >
+                                    {b}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* CTA */}
+                <div className="space-y-3 pt-2">
+                    <button
+                        onClick={onContinue}
+                        className="w-full py-4 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90"
+                        style={{ background: C.red, color: '#fff' }}
+                    >
+                        {nextWorld ? `Continuar al Mundo ${nextWorld.orderIndex}` : 'Completar viaje'}
+                    </button>
+                    {nextWorld && (
+                        <p className="text-xs text-center" style={{ color: C.textMuted }}>
+                            Próximo:{' '}
+                            <span style={{ color: C.green }}>{nextWorld.title}</span>
+                        </p>
+                    )}
+                </div>
+            </div>
+        </div>
+    )
+}
+
 // ─── Celebration screen ───────────────────────────────────────────────────────
 
 function CelebrationScreen({
     station,
     result,
+    nextStation,
+    onGoToNext,
     onContinue,
 }: {
     station: Station
     result: BlockInteractResult
+    nextStation: { id: string; title: string } | null
+    onGoToNext?: () => void
     onContinue: () => void
 }) {
     return (
@@ -1101,13 +1339,34 @@ function CelebrationScreen({
                     )}
                 </div>
 
-                <button
-                    onClick={onContinue}
-                    className="w-full py-4 rounded-xl font-semibold transition-opacity hover:opacity-90 active:opacity-80"
-                    style={{ background: C.red, color: '#fff' }}
-                >
-                    Continuar mi viaje →
-                </button>
+                <div className="space-y-3">
+                    {nextStation && onGoToNext && (
+                        <button
+                            onClick={onGoToNext}
+                            className="w-full py-4 rounded-xl font-semibold transition-opacity hover:opacity-90 active:opacity-80"
+                            style={{ background: C.red, color: '#fff' }}
+                        >
+                            Siguiente estación →
+                        </button>
+                    )}
+                    {nextStation && (
+                        <p className="text-xs" style={{ color: C.textMuted }}>
+                            Próxima:{' '}
+                            <span style={{ color: C.green }}>{nextStation.title}</span>
+                        </p>
+                    )}
+                    <button
+                        onClick={onContinue}
+                        className="w-full py-3.5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90"
+                        style={{
+                            background: nextStation ? C.surface2 : C.red,
+                            color: nextStation ? C.textMuted : '#fff',
+                            border: nextStation ? `1px solid ${C.border}` : 'none',
+                        }}
+                    >
+                        {nextStation ? '← Volver al mundo' : 'Continuar mi viaje →'}
+                    </button>
+                </div>
             </div>
         </div>
     )
