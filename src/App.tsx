@@ -18,6 +18,10 @@ import ChallengeLogs from './components/views/ChallengeLogs';
 import MyMoneyInAction from './components/views/finance/MyMoneyInAction';
 import GastoHormiga from './components/views/finance/GastoHormiga';
 import { usePageTracking } from './hooks/usePageTracking';
+import WorldsRoute from './components/shared/WorldsRoute';
+import WorldsHome from './components/views/worlds/WorldsHome';
+import WorldsJourney from './components/views/worlds/WorldsJourney';
+import WorldsStation from './components/views/worlds/WorldsStation';
 
 function App() {
     const host = window.location.hostname;
@@ -112,6 +116,22 @@ function App() {
                     <PublicRoute>
                         <ResetPassword />
                     </PublicRoute>
+                } />
+
+                <Route path="/worlds" element={
+                    <WorldsRoute>
+                        <WorldsHome />
+                    </WorldsRoute>
+                } />
+                <Route path="/worlds/:journeyId" element={
+                    <WorldsRoute>
+                        <WorldsJourney />
+                    </WorldsRoute>
+                } />
+                <Route path="/worlds/:journeyId/station/:stationId" element={
+                    <WorldsRoute>
+                        <WorldsStation />
+                    </WorldsRoute>
                 } />
 
                 <Route path="*" element={<Navigate to="/" replace />} />

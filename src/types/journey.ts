@@ -14,6 +14,8 @@ export interface Station {
     title: string;
     description: string | null;
     orderIndex: number;
+    xp: number;
+    badgeName: string | null;
     blocks: Block[];
 }
 
@@ -32,7 +34,9 @@ export interface Journey {
     title: string;
     description: string | null;
     isActive: boolean;
+    allowed_memberships: string[];
     worlds: World[];
+    area?: { id: string; name: string };
 }
 
 export interface Area {
@@ -47,6 +51,10 @@ export interface UserJourneyProgress {
     status: string;
     enrolledAt: string;
     completedAt: string | null;
+    totalXpEarned: number;
+    earnedBadges: string[];
+    currentStreak: number;
+    lastActivityDate: string | null;
 }
 
 export interface StationProgress {
@@ -54,6 +62,7 @@ export interface StationProgress {
     stationId: string;
     isCompleted: boolean;
     completedAt: string | null;
+    xpEarned: number;
 }
 
 export interface BlockInteraction {
@@ -71,4 +80,16 @@ export interface JourneyDetailsResponse {
         stationProgress: StationProgress[];
         blockInteractions: BlockInteraction[];
     }
+}
+
+export interface BlockInteractResult {
+    success: boolean;
+    interaction: BlockInteraction;
+    stationCompleted: boolean;
+    xpEarned?: number;
+    streakBonus?: number;
+    totalXpEarned?: number;
+    newStreak?: number;
+    badgeEarned?: string | null;
+    earnedBadges?: string[];
 }

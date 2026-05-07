@@ -7,14 +7,15 @@ import {
     User,
     ShieldCheck,
     ArrowRight,
-    LogOut
+    LogOut,
+    Globe,
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../../store/useAuth';
 import { SidebarItem } from './SidebarItem';
 
 interface HomeSidebarProps {
-    activeTab: 'Dashboard' | 'Mi Viaje' | 'Mis Retos' | 'Mis Recursos' | 'Perfil';
+    activeTab: 'Dashboard' | 'Mi Viaje' | 'Mis Retos' | 'Mis Recursos' | 'Perfil' | 'Mundos';
 }
 
 export const HomeSidebar = ({ activeTab }: HomeSidebarProps) => {
@@ -49,6 +50,14 @@ export const HomeSidebar = ({ activeTab }: HomeSidebarProps) => {
                         // disabled={true}
                         onClick={() => navigate('/journey')}
                     /> */}
+                    {user?.membership === 'test' && (
+                        <SidebarItem
+                            icon={Globe}
+                            label="Mundos & Retos"
+                            active={activeTab === 'Mundos'}
+                            onClick={() => navigate('/worlds')}
+                        />
+                    )}
                     <SidebarItem
                         icon={Flag}
                         label="Mis Retos"

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../store/useAuth';
-import { LogOut, Bell, Check, X, Loader2, Menu, LayoutDashboard, Compass, Flag, BookOpen, User } from 'lucide-react';
+import { LogOut, Bell, Check, X, Loader2, Menu, LayoutDashboard, Compass, Flag, BookOpen, User, Globe } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
@@ -231,31 +231,30 @@ export default function Header() {
                       <span className="font-medium">Mis Retos</span>
                     </Link>
                   </li>
+                  {user?.membership === 'test' && (
+                    <li>
+                      <Link
+                        to="/worlds"
+                        onClick={() => setShowMobileMenu(false)}
+                        className="flex items-center gap-3 w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-50 transition-colors"
+                      >
+                        <Globe size={20} />
+                        <span className="font-medium">Mundos & Retos</span>
+                      </Link>
+                    </li>
+                  )}
                   {/* Secciones restringidas por rol */}
                   {(user?.role === 'admin' /* || user?.role === 'user' */) && (
-                    <>
-                      <li>
-                        <Link
-                          to="/journey"
-                          onClick={() => setShowMobileMenu(false)}
-                          className="flex items-center gap-3 w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-50 transition-colors"
-                        >
-                          <Compass size={20} />
-                          <span className="font-medium">Mi Viaje</span>
-                        </Link>
-                      </li>
-
-                      <li>
-                        <Link
-                          to="/resources"
-                          onClick={() => setShowMobileMenu(false)}
-                          className="flex items-center gap-3 w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-50 transition-colors"
-                        >
-                          <BookOpen size={20} />
-                          <span className="font-medium">Mis Recursos</span>
-                        </Link>
-                      </li>
-                    </>
+                    <li>
+                      <Link
+                        to="/resources"
+                        onClick={() => setShowMobileMenu(false)}
+                        className="flex items-center gap-3 w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-50 transition-colors"
+                      >
+                        <BookOpen size={20} />
+                        <span className="font-medium">Mis Recursos</span>
+                      </Link>
+                    </li>
                   )}
 
                   {/* ///////Ocualtar/////// */}
