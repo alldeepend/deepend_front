@@ -594,7 +594,7 @@ function PuntoPartida({ content }: { content: any }) {
                     )}
                 </blockquote>
             )}
-            <img src="/2 (2).jpg" alt="" className="w-full rounded-2xl object-cover object-bottom" style={{ height: '530px' }} />
+            <img src={content.imageUrl ?? '/2 (2).jpg'} alt="" className="w-full rounded-2xl object-cover object-bottom" style={{ height: '530px' }} />
         </div>
     )
 }
@@ -1068,7 +1068,7 @@ function Refuerzo({ content, station }: { content: any; station: Station }) {
 
             {/* Image */}
             <img
-                src="/a-c-lj0BHb9llUY-unsplash.jpg"
+                src={content.imageUrl ?? '/a-c-lj0BHb9llUY-unsplash.jpg'}
                 alt=""
                 className="w-full rounded-2xl object-cover"
                 style={{ height: '220px' }}
@@ -1288,7 +1288,7 @@ function WorldCompletionScreen({
                 )}
 
                 <img
-                    src="/1 16 marzo portada.jpg"
+                    src={data.world?.imageUrl ?? '/1 16 marzo portada.jpg'}
                     alt="Portada"
                     className="w-full rounded-xl object-cover"
                 />
