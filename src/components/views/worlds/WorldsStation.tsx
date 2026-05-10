@@ -53,6 +53,7 @@ export default function WorldsStation() {
         world: any; nextWorld: any; xpEarned: number; badges: string[]; currentBadge: string | null; streak: number
     } | null>(null)
     const [xpFlash, setXpFlash] = useState<number | null>(null)
+    const [reviewMode, setReviewMode] = useState(false)
 
     const topRef = useRef<HTMLDivElement>(null)
 
@@ -68,6 +69,7 @@ export default function WorldsStation() {
         setBlockIndex(0)
         setCompletedBlockIds(new Set())
         setResponses({})
+        setReviewMode(false)
         journeyApi.getJourneyDetails(journeyId)
             .then(d => {
                 setData(d)
@@ -232,6 +234,7 @@ export default function WorldsStation() {
                     ? () => navigate(`/worlds/${journeyId}/station/${nextStation.id}`)
                     : undefined}
                 onContinue={() => navigate(`/worlds/${journeyId}`)}
+                onReview={() => setShowCelebration(false)}
             />
         )
     }
@@ -245,7 +248,7 @@ export default function WorldsStation() {
         )
     }
 
-    if (stationAlreadyCompleted) {
+    if (stationAlreadyCompleted && !reviewMode) {
         const xpEarned = data?.progress.stationProgress
             .find(sp => sp.stationId === stationId)?.xpEarned ?? 0
 
@@ -302,6 +305,13 @@ export default function WorldsStation() {
                                 Siguiente estación →
                             </button>
                         )}
+                        <button
+                            onClick={() => setReviewMode(true)}
+                            className="w-full py-3.5 rounded-xl text-sm font-medium"
+                            style={{ background: C.surface1, color: C.text, border: `1px solid ${C.border}` }}
+                        >
+                            Ver mis respuestas
+                        </button>
                         <button
                             onClick={() => navigate(`/worlds/${journeyId}`)}
                             className="w-full py-3.5 rounded-xl text-sm"
@@ -410,6 +420,7 @@ export default function WorldsStation() {
                         alreadyDone={blockAlreadyDone}
                         onSubmit={handleSubmitBlock}
                         submitting={submitting}
+                        isLastStation={nextStation === null}
                         onNext={() => {
                             const next = blockIndex + 1
                             if (next < blocks.length) {
@@ -444,6 +455,63 @@ export default function WorldsStation() {
     )
 }
 
+// ─── Response validation ──────────────────────────────────────────────────────
+
+function isResponseValid(blockType: string, response: any): boolean {
+    switch (blockType) {
+        case 'punto_partida':
+        case 'capsula':
+        case 'refuerzo':
+        case 'recompensa':
+            return true
+
+        case 'activacion': {
+            const v = response ?? {}
+            const mode = v.mode ?? 'text'
+            if (mode === 'reescritura_guiada') {
+                const completions: string[] = v.completions ?? []
+                return completions.length === 4 && completions.every(c => c.trim())
+            }
+            if (mode === 'banco' || mode === 'texto') {
+                const answers: any[] = v.answers ?? []
+                return answers.length > 0 && answers.every(a => {
+                    if (typeof a === 'string') return !!a.trim()
+                    if (a?.guided) return !!(a.text?.trim())
+                    return false
+                })
+            }
+            if (mode === 'text') return !!(v.text?.trim())
+            if (mode === 'select') {
+                const selected: string[] = v.selected ?? []
+                if (selected.length === 0) return false
+                if (selected.includes('Otra — escribo yo')) return !!(v.otherText?.trim())
+                return true
+            }
+            return false
+        }
+
+        case 'opciones_respuesta':
+            if (Array.isArray(response)) return response.length > 0
+            return !!response
+
+        case 'accion_real':
+            if (typeof response === 'object' && response !== null) {
+                if (!response.selected) return false
+                if (response.selected === 'guided') return !!(response.guidedText?.trim())
+                return true
+            }
+            // foto mode — photo upload not yet implemented, allow proceed
+            if (response === '__foto__') return true
+            return !!(typeof response === 'string' && response.trim())
+
+        case 'evidencia':
+            return !!(typeof response === 'string' && response.trim())
+
+        default:
+            return true
+    }
+}
+
 // ─── Block Player ─────────────────────────────────────────────────────────────
 
 function BlockPlayer({
@@ -459,6 +527,7 @@ function BlockPlayer({
     canGoPrev,
     canGoNext,
     isLast,
+    isLastStation,
     nextStationId,
     journeyId: _journeyId,
     onCierreSubmit,
@@ -475,6 +544,7 @@ function BlockPlayer({
     canGoPrev: boolean
     canGoNext: boolean
     isLast: boolean
+    isLastStation: boolean
     nextStationId: string | null
     journeyId: string
     onCierreSubmit: (destination: 'next' | 'world') => void
@@ -483,9 +553,50 @@ function BlockPlayer({
     const c = block.content ?? {}
 
     const isCierre = block.type === 'cierre'
+    const isFotoOnly = block.type === 'accion_real' && c.actionType === 'foto'
+    const canSubmit = alreadyDone || isFotoOnly || isResponseValid(block.type, response)
+
+    const showStation1Celebration = block.type === 'punto_partida' && station.orderIndex === 2
+    const showLastStationCelebration = block.type === 'punto_partida' && isLastStation
 
     return (
         <div className="space-y-6 pt-2">
+            {/* Micro-celebración estación 1 completada */}
+            {showStation1Celebration && (
+                <div
+                    className="rounded-2xl px-5 py-4 flex items-center gap-4"
+                    style={{ background: `${C.amber}12`, border: `1px solid ${C.amber}40` }}
+                >
+                    <span className="text-2xl shrink-0">⭐</span>
+                    <div>
+                        <p className="text-xs font-bold tracking-wide uppercase" style={{ color: C.amber }}>
+                            ¡Estación 1 completada!
+                        </p>
+                        <p className="text-xs mt-0.5 leading-relaxed" style={{ color: C.textMuted }}>
+                            Diste el primer paso. Eso ya dice mucho de ti.
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Micro-celebración última estación */}
+            {showLastStationCelebration && (
+                <div
+                    className="rounded-2xl px-5 py-4 flex items-center gap-4"
+                    style={{ background: `${C.red}12`, border: `1px solid ${C.red}40` }}
+                >
+                    <span className="text-2xl shrink-0">🏁</span>
+                    <div>
+                        <p className="text-xs font-bold tracking-wide uppercase" style={{ color: C.red }}>
+                            ¡Última estación!
+                        </p>
+                        <p className="text-xs mt-0.5 leading-relaxed" style={{ color: C.textMuted }}>
+                            Has llegado hasta aquí. Esto es lo que pocos logran.
+                        </p>
+                    </div>
+                </div>
+            )}
+
             {/* Block type label */}
             {block.type !== 'refuerzo' && (
                 <p className="text-[10px] tracking-[0.2em] uppercase" style={{ color: C.textMuted }}>
@@ -505,9 +616,7 @@ function BlockPlayer({
 
             {/* Type-specific content */}
             {block.type === 'punto_partida' && <PuntoPartida content={c} />}
-            {block.type === 'capsula' && (
-                <Capsula content={c} value={response} onChange={onResponse} disabled={alreadyDone} />
-            )}
+            {block.type === 'capsula' && <Capsula content={c} />}
             {block.type === 'activacion' && (
                 <Activacion content={c} value={response} onChange={onResponse} disabled={alreadyDone} />
             )}
@@ -536,14 +645,26 @@ function BlockPlayer({
             {!isCierre && (
                 <div className="space-y-2 pt-1">
                     {!alreadyDone && (
-                        <button
-                            onClick={() => onSubmit()}
-                            disabled={submitting}
-                            className="w-full py-3.5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90 active:opacity-80"
-                            style={{ background: C.red, color: '#fff', opacity: submitting ? 0.6 : 1 }}
-                        >
-                            {submitting ? 'Guardando...' : block.type === 'refuerzo' ? 'Continuar mi viaje →' : isLast ? 'Completar estación' : 'Continuar'}
-                        </button>
+                        <>
+                            <button
+                                onClick={() => onSubmit()}
+                                disabled={submitting || !canSubmit}
+                                className="w-full py-3.5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90 active:opacity-80"
+                                style={{
+                                    background: C.red,
+                                    color: '#fff',
+                                    opacity: submitting || !canSubmit ? 0.4 : 1,
+                                    cursor: !canSubmit ? 'not-allowed' : 'pointer',
+                                }}
+                            >
+                                {submitting ? 'Guardando...' : block.type === 'refuerzo' ? 'Continuar mi viaje →' : isLast ? 'Completar estación' : 'Continuar'}
+                            </button>
+                            {!canSubmit && (
+                                <p className="text-xs text-center" style={{ color: C.textMuted }}>
+                                    Completa la actividad para continuar
+                                </p>
+                            )}
+                        </>
                     )}
 
                     {alreadyDone && canGoNext && (
@@ -606,63 +727,17 @@ function parseBold(text: string): React.ReactNode {
     )
 }
 
-function Capsula({
-    content, value, onChange, disabled,
-}: { content: any; value: any; onChange: (v: any) => void; disabled: boolean }) {
-    const v = value ?? {}
+function Capsula({ content }: { content: any }) {
     const embedUrl = content.videoUrl ? getYouTubeEmbedUrl(content.videoUrl) : null
-
-    const inputStyle = {
-        background: C.surface2,
-        border: `1px solid ${C.border}`,
-        color: C.text,
-        opacity: disabled ? 0.6 : 1,
-    }
-
-    const userField = (
-        label: string,
-        key: string,
-        placeholder: string,
-        multiline?: boolean,
-        rows?: number
-    ) => (
-        <div key={key} className="space-y-1">
-            <p className="text-[10px] tracking-[0.14em] uppercase" style={{ color: C.textMuted }}>
-                {label}
-            </p>
-            {multiline ? (
-                <textarea
-                    rows={rows ?? 3}
-                    placeholder={placeholder}
-                    value={v[key] ?? ''}
-                    onChange={e => onChange({ ...v, [key]: e.target.value })}
-                    disabled={disabled}
-                    className="w-full rounded-xl p-3 text-sm resize-none outline-none placeholder:opacity-30"
-                    style={inputStyle}
-                />
-            ) : (
-                <input
-                    placeholder={placeholder}
-                    value={v[key] ?? ''}
-                    onChange={e => onChange({ ...v, [key]: e.target.value })}
-                    disabled={disabled}
-                    className="w-full rounded-xl px-3 py-2.5 text-sm outline-none placeholder:opacity-30"
-                    style={inputStyle}
-                />
-            )}
-        </div>
-    )
 
     return (
         <div className="space-y-5">
-            {/* Texto del admin */}
             {content.text && (
                 <p className="text-sm leading-relaxed" style={{ color: C.text }}>
                     {parseBold(content.text)}
                 </p>
             )}
 
-            {/* Video opcional */}
             {embedUrl && (
                 <div className="rounded-xl overflow-hidden w-full" style={{ aspectRatio: '16/9' }}>
                     <iframe
@@ -679,28 +754,48 @@ function Capsula({
                     style={{ background: C.surface2 }} />
             )}
 
-            {/* Transición al input */}
-            <p
-                className="text-sm leading-relaxed italic text-center px-2"
-                style={{ color: C.textMuted, fontFamily: 'Georgia, "Times New Roman", serif' }}
-            >
-                Lo que acabas de leer no es teoría — es un espejo. Ponlo en tus palabras.
-            </p>
+            {(content.concept || content.quote || content.bridge) && <div className="rounded-xl p-5 space-y-5" style={{ background: C.surface1, border: `1px solid ${C.border}` }}>
+                {content.concept && (
+                    <div className="space-y-1.5">
+                        <p className="text-[10px] tracking-[0.16em] uppercase font-semibold" style={{ color: C.textMuted }}>
+                            Concepto del libro
+                        </p>
+                        <p className="text-sm leading-relaxed" style={{ color: C.text }}>
+                            {parseBold(content.concept)}
+                        </p>
+                    </div>
+                )}
 
-            {/* Inputs del usuario */}
-            <div
-                className="rounded-xl p-4 space-y-4"
-                style={{ background: C.surface1, border: `1px solid ${C.border}` }}
-            >
-                {userField('Concepto del libro (100–150 palabras)', 'concept',
-                    'Escribe la idea central del libro que conecta con esta estación...', true, 5)}
-                {userField('Cita literal del libro', 'quote',
-                    '"Frase exacta del libro (máx 30 palabras)..."', true, 3)}
-                {userField('Fuente', 'quoteSource',
-                    'Nombre del libro — Autor')}
-                {userField('Frase puente', 'bridge',
-                    'Frase que conecta la idea del libro con tu realidad...', true, 3)}
-            </div>
+                {content.quote && (
+                    <div
+                        className="pl-4 space-y-2"
+                        style={{ borderLeft: `3px solid ${C.red}` }}
+                    >
+                        {content.quoteSource && (
+                            <p className="text-[10px] tracking-[0.16em] uppercase font-semibold" style={{ color: C.red }}>
+                                {content.quoteSource}
+                            </p>
+                        )}
+                        <p className="text-sm leading-relaxed" style={{ color: C.text }}>
+                            {parseBold(content.quote)}
+                        </p>
+                    </div>
+                )}
+
+                {content.bridge && (
+                    <div className="space-y-1.5">
+                        <p className="text-[10px] tracking-[0.16em] uppercase font-semibold" style={{ color: C.textMuted }}>
+                            Frase puente
+                        </p>
+                        <p
+                            className="text-sm leading-relaxed italic"
+                            style={{ color: C.text, fontFamily: 'Georgia, "Times New Roman", serif' }}
+                        >
+                            {parseBold(content.bridge)}
+                        </p>
+                    </div>
+                )}
+            </div>}
         </div>
     )
 }
@@ -711,15 +806,37 @@ function Activacion({
     const question = content.question ?? content.prompt ?? ''
     const options: string[] = content.options ?? []
     const multiple = content.selectionType === 'multiple'
+    const isReescritura = content.selectionType === 'reescritura_guiada'
+    const isPreguntas = content.selectionType === 'preguntas'
+    const fields: string[] = content.fields?.length
+        ? content.fields
+        : ['Antes creía que:', 'Eso me llevó a:', 'Lo que ahora comprendo es:', 'Desde esta comprensión, puedo:']
+    const pQuestions: { text: string; phrases: string[] }[] = content.questions ?? []
 
-    // value shape: { mode: 'text'|'select', text: string, selected: string[] }
-    // handle legacy string value
+    // value shape: { mode: 'text'|'select'|'reescritura_guiada'|'banco'|'texto', text, selected, completions, answers }
     const v = typeof value === 'string'
-        ? { mode: 'text', text: value, selected: [] }
-        : (value ?? { mode: 'text', text: '', selected: [] })
+        ? { mode: 'text', text: value, selected: [], completions: [], answers: [] }
+        : (value ?? { mode: isReescritura ? 'reescritura_guiada' : isPreguntas ? 'banco' : 'text', text: '', selected: [], completions: [], answers: [] })
 
-    const mode: string = v.mode ?? 'text'
+    const mode: string = v.mode ?? (isReescritura ? 'reescritura_guiada' : isPreguntas ? 'banco' : 'text')
     const setMode = (m: string) => onChange({ ...v, mode: m })
+
+    const completions: string[] = v.completions ?? []
+    const setCompletion = (i: number, text: string) => {
+        const next = [...completions]
+        while (next.length < fields.length) next.push('')
+        next[i] = text
+        onChange({ ...v, mode: 'reescritura_guiada', completions: next })
+    }
+
+    const pAnswers: any[] = v.answers ?? []
+
+    const setPAnswer = (i: number, val: any) => {
+        const next = [...pAnswers]
+        while (next.length < pQuestions.length) next.push('')
+        next[i] = val
+        onChange({ ...v, answers: next })
+    }
 
     const toggleOption = (opt: string) => {
         if (disabled) return
@@ -739,6 +856,225 @@ function Activacion({
         { id: 'select', label: 'Elegir',   enabled: options.length > 0 },
         { id: 'audio',  label: 'Audio',    enabled: false },
     ]
+
+    // ── Preguntas con banco de frases ──
+    if (isPreguntas) {
+        const responseMode = (mode === 'banco' || mode === 'texto') ? mode : 'banco'
+        return (
+            <div className="space-y-5">
+                {question && (
+                    <p className="text-base leading-relaxed" style={{ color: C.text }}>{question}</p>
+                )}
+
+                {/* Question list */}
+                <div className="rounded-xl p-4 space-y-3" style={{ background: C.surface1, border: `1px solid ${C.border}` }}>
+                    <p className="text-[10px] tracking-[0.16em] uppercase font-semibold" style={{ color: C.textMuted }}>
+                        {pQuestions.length} preguntas
+                    </p>
+                    {pQuestions.map((q, i) => (
+                        <div key={i} className="flex items-start gap-3">
+                            <span className="text-sm font-bold shrink-0 mt-0.5" style={{ color: C.red }}>{i + 1}.</span>
+                            <p className="text-sm leading-relaxed" style={{ color: C.text }}>{q.text}</p>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Response mode selector */}
+                <div className="space-y-2">
+                    <p className="text-xs" style={{ color: C.textMuted }}>Opciones de respuesta — para cada una de las {pQuestions.length} preguntas</p>
+                    <div className="grid grid-cols-2 gap-2">
+                        {[
+                            { id: 'texto', label: 'Escribir las respuestas' },
+                            { id: 'banco', label: 'Banco de frases' },
+                        ].map(opt => (
+                            <button
+                                key={opt.id}
+                                onClick={() => !disabled && onChange({ mode: opt.id, answers: [] })}
+                                disabled={disabled}
+                                className="py-3 px-3 rounded-xl text-xs font-semibold text-center transition-all"
+                                style={{
+                                    border: `1px solid ${responseMode === opt.id ? C.red : C.border}`,
+                                    color: responseMode === opt.id ? C.red : C.textMuted,
+                                    background: C.surface2,
+                                    cursor: disabled ? 'default' : 'pointer',
+                                }}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Banco de frases — sequential banks */}
+                {responseMode === 'banco' && pQuestions.map((q, i) => {
+                    const isUnlocked = i === 0 || !!(pAnswers[i - 1]?.trim())
+                    const sel = pAnswers[i] ?? ''
+                    return (
+                        <div key={i} className="space-y-2">
+                            <p
+                                className="text-[10px] tracking-[0.14em] uppercase font-semibold"
+                                style={{ color: isUnlocked ? C.textMuted : C.border }}
+                            >
+                                Banco de frases — Pregunta {i + 1}: {q.text}
+                            </p>
+                            {isUnlocked ? (
+                                <div className="space-y-2">
+                                    {q.phrases.map((phrase: any, pi: number) => {
+                                        const isGuidedPhrase = typeof phrase === 'object' && phrase?.isGuided
+                                        if (isGuidedPhrase) {
+                                            const isActive = sel?.guided === true && sel?.prefix === phrase.prefix
+                                            const guidedText: string = isActive ? (sel.text ?? '') : ''
+                                            return (
+                                                <div
+                                                    key={pi}
+                                                    className="rounded-xl overflow-hidden"
+                                                    style={{ border: `1px solid ${isActive ? C.amber : C.border}` }}
+                                                >
+                                                    <div className="px-4 pt-3 pb-1" style={{ background: C.surface1 }}>
+                                                        <p
+                                                            className="text-sm leading-relaxed italic"
+                                                            style={{ color: C.textMuted, fontFamily: 'Georgia, "Times New Roman", serif' }}
+                                                        >
+                                                            {phrase.prefix}
+                                                        </p>
+                                                    </div>
+                                                    <div className="px-4 pb-3" style={{ background: C.surface1 }}>
+                                                        <input
+                                                            type="text"
+                                                            placeholder="completa aquí..."
+                                                            value={guidedText}
+                                                            onChange={e => !disabled && setPAnswer(i, e.target.value
+                                                                ? { guided: true, prefix: phrase.prefix, text: e.target.value }
+                                                                : ''
+                                                            )}
+                                                            disabled={disabled}
+                                                            className="w-full rounded-lg px-3 py-2.5 text-sm outline-none placeholder:opacity-30"
+                                                            style={{
+                                                                background: C.surface2,
+                                                                border: `1px solid ${guidedText.trim() ? `${C.amber}60` : C.border}`,
+                                                                color: C.text,
+                                                                opacity: disabled ? 0.6 : 1,
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )
+                                        }
+                                        const isChosen = typeof sel === 'string' && sel === phrase
+                                        return (
+                                            <button
+                                                key={pi}
+                                                onClick={() => !disabled && setPAnswer(i, isChosen ? '' : phrase)}
+                                                disabled={disabled}
+                                                className="w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-200"
+                                                style={{
+                                                    background: isChosen ? `${C.red}20` : C.surface2,
+                                                    border: `1px solid ${isChosen ? C.red : C.border}`,
+                                                    color: isChosen ? C.text : C.textMuted,
+                                                    opacity: disabled && !isChosen ? 0.5 : 1,
+                                                }}
+                                            >
+                                                <span
+                                                    className="inline-flex w-5 h-5 rounded-full border items-center justify-center text-xs mr-3 shrink-0"
+                                                    style={{
+                                                        borderColor: isChosen ? C.red : C.border,
+                                                        background: isChosen ? C.red : 'transparent',
+                                                        color: '#fff',
+                                                    }}
+                                                >
+                                                    {isChosen ? '✓' : ''}
+                                                </span>
+                                                {phrase}
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                            ) : (
+                                <div
+                                    className="rounded-xl p-4 text-center"
+                                    style={{ background: C.surface1, border: `1px dashed ${C.border}`, opacity: 0.45 }}
+                                >
+                                    <p className="text-xs" style={{ color: C.textMuted }}>
+                                        Responde la pregunta {i} para desbloquear
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    )
+                })}
+
+                {/* Texto libre */}
+                {responseMode === 'texto' && pQuestions.map((q, i) => (
+                    <div key={i} className="space-y-2">
+                        <p className="text-xs leading-relaxed" style={{ color: C.textMuted }}>
+                            <span style={{ color: C.red, fontWeight: 700 }}>{i + 1}. </span>{q.text}
+                        </p>
+                        <textarea
+                            rows={3}
+                            placeholder="Tu respuesta..."
+                            value={pAnswers[i] ?? ''}
+                            onChange={e => setPAnswer(i, e.target.value)}
+                            disabled={disabled}
+                            className="w-full rounded-xl p-3 text-sm resize-none outline-none placeholder:opacity-30"
+                            style={{
+                                background: C.surface2,
+                                border: `1px solid ${pAnswers[i]?.trim() ? `${C.green}60` : C.border}`,
+                                color: C.text,
+                                opacity: disabled ? 0.6 : 1,
+                            }}
+                        />
+                    </div>
+                ))}
+            </div>
+        )
+    }
+
+    // ── Reescritura guiada — renders completely different UI (no tabs) ──
+    if (isReescritura) {
+        return (
+            <div className="space-y-4">
+                {question && (
+                    <p className="text-base leading-relaxed" style={{ color: C.text }}>
+                        {question}
+                    </p>
+                )}
+                <div className="space-y-3">
+                    {fields.map((prefix, i) => (
+                        <div
+                            key={i}
+                            className="rounded-xl overflow-hidden"
+                            style={{ border: `1px solid ${C.border}` }}
+                        >
+                            <div className="px-4 pt-3 pb-1" style={{ background: C.surface1 }}>
+                                <p
+                                    className="text-sm leading-relaxed italic"
+                                    style={{ color: C.textMuted, fontFamily: 'Georgia, "Times New Roman", serif' }}
+                                >
+                                    {prefix}
+                                </p>
+                            </div>
+                            <div className="px-4 pb-3" style={{ background: C.surface1 }}>
+                                <input
+                                    type="text"
+                                    placeholder="completa aquí..."
+                                    value={completions[i] ?? ''}
+                                    onChange={e => setCompletion(i, e.target.value)}
+                                    disabled={disabled}
+                                    className="w-full rounded-lg px-3 py-2.5 text-sm outline-none placeholder:opacity-30"
+                                    style={{
+                                        background: C.surface2,
+                                        border: `1px solid ${completions[i]?.trim() ? C.green + '60' : C.border}`,
+                                        color: C.text,
+                                        opacity: disabled ? 0.6 : 1,
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="space-y-4">
@@ -761,6 +1097,7 @@ function Activacion({
                             color: mode === tab.id && tab.enabled ? C.red : tab.enabled ? C.text : C.border,
                             background: C.surface2,
                             cursor: tab.enabled && !disabled ? 'pointer' : 'default',
+                            opacity: !tab.enabled ? 0.35 : 1,
                         }}
                     >
                         {tab.label}
@@ -918,16 +1255,194 @@ function AccionReal({
     content, value, onChange, disabled,
 }: { content: any; value: any; onChange: (v: any) => void; disabled: boolean }) {
     const phrase = content.phrase ?? ''
+    const isSeleccion = content.actionType === 'seleccion'
+    const [activeTab, setActiveTab] = useState<'text' | 'photo' | 'audio'>('text')
 
+    // ── Selección guiada mode ──
+    if (isSeleccion) {
+        const opts: string[] = content.options ?? []
+        const guidedPrefix: string = content.guidedPrefix ?? 'Mi compromiso personal es:'
+        const prompt: string = content.prompt ?? ''
+
+        const v = (typeof value === 'object' && value !== null) ? value : { selected: null, guidedText: '' }
+        const selected: string | null = v.selected ?? null
+        const guidedText: string = v.guidedText ?? ''
+        const isGuided = selected === 'guided'
+
+        const pickOption = (opt: string) => {
+            if (disabled) return
+            onChange({ selected: selected === opt ? null : opt, guidedText: '' })
+        }
+        const pickGuided = () => {
+            if (disabled) return
+            onChange({ selected: isGuided ? null : 'guided', guidedText: '' })
+        }
+
+        return (
+            <div className="space-y-3">
+                {prompt && (
+                    <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>{prompt}</p>
+                )}
+                <div className="space-y-2">
+                    {opts.map((opt, i) => {
+                        const sel = selected === opt
+                        return (
+                            <button
+                                key={i}
+                                onClick={() => pickOption(opt)}
+                                disabled={disabled}
+                                className="w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-200"
+                                style={{
+                                    background: sel ? `${C.red}20` : C.surface2,
+                                    border: `1px solid ${sel ? C.red : C.border}`,
+                                    color: sel ? C.text : C.textMuted,
+                                    opacity: disabled && !sel ? 0.5 : 1,
+                                }}
+                            >
+                                <span
+                                    className="inline-flex w-5 h-5 rounded-full border items-center justify-center text-xs mr-3 shrink-0"
+                                    style={{
+                                        borderColor: sel ? C.red : C.border,
+                                        background: sel ? C.red : 'transparent',
+                                        color: '#fff',
+                                    }}
+                                >
+                                    {sel ? '✓' : ''}
+                                </span>
+                                {opt}
+                            </button>
+                        )
+                    })}
+
+                    {/* Guided option — always last */}
+                    <div className="space-y-2">
+                        <button
+                            onClick={pickGuided}
+                            disabled={disabled}
+                            className="w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-200"
+                            style={{
+                                background: isGuided ? `${C.amber}18` : C.surface2,
+                                border: `1px solid ${isGuided ? C.amber : C.border}`,
+                                color: isGuided ? C.text : C.textMuted,
+                                opacity: disabled && !isGuided ? 0.5 : 1,
+                            }}
+                        >
+                            <span
+                                className="inline-flex w-5 h-5 rounded-full border items-center justify-center text-xs mr-3 shrink-0"
+                                style={{
+                                    borderColor: isGuided ? C.amber : C.border,
+                                    background: isGuided ? C.amber : 'transparent',
+                                    color: '#fff',
+                                }}
+                            >
+                                {isGuided ? '✓' : ''}
+                            </span>
+                            <span style={{ color: isGuided ? C.amber : undefined }}>
+                                Escribo la mía
+                            </span>
+                        </button>
+
+                        {isGuided && (
+                            <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${C.amber}40` }}>
+                                <div className="px-4 pt-3 pb-1" style={{ background: C.surface1 }}>
+                                    <p
+                                        className="text-sm italic leading-relaxed"
+                                        style={{ color: C.textMuted, fontFamily: 'Georgia, "Times New Roman", serif' }}
+                                    >
+                                        {guidedPrefix}
+                                    </p>
+                                </div>
+                                <div className="px-4 pb-3" style={{ background: C.surface1 }}>
+                                    <input
+                                        autoFocus
+                                        type="text"
+                                        placeholder="completa aquí..."
+                                        value={guidedText}
+                                        onChange={e => onChange({ selected: 'guided', guidedText: e.target.value })}
+                                        disabled={disabled}
+                                        className="w-full rounded-lg px-3 py-2.5 text-sm outline-none placeholder:opacity-30"
+                                        style={{
+                                            background: C.surface2,
+                                            border: `1px solid ${guidedText.trim() ? `${C.amber}60` : C.border}`,
+                                            color: C.text,
+                                            opacity: disabled ? 0.6 : 1,
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    // ── Solo foto mode ──
+    if (content.actionType === 'foto') {
+        const instruction: string = content.phrase ?? ''
+        const captured = value === '__foto__'
+        return (
+            <div className="space-y-5">
+                {instruction && (
+                    <div
+                        className="rounded-xl px-5 py-4"
+                        style={{ background: C.surface1, border: `1px solid ${C.border}` }}
+                    >
+                        <p
+                            className="text-base leading-relaxed italic"
+                            style={{ color: C.text, fontFamily: 'Georgia, "Times New Roman", serif' }}
+                        >
+                            {instruction}
+                        </p>
+                    </div>
+                )}
+                <button
+                    type="button"
+                    onClick={() => !disabled && !captured && onChange('__foto__')}
+                    className="w-full rounded-xl flex flex-col items-center justify-center gap-3 py-10 transition-all"
+                    style={{
+                        background: captured ? `${C.green}15` : C.surface1,
+                        border: `2px dashed ${captured ? C.green : C.border}`,
+                        cursor: disabled || captured ? 'default' : 'pointer',
+                    }}
+                >
+                    {captured ? (
+                        <>
+                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: C.green }}>
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            <p className="text-sm font-semibold" style={{ color: C.green }}>
+                                Foto registrada
+                            </p>
+                        </>
+                    ) : (
+                        <>
+                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: C.textMuted }}>
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                                <circle cx="12" cy="13" r="4"/>
+                            </svg>
+                            <p className="text-sm font-medium" style={{ color: C.textMuted }}>
+                                Tomar / subir foto
+                            </p>
+                            <p className="text-xs" style={{ color: C.border }}>
+                                Disponible próximamente
+                            </p>
+                        </>
+                    )}
+                </button>
+            </div>
+        )
+    }
+
+    // ── Frase a completar mode (original) ──
     const TABS = [
-        { id: 'text',  label: 'Texto app',   enabled: true },
-        { id: 'photo', label: 'Foto escrita', enabled: false },
-        { id: 'audio', label: 'Audio',        enabled: false },
+        { id: 'text'  as const, label: 'Texto app',   clickable: true },
+        { id: 'photo' as const, label: 'Foto escrita', clickable: true },
+        { id: 'audio' as const, label: 'Audio',        clickable: false },
     ]
 
     return (
         <div className="space-y-5">
-            {/* Phrase box */}
             {phrase && (
                 <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${C.border}` }}>
                     <div className="px-4 pt-4 pb-2" style={{ background: C.surface1 }}>
@@ -960,39 +1475,42 @@ function AccionReal({
                 </div>
             )}
 
-            {/* Evidence tabs */}
             <div className="space-y-3">
                 <p className="text-sm" style={{ color: C.textMuted }}>¿Cómo envías tu evidencia?</p>
                 <div className="flex gap-2">
                     {TABS.map(tab => (
-                        <div
+                        <button
                             key={tab.id}
-                            className="flex-1 py-2.5 px-2 rounded-xl text-xs font-semibold text-center"
+                            type="button"
+                            onClick={() => tab.clickable && setActiveTab(tab.id)}
+                            disabled={!tab.clickable}
+                            className="flex-1 py-2.5 px-2 rounded-xl text-xs font-semibold text-center transition-colors"
                             style={{
-                                border: `1px solid ${tab.id === 'text' ? C.red : C.border}`,
-                                color: tab.id === 'text' ? C.red : C.border,
+                                border: `1px solid ${activeTab === tab.id ? C.red : C.border}`,
+                                color: activeTab === tab.id ? C.red : tab.clickable ? C.textMuted : C.border,
                                 background: C.surface2,
-                                cursor: 'default',
+                                cursor: tab.clickable ? 'pointer' : 'default',
                             }}
                         >
                             {tab.label}
-                        </div>
+                        </button>
                     ))}
                 </div>
 
-                {/* Photo placeholder — siempre visible, deshabilitado */}
-                <div
-                    className="rounded-xl p-6 flex flex-col items-center justify-center gap-2"
-                    style={{ background: C.surface1, border: `1px dashed ${C.border}`, opacity: 0.38 }}
-                >
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: C.textMuted }}>
-                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                        <circle cx="12" cy="13" r="4"/>
-                    </svg>
-                    <p className="text-xs text-center" style={{ color: C.textMuted }}>
-                        Sube foto de lo escrito<br />a mano — opcional
-                    </p>
-                </div>
+                {activeTab === 'photo' && (
+                    <div
+                        className="rounded-xl p-6 flex flex-col items-center justify-center gap-2"
+                        style={{ background: C.surface1, border: `1px dashed ${C.border}`, cursor: 'pointer' }}
+                    >
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: C.textMuted }}>
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                            <circle cx="12" cy="13" r="4"/>
+                        </svg>
+                        <p className="text-xs text-center" style={{ color: C.textMuted }}>
+                            Sube foto de lo escrito a mano
+                        </p>
+                    </div>
+                )}
             </div>
         </div>
     )
@@ -1323,12 +1841,14 @@ function CelebrationScreen({
     nextStation,
     onGoToNext,
     onContinue,
+    onReview,
 }: {
     station: Station
     result: BlockInteractResult
     nextStation: { id: string; title: string } | null
     onGoToNext?: () => void
     onContinue: () => void
+    onReview: () => void
 }) {
     return (
         <div
@@ -1350,6 +1870,8 @@ function CelebrationScreen({
                 <p className="text-sm" style={{ color: C.textMuted }}>
                     {station.title}
                 </p>
+
+                <img src="/StationPhoto.jpg" alt="" className="w-full rounded-2xl object-cover" style={{ height: '280px' }} />
 
                 {/* XP earned */}
                 <div
@@ -1404,6 +1926,13 @@ function CelebrationScreen({
                             <span style={{ color: C.green }}>{nextStation.title}</span>
                         </p>
                     )}
+                    <button
+                        onClick={onReview}
+                        className="w-full py-3.5 rounded-xl text-sm font-medium"
+                        style={{ background: C.surface1, color: C.text, border: `1px solid ${C.border}` }}
+                    >
+                        Ver mis respuestas
+                    </button>
                     <button
                         onClick={onContinue}
                         className="w-full py-3.5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90"
