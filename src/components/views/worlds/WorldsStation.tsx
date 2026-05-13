@@ -38,6 +38,7 @@ export default function WorldsStation() {
     const { journeyId, stationId } = useParams<{ journeyId: string; stationId: string }>()
     const navigate = useNavigate()
 
+
     const [data, setData] = useState<JourneyDetailsResponse | null>(null)
     const [loading, setLoading] = useState(true)
 
@@ -308,7 +309,7 @@ export default function WorldsStation() {
                         <button
                             onClick={() => setReviewMode(true)}
                             className="w-full py-3.5 rounded-xl text-sm font-medium"
-                            style={{ background: C.surface1, color: C.text, border: `1px solid ${C.border}` }}
+                            style={{ background: C.surface1, color: C.green, border: `1px solid ${C.green}` }}
                         >
                             Ver mis respuestas
                         </button>
@@ -440,6 +441,9 @@ export default function WorldsStation() {
                         isLast={blockIndex === blocks.length - 1}
                         nextStationId={nextStation?.id ?? null}
                         journeyId={journeyId!}
+                        onGoToNextStation={nextStation
+                            ? () => navigate(`/worlds/${journeyId}/station/${nextStation.id}`)
+                            : undefined}
                         onCierreSubmit={async (destination: 'next' | 'world') => {
                             await handleSubmitBlock(true)
                             if (destination === 'next' && nextStation) {
@@ -496,11 +500,13 @@ function isResponseValid(blockType: string, response: any): boolean {
 
         case 'accion_real':
             if (typeof response === 'object' && response !== null) {
-                if (!response.selected) return false
-                if (response.selected === 'guided') return !!(response.guidedText?.trim())
-                return true
+                if ('selected' in response) {
+                    if (!response.selected) return false
+                    if (response.selected === 'guided') return !!(response.guidedText?.trim())
+                    return true
+                }
+                if ('text' in response) return !!(response.text?.trim())
             }
-            // foto mode — photo upload not yet implemented, allow proceed
             if (response === '__foto__') return true
             return !!(typeof response === 'string' && response.trim())
 
@@ -531,6 +537,7 @@ function BlockPlayer({
     nextStationId,
     journeyId: _journeyId,
     onCierreSubmit,
+    onGoToNextStation,
 }: {
     block: Block
     station: Station
@@ -548,6 +555,7 @@ function BlockPlayer({
     nextStationId: string | null
     journeyId: string
     onCierreSubmit: (destination: 'next' | 'world') => void
+    onGoToNextStation?: () => void
 }) {
     const label = BLOCK_LABELS[block.type] ?? block.type
     const c = block.content ?? {}
@@ -674,6 +682,16 @@ function BlockPlayer({
                             style={{ background: C.surface2, color: C.text, border: `1px solid ${C.border}` }}
                         >
                             Siguiente →
+                        </button>
+                    )}
+
+                    {alreadyDone && isLast && !isLastStation && onGoToNextStation && (
+                        <button
+                            onClick={onGoToNextStation}
+                            className="w-full py-3.5 rounded-xl font-semibold text-sm"
+                            style={{ background: C.red, color: '#fff' }}
+                        >
+                            Siguiente estación →
                         </button>
                     )}
 
@@ -1256,7 +1274,15 @@ function AccionReal({
 }: { content: any; value: any; onChange: (v: any) => void; disabled: boolean }) {
     const phrase = content.phrase ?? ''
     const isSeleccion = content.actionType === 'seleccion'
-    const [activeTab, setActiveTab] = useState<'text' | 'photo' | 'audio'>('text')
+
+    const freeText: string = typeof value === 'object' && value !== null && 'text' in value
+        ? (value.text ?? '')
+        : (typeof value === 'string' ? value : '')
+    const initialTab: 'text' | 'photo' | 'audio' =
+        typeof value === 'object' && value !== null && 'activeTab' in value
+            ? value.activeTab
+            : 'text'
+    const [activeTab, setActiveTab] = useState<'text' | 'photo' | 'audio'>(initialTab)
 
     // ── Selección guiada mode ──
     if (isSeleccion) {
@@ -1436,7 +1462,7 @@ function AccionReal({
 
     // ── Frase a completar mode (original) ──
     const TABS = [
-        { id: 'text'  as const, label: 'Texto app',   clickable: true },
+        { id: 'text'  as const, label: 'Escritura libre',   clickable: true },
         { id: 'photo' as const, label: 'Foto escrita', clickable: true },
         { id: 'audio' as const, label: 'Audio',        clickable: false },
     ]
@@ -1460,8 +1486,8 @@ function AccionReal({
                         <textarea
                             rows={3}
                             placeholder="completa aquí..."
-                            value={value ?? ''}
-                            onChange={e => onChange(e.target.value)}
+                            value={freeText}
+                            onChange={e => onChange({ text: e.target.value, activeTab })}
                             disabled={disabled}
                             className="w-full rounded-lg p-3 text-sm resize-none outline-none"
                             style={{
@@ -1482,7 +1508,12 @@ function AccionReal({
                         <button
                             key={tab.id}
                             type="button"
-                            onClick={() => tab.clickable && setActiveTab(tab.id)}
+                            onClick={() => {
+                                if (tab.clickable) {
+                                    setActiveTab(tab.id)
+                                    onChange({ text: freeText, activeTab: tab.id })
+                                }
+                            }}
                             disabled={!tab.clickable}
                             className="flex-1 py-2.5 px-2 rounded-xl text-xs font-semibold text-center transition-colors"
                             style={{
@@ -1745,10 +1776,10 @@ function WorldCompletionScreen({
             className="min-h-screen flex flex-col"
             style={{ background: C.bg, color: C.text, fontFamily: 'Montserrat, sans-serif' }}
         >
-            {/* Red header */}
+            {/* Green header */}
             <div
                 className="flex flex-col items-center justify-center gap-3 px-6 pt-12 pb-10"
-                style={{ background: C.red }}
+                style={{ background: '#52B788' }}
             >
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#231F20' }}>
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
@@ -1787,20 +1818,23 @@ function WorldCompletionScreen({
                             Insignias ganadas
                         </p>
                         <div className="flex flex-wrap gap-2">
-                            {badges.map((b, i) => (
+                            {badges.map((b, i) => {
+                                const accent = i % 2 === 0 ? '#1B4332' : '#52B788'
+                                return (
                                 <span
                                     key={i}
                                     className="text-xs px-3 py-2 rounded-full font-semibold flex items-center gap-1.5 flex-none"
                                     style={{
-                                        border: `1px solid ${C.red}`,
-                                        color: C.red,
-                                        background: `${C.red}10`,
+                                        border: `1px solid ${accent}`,
+                                        color: accent,
+                                        background: `${accent}18`,
                                     }}
                                 >
                                     <Award size={14} />
                                     {b}
                                 </span>
-                            ))}
+                                )
+                            })}
                         </div>
                     </div>
                 )}
@@ -1852,10 +1886,10 @@ function CelebrationScreen({
 }) {
     return (
         <div
-            className="min-h-screen flex flex-col items-center justify-center px-6 text-center"
+            className="min-h-screen flex flex-col items-center px-6 py-10 text-center"
             style={{ background: C.bg, color: C.text, fontFamily: 'Montserrat, sans-serif' }}
         >
-            <div className="space-y-6 max-w-sm mx-auto">
+            <div className="space-y-6 max-w-sm mx-auto w-full pb-6">
                 <div className="flex items-center justify-center w-16 h-16 rounded-full mx-auto" style={{ background: `${C.amber}20`, border: `1.5px solid ${C.amber}` }}>
                     <Sparkles size={32} style={{ color: C.amber }} />
                 </div>
@@ -1905,7 +1939,7 @@ function CelebrationScreen({
                             className="rounded-lg px-4 py-2 text-sm"
                             style={{ background: C.green + '15', color: C.green }}
                         >
-                            <Award size={14} className="inline mr-1" /> ¡Obtuviste el badge "{result.badgeEarned}"!
+                            <Award size={14} className="inline mr-1" /> ¡Obtuviste tu insignia "{result.badgeEarned}"!
                         </div>
                     )}
                 </div>
@@ -1929,7 +1963,7 @@ function CelebrationScreen({
                     <button
                         onClick={onReview}
                         className="w-full py-3.5 rounded-xl text-sm font-medium"
-                        style={{ background: C.surface1, color: C.text, border: `1px solid ${C.border}` }}
+                        style={{ background: C.surface1, color: C.green, border: `1px solid ${C.green}` }}
                     >
                         Ver mis respuestas
                     </button>
