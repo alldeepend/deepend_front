@@ -15,6 +15,7 @@ const C = {
     amber:    '#EF9F27',
     green:    '#52B788',
     border:   '#333330',
+    forest: '#1B4332',
 }
 
 export default function WorldsHome() {
@@ -47,6 +48,19 @@ export default function WorldsHome() {
     const goTo = (idx: number) => {
         setCurrentIdx(Math.max(0, Math.min(idx, totalSections - 1)))
     }
+
+    // Restaura la sección guardada tras volver de un reto
+    useEffect(() => {
+        if (allJourneys.length === 0) return
+        const saved = sessionStorage.getItem('worldsHomeIdx')
+        if (saved) {
+            const idx = parseInt(saved, 10)
+            if (!isNaN(idx) && idx > 0 && idx < totalSections) {
+                setCurrentIdx(idx)
+            }
+            sessionStorage.removeItem('worldsHomeIdx')
+        }
+    }, [allJourneys.length])
 
     if (loading) {
         return (
@@ -151,31 +165,14 @@ export default function WorldsHome() {
                             return (
                                 <div
                                     key={journey.id}
-                                    className="relative flex flex-col justify-between overflow-hidden"
+                                    className="flex flex-col overflow-hidden"
                                     style={{ height: '100dvh', background: C.bg }}
                                 >
-                                    {/* Número de marca de agua */}
-                                    <span
-                                        className="absolute inset-0 flex items-center justify-center pointer-events-none select-none"
-                                        style={{
-                                            fontFamily: 'Georgia, serif',
-                                            fontSize: 'clamp(180px, 45vw, 260px)',
-                                            fontWeight: 700,
-                                            color: C.text,
-                                            opacity: 0.04,
-                                            lineHeight: 1,
-                                        }}
-                                    >
-                                        {String(idx + 1).padStart(2, '0')}
-                                    </span>
-
-                                    {/* ── Zona superior: contador + área + título + descripción ── */}
-                                    <div className="relative z-10 flex flex-col gap-5 px-6 pt-14">
-                                        <p className="text-xs tracking-[0.3em] uppercase text-center" style={{ color: C.textMuted }}>
+                                    {/* ── Zona superior: contador + área + título ── */}
+                                    <div className="relative z-10 flex flex-col gap-4 px-6 pt-14 text-center">
+                                        <p className="text-xs tracking-[0.3em] uppercase" style={{ color: C.textMuted }}>
                                             {String(idx + 1).padStart(2, '0')} / {String(allJourneys.length).padStart(2, '0')}
                                         </p>
-
-                                        {/* Área · Mundo */}
                                         <div className="flex items-center gap-3">
                                             <div className="flex-1 h-px" style={{ background: C.border }} />
                                             <p className="text-[10px] tracking-[0.3em] uppercase" style={{ color: C.textMuted }}>
@@ -183,35 +180,46 @@ export default function WorldsHome() {
                                             </p>
                                             <div className="flex-1 h-px" style={{ background: C.border }} />
                                         </div>
-
-                                        {/* Título */}
                                         <h1
                                             className="text-5xl font-bold leading-tight"
                                             style={{ fontFamily: 'Georgia, "Times New Roman", serif', color: C.text }}
                                         >
                                             {journey.title}
                                         </h1>
+                                    </div>
 
-                                        {/* Descripción */}
+                                    {/* ── Franja central: imagen + descripción + stats ── */}
+                                    <div className="flex-1 flex flex-col justify-between px-6 py-5 relative">
+                                        {/* Imagen con mismos márgenes que los cajones */}
+                                        <img
+                                            src="/allison-saeng-hMPqCk0R1uk-unsplash-modified.jpg"
+                                            className="absolute inset-x-6 inset-y-0 w-[calc(100%-3rem)] h-full object-cover object-center pointer-events-none rounded-xl"
+                                            style={{ opacity: 0.35 }}
+                                            alt=""
+                                        />
+                                        <div
+                                            className="absolute inset-x-6 inset-y-0 rounded-xl pointer-events-none"
+                                            style={{ background: 'linear-gradient(to bottom, rgba(35,31,32,0.45) 0%, transparent 30%, transparent 70%, rgba(35,31,32,0.45) 100%)' }}
+                                        />
+                                        {/* Descripción sobre la imagen */}
                                         {journey.description && (
-                                            <p className="text-base leading-relaxed" style={{ color: C.textMuted }}>
+                                            <p className="relative z-10 text-base leading-relaxed text-center" style={{ color: C.textMuted }}>
                                                 {journey.description}
                                             </p>
                                         )}
-                                    </div>
-
-                                    {/* ── Zona inferior: stats + progreso + CTA ── */}
-                                    <div className="relative z-10 flex flex-col gap-4 px-6 pb-20">
-
-                                        {/* Stats */}
+                                        {/* Stats sobre la imagen */}
                                         <div
-                                            className="w-full rounded-xl grid grid-cols-3 divide-x divide-[#333330]"
-                                            style={{ border: `1px solid ${C.border}` }}
+                                            className="relative z-10 w-full rounded-xl grid grid-cols-3 divide-x divide-[#6B6560]"
+                                            style={{ border: '1px solid #6B6560' }}
                                         >
                                             <StatCell value={String(stations)} label="estaciones" />
                                             <StatCell value={String(numDays)} label="días" />
                                             <StatCell value={String(xpMax)} label="XP máx" amber />
                                         </div>
+                                    </div>
+
+{/* ── Zona inferior: progreso + CTA ── */}
+                                    <div className="relative z-10 flex flex-col gap-4 px-6 pt-5 pb-32">
 
                                         {/* Progreso */}
                                         {isStarted && (
@@ -233,7 +241,10 @@ export default function WorldsHome() {
 
                                         {/* CTA */}
                                         <button
-                                            onClick={() => navigate(`/worlds/${journey.id}`)}
+                                            onClick={() => {
+                                                sessionStorage.setItem('worldsHomeIdx', String(idx + 1))
+                                                navigate(`/worlds/${journey.id}`)
+                                            }}
                                             className="w-full py-4 rounded-full font-semibold text-sm tracking-wide transition-opacity hover:opacity-90 active:opacity-80"
                                             style={{ background: C.red, color: '#fff' }}
                                         >
@@ -251,8 +262,8 @@ export default function WorldsHome() {
                 </div>
             </div>
 
-            {/* Botones de navegación — fijos, esquina inferior derecha */}
-            <div className="fixed right-6 bottom-8 z-50 flex flex-col gap-3">
+            {/* Botones de navegación */}
+            <div className="fixed bottom-16 left-1/2 md:left-[calc(50%+8rem)] -translate-x-1/2 z-50 flex flex-row gap-3">
                 {currentIdx > 0 && (
                     <button
                         onClick={() => goTo(currentIdx - 1)}
@@ -268,7 +279,7 @@ export default function WorldsHome() {
                 {currentIdx < totalSections - 1 && (
                     <button
                         onClick={() => goTo(currentIdx + 1)}
-                        className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95"
+                        className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95 ${currentIdx === 0 ? 'animate-bounce' : ''}`}
                         style={{ background: C.red, color: '#fff' }}
                         aria-label="Siguiente sección"
                     >
