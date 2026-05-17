@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router'
 import { journeyApi } from '../../../services/journey'
 import type { Area, Journey, UserJourneyProgress } from '../../../types/journey'
 import { useAuth } from '../../../store/useAuth'
+import { HomeSidebar } from '../../home/HomeSidebar'
 
-// ─── DeepEnd brand colors ─────────────────────────────────────────────────────
 const C = {
     bg:       '#231F20',
     surface1: '#1E1A1B',
@@ -15,14 +15,15 @@ const C = {
     amber:    '#EF9F27',
     green:    '#52B788',
     border:   '#333330',
+    forest: '#1B4332',
 }
 
 export default function WorldsHome() {
-    const navigate = useNavigate()
-    const { user } = useAuth()
-
-    const [areas, setAreas] = useState<Area[]>([])
-    const [loading, setLoading] = useState(true)
+    const navigate  = useNavigate()
+    const { user }  = useAuth()
+    const [areas, setAreas]       = useState<Area[]>([])
+    const [loading, setLoading]   = useState(true)
+    const [currentIdx, setCurrentIdx] = useState(0)
 
     useEffect(() => {
         journeyApi.getAvailableJourneys()
@@ -41,190 +42,269 @@ export default function WorldsHome() {
     const totalXpMax = (j: Journey) =>
         (j.worlds ?? []).reduce((s, w) => (w.stations ?? []).reduce((ss, st) => ss + (st.xp || 0), s), 0)
 
-    return (
-        <div
-            className="min-h-screen flex flex-col"
-            style={{ background: C.bg, color: C.text, fontFamily: 'Montserrat, sans-serif' }}
-        >
-            {/* Top bar con banner */}
-            <div
-                className="px-6 pt-8 pb-4 flex items-center justify-between relative overflow-hidden bg-center md:bg-[center_40%]"
-                style={{
-                    borderBottom: `1px solid ${C.border}`,
-                    backgroundImage: 'url(/frank-van-hulst-dVaJ-yJjUvs-unsplash.jpg)',
-                    backgroundSize: 'cover',
-                }}
-            >
-                <div className="absolute inset-0" style={{ background: 'rgba(35,31,32,0.72)' }} />
-                <div className="relative z-10 flex items-center justify-between w-full">
-                <div>
-                    <p className="text-xs tracking-[0.2em] uppercase" style={{ color: C.textMuted }}>
-                        DEEPEND · {user?.membership?.toUpperCase() || 'TEST'}
-                    </p>
-                    <h1
-                        className="text-3xl font-bold mt-1"
-                        style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
-                    >
-                        Mi Viaje
-                    </h1>
-                </div>
-                <button
-                    onClick={() => navigate('/dashboard')}
-                    className="text-sm px-4 py-2 rounded-lg transition"
-                    style={{ color: C.textMuted, border: `1px solid ${C.border}` }}
-                >
-                    ← Volver
-                </button>
-                </div>
-            </div>
+    // section 0 = hero, sections 1..N = journeys
+    const totalSections = 1 + allJourneys.length
 
-            {/* Content */}
-            <div className="flex-1 px-6 py-8 max-w-2xl mx-auto w-full">
-                {loading ? (
-                    <div className="flex justify-center items-center h-40">
-                        <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: `${C.border} ${C.red} ${C.border} ${C.border}` }} />
-                    </div>
-                ) : allJourneys.length === 0 ? (
-                    <div className="text-center py-16" style={{ color: C.textMuted }}>
-                        <p className="text-lg mb-2" style={{ fontFamily: 'Georgia, serif' }}>
-                            Próximamente
-                        </p>
-                        <p className="text-sm">Los retos de esta sección están en preparación.</p>
-                    </div>
-                ) : (
-                    <div className="space-y-5">
-                        {allJourneys.map(journey => (
-                            <JourneyCard
-                                key={journey.id}
-                                journey={journey}
-                                totalStations={totalStations(journey)}
-                                totalXpMax={totalXpMax(journey)}
-                                onStart={() => navigate(`/worlds/${journey.id}`)}
-                            />
-                        ))}
-                    </div>
-                )}
-            </div>
-        </div>
-    )
-}
+    const goTo = (idx: number) => {
+        setCurrentIdx(Math.max(0, Math.min(idx, totalSections - 1)))
+    }
 
-// ─── Journey card ─────────────────────────────────────────────────────────────
+    // Restaura la sección guardada tras volver de un reto
+    useEffect(() => {
+        if (allJourneys.length === 0) return
+        const saved = sessionStorage.getItem('worldsHomeIdx')
+        if (saved) {
+            const idx = parseInt(saved, 10)
+            if (!isNaN(idx) && idx > 0 && idx < totalSections) {
+                setCurrentIdx(idx)
+            }
+            sessionStorage.removeItem('worldsHomeIdx')
+        }
+    }, [allJourneys.length])
 
-function JourneyCard({
-    journey,
-    totalStations,
-    totalXpMax,
-    onStart,
-}: {
-    journey: Journey & { areaName: string }
-    totalStations: number
-    totalXpMax: number
-    onStart: () => void
-}) {
-    const userJourney = (journey as any).userJourneys?.[0] as UserJourneyProgress | undefined
-    const isStarted = !!userJourney
-    const isCompleted = userJourney?.status === 'completado'
-    const xpEarned = userJourney?.totalXpEarned ?? 0
-    const progress = totalXpMax > 0 ? Math.round((xpEarned / totalXpMax) * 100) : 0
-
-    return (
-        <div
-            className="rounded-2xl p-6 space-y-5"
-            style={{ background: C.surface1, border: `1px solid ${C.border}` }}
-        >
-            {/* Header */}
-            <div className="flex items-start justify-between gap-4">
-                <div>
-                    <p
-                        className="text-[10px] tracking-[0.15em] uppercase mb-2"
-                        style={{ color: C.textMuted }}
-                    >
-                        {journey.areaName} · {(journey.worlds?.length ?? 0) > 0 ? journey.worlds[0].title : 'Mundo 1'}
-                    </p>
-                    <h2
-                        className="text-2xl font-bold leading-tight"
-                        style={{ fontFamily: 'Georgia, "Times New Roman", serif', color: C.text }}
-                    >
-                        {journey.title}
-                    </h2>
-                    {journey.description && (
-                        <p className="text-sm mt-2 leading-relaxed" style={{ color: C.textMuted }}>
-                            {journey.description}
-                        </p>
-                    )}
-                </div>
-                {isCompleted && (
-                    <span
-                        className="text-xs px-3 py-1 rounded-full font-semibold shrink-0"
-                        style={{ background: C.green + '20', color: C.green }}
-                    >
-                        Completado
-                    </span>
-                )}
-            </div>
-
-            {/* Stats */}
-            <div className="flex gap-6">
-                <Stat value={String(totalStations)} label="estaciones" />
-                <Stat value={`${(journey.worlds?.length ?? 0) * 2 || 7}`} label="días" />
-                <Stat
-                    value={`${totalXpMax}`}
-                    label="XP máx"
-                    amber
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center" style={{ background: C.bg }}>
+                <div
+                    className="w-8 h-8 border-2 rounded-full animate-spin"
+                    style={{ borderColor: `${C.border} ${C.red} ${C.border} ${C.border}` }}
                 />
             </div>
+        )
+    }
 
-            {/* Progress bar (if started) */}
-            {isStarted && (
-                <div className="space-y-2">
-                    <div className="flex justify-between text-xs" style={{ color: C.textMuted }}>
-                        <span>Progreso</span>
-                        <span style={{ color: C.amber, fontFamily: 'monospace' }}>
-                            {xpEarned} / {totalXpMax} XP
-                        </span>
+    return (
+        <div className="flex" style={{ height: '100dvh', overflow: 'hidden', background: C.bg, fontFamily: 'Montserrat, sans-serif' }}>
+
+            {/* Sidebar (desktop only) */}
+            <div className="hidden md:block flex-shrink-0 h-full">
+                <HomeSidebar activeTab="Mundos" dark />
+            </div>
+
+            {/* Slider viewport */}
+            <div className="flex-1 flex justify-center overflow-hidden">
+                <div className="w-full max-w-md md:max-w-none overflow-hidden relative">
+
+                    {/* Sliding track */}
+                    <div
+                        style={{
+                            transform: `translateY(calc(${-currentIdx} * 100dvh))`,
+                            transition: 'transform 0.65s cubic-bezier(0.76, 0, 0.24, 1)',
+                            willChange: 'transform',
+                        }}
+                    >
+
+                        {/* ── Sección 0: Hero ── */}
+                        <div className="relative flex flex-col" style={{ height: '100dvh' }}>
+                            {/* Imagen de fondo */}
+                            <img
+                                src="/frank-van-hulst-dVaJ-yJjUvs-unsplash.jpg"
+                                className="absolute inset-0 w-full h-full object-cover object-center"
+                                alt=""
+                            />
+                            <div
+                                className="absolute inset-0"
+                                style={{ background: 'linear-gradient(to bottom, rgba(35,31,32,0.5) 0%, rgba(35,31,32,0.2) 35%, rgba(35,31,32,0.6) 100%)' }}
+                            />
+
+                            {/* Top bar */}
+                            <div className="relative z-10 flex items-center justify-between px-6 pt-10">
+                                <p className="text-xs tracking-[0.25em] uppercase" style={{ color: C.textMuted }}>
+                                    DEEP END · {user?.membership?.toUpperCase() ?? 'TEST'}
+                                </p>
+                                <button
+                                    onClick={() => navigate('/dashboard')}
+                                    className="text-xs px-3 py-1.5 rounded-lg"
+                                    style={{ color: C.textMuted, border: `1px solid ${C.border}` }}
+                                >
+                                    ← Volver
+                                </button>
+                            </div>
+
+                            {/* Contenido central */}
+                            <div className="relative z-10 flex-1 flex flex-col items-center justify-center gap-5 px-8 text-center">
+                                <img
+                                    src="/Logos_Variaciones-02.png"
+                                    alt="DeepEnd"
+                                    className="w-44 object-contain"
+                                />
+                                <h1
+                                    className="text-3xl font-bold leading-snug"
+                                    style={{ fontFamily: 'Georgia, "Times New Roman", serif', color: C.text }}
+                                >
+                                    Bienvenido a los Mundos
+                                </h1>
+                                {allJourneys.length > 0 && (
+                                    <p className="text-xs tracking-[0.25em] uppercase" style={{ color: C.textMuted }}>
+                                        {allJourneys.length} {allJourneys.length === 1 ? 'reto disponible' : 'retos disponibles'}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Hint inferior */}
+                            <div className="relative z-10 flex flex-col items-center pb-10 gap-2">
+                                <p className="text-xs tracking-[0.2em] uppercase" style={{ color: C.textMuted }}>
+                                    Explora los retos
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* ── Secciones 1..N: Retos ── */}
+                        {allJourneys.map((journey, idx) => {
+                            const userJourney = (journey as any).userJourneys?.[0] as UserJourneyProgress | undefined
+                            const isStarted   = !!userJourney
+                            const isCompleted = userJourney?.status === 'completado'
+                            const xpEarned    = userJourney?.totalXpEarned ?? 0
+                            const xpMax       = totalXpMax(journey)
+                            const progress    = xpMax > 0 ? Math.round((xpEarned / xpMax) * 100) : 0
+                            const worldTitle  = journey.worlds?.[0]?.title ?? 'Mundo 1'
+                            const numDays     = (journey.worlds?.length ?? 0) * 2 || 7
+                            const ctaLabel    = isCompleted ? 'Ver mi historia' : isStarted ? 'Continuar mi viaje' : 'Comenzar mi viaje'
+                            const stations    = totalStations(journey)
+
+                            return (
+                                <div
+                                    key={journey.id}
+                                    className="flex flex-col overflow-hidden"
+                                    style={{ height: '100dvh', background: C.bg }}
+                                >
+                                    {/* ── Zona superior: contador + área + título ── */}
+                                    <div className="relative z-10 flex flex-col gap-4 px-6 pt-14 text-center">
+                                        <p className="text-xs tracking-[0.3em] uppercase" style={{ color: C.textMuted }}>
+                                            {String(idx + 1).padStart(2, '0')} / {String(allJourneys.length).padStart(2, '0')}
+                                        </p>
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex-1 h-px" style={{ background: C.border }} />
+                                            <p className="text-[10px] tracking-[0.3em] uppercase" style={{ color: C.textMuted }}>
+                                                {journey.areaName} · {worldTitle}
+                                            </p>
+                                            <div className="flex-1 h-px" style={{ background: C.border }} />
+                                        </div>
+                                        <h1
+                                            className="text-5xl font-bold leading-tight"
+                                            style={{ fontFamily: 'Georgia, "Times New Roman", serif', color: C.text }}
+                                        >
+                                            {journey.title}
+                                        </h1>
+                                    </div>
+
+                                    {/* ── Franja central: imagen + descripción + stats ── */}
+                                    <div className="flex-1 flex flex-col justify-between px-6 py-5 relative">
+                                        {/* Imagen con mismos márgenes que los cajones */}
+                                        <img
+                                            src="/allison-saeng-hMPqCk0R1uk-unsplash-modified.jpg"
+                                            className="absolute inset-x-6 inset-y-0 w-[calc(100%-3rem)] h-full object-cover object-center pointer-events-none rounded-xl"
+                                            style={{ opacity: 0.35 }}
+                                            alt=""
+                                        />
+                                        <div
+                                            className="absolute inset-x-6 inset-y-0 rounded-xl pointer-events-none"
+                                            style={{ background: 'linear-gradient(to bottom, rgba(35,31,32,0.45) 0%, transparent 30%, transparent 70%, rgba(35,31,32,0.45) 100%)' }}
+                                        />
+                                        {/* Descripción sobre la imagen */}
+                                        {journey.description && (
+                                            <p className="relative z-10 text-base leading-relaxed text-center" style={{ color: C.textMuted }}>
+                                                {journey.description}
+                                            </p>
+                                        )}
+                                        {/* Stats sobre la imagen */}
+                                        <div
+                                            className="relative z-10 w-full rounded-xl grid grid-cols-3 divide-x divide-[#6B6560]"
+                                            style={{ border: '1px solid #6B6560' }}
+                                        >
+                                            <StatCell value={String(stations)} label="estaciones" />
+                                            <StatCell value={String(numDays)} label="días" />
+                                            <StatCell value={String(xpMax)} label="XP máx" amber />
+                                        </div>
+                                    </div>
+
+{/* ── Zona inferior: progreso + CTA ── */}
+                                    <div className="relative z-10 flex flex-col gap-4 px-6 pt-5 pb-32">
+
+                                        {/* Progreso */}
+                                        {isStarted && (
+                                            <div className="space-y-2">
+                                                <div className="flex justify-between text-xs" style={{ color: C.textMuted }}>
+                                                    <span>Progreso</span>
+                                                    <span style={{ color: C.amber, fontFamily: 'monospace' }}>
+                                                        {xpEarned} / {xpMax} XP
+                                                    </span>
+                                                </div>
+                                                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: C.surface2 }}>
+                                                    <div
+                                                        className="h-full rounded-full transition-all duration-500"
+                                                        style={{ width: `${progress}%`, background: C.amber }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* CTA */}
+                                        <button
+                                            onClick={() => {
+                                                sessionStorage.setItem('worldsHomeIdx', String(idx + 1))
+                                                navigate(`/worlds/${journey.id}`)
+                                            }}
+                                            className="w-full py-4 rounded-full font-semibold text-sm tracking-wide transition-opacity hover:opacity-90 active:opacity-80"
+                                            style={{ background: C.red, color: '#fff' }}
+                                        >
+                                            {ctaLabel}
+                                        </button>
+
+                                        <p className="text-xs text-center" style={{ color: C.textMuted }}>
+                                            Puedes pausar cuando quieras
+                                        </p>
+                                    </div>
+                                </div>
+                            )
+                        })}
                     </div>
-                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: C.surface2 }}>
-                        <div
-                            className="h-full rounded-full transition-all duration-500"
-                            style={{ width: `${progress}%`, background: C.amber }}
-                        />
-                    </div>
-                    {(userJourney?.currentStreak ?? 0) > 0 && (
-                        <p className="text-xs" style={{ color: C.textMuted }}>
-                            🔥 Racha activa: <span style={{ color: C.amber }}>{userJourney!.currentStreak} días</span>
-                        </p>
-                    )}
                 </div>
-            )}
+            </div>
 
-            {/* CTA */}
-            <button
-                onClick={onStart}
-                className="w-full py-3.5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90 active:opacity-80"
-                style={{ background: C.red, color: '#fff' }}
-            >
-                {isCompleted ? 'Ver mi historia' : isStarted ? 'Continuar mi viaje' : 'Comenzar mi viaje'}
-            </button>
+            {/* Botones de navegación */}
+            <div className="fixed bottom-16 left-1/2 md:left-[calc(50%+8rem)] -translate-x-1/2 z-50 flex flex-row gap-3">
+                {currentIdx > 0 && (
+                    <button
+                        onClick={() => goTo(currentIdx - 1)}
+                        className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95"
+                        style={{ background: C.surface1, border: `1px solid ${C.border}`, color: C.text }}
+                        aria-label="Sección anterior"
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="18 15 12 9 6 15" />
+                        </svg>
+                    </button>
+                )}
+                {currentIdx < totalSections - 1 && (
+                    <button
+                        onClick={() => goTo(currentIdx + 1)}
+                        className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95 ${currentIdx === 0 ? 'animate-bounce' : ''}`}
+                        style={{ background: C.red, color: '#fff' }}
+                        aria-label="Siguiente sección"
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                    </button>
+                )}
+            </div>
         </div>
     )
 }
 
-function Stat({ value, label, amber }: { value: string; label: string; amber?: boolean }) {
+function StatCell({ value, label, amber }: { value: string; label: string; amber?: boolean }) {
     return (
-        <div className="text-center">
-            <p
+        <div className="py-4 flex flex-col items-center gap-1">
+            <span
                 className="text-xl font-bold"
-                style={{
-                    fontFamily: 'monospace',
-                    color: amber ? C.amber : C.text,
-                }}
+                style={{ fontFamily: 'monospace', color: amber ? C.amber : C.text }}
             >
                 {value}
-            </p>
-            <p className="text-[11px] mt-0.5" style={{ color: C.textMuted }}>
+            </span>
+            <span className="text-[10px] uppercase tracking-wider" style={{ color: C.textMuted }}>
                 {label}
-            </p>
+            </span>
         </div>
     )
 }

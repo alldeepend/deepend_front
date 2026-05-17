@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { Lock, Compass } from 'lucide-react'
+import { Lock, Award } from 'lucide-react'
 import { journeyApi } from '../../../services/journey'
 import type { JourneyDetailsResponse, StationProgress } from '../../../types/journey'
 
@@ -156,132 +156,131 @@ export default function WorldsJourney() {
             )}
 
             {/* World & station map */}
-            <div className="flex-1 px-6 py-8 max-w-2xl mx-auto w-full space-y-10">
+            <div className="flex-1 px-6 py-8 max-w-2xl mx-auto w-full">
                 {(() => {
                     const sortedWorlds = journey.worlds
                         .slice()
                         .sort((a, b) => a.orderIndex - b.orderIndex)
 
-                    const firstUnstartedIdx = sortedWorlds.findIndex(w => {
-                        const ids = w.stations.map(s => s.id)
-                        return !ids.some(id => isStationCompleted(id) || id === currentStationId)
+                    // Build flat list: world headers + stations interleaved
+                    type TrackItem =
+                        | { kind: 'world'; world: typeof sortedWorlds[0]; wIdx: number; hasStarted: boolean }
+                        | { kind: 'station'; station: typeof sortedWorlds[0]['stations'][0]; world: typeof sortedWorlds[0] }
+
+                    const items: TrackItem[] = []
+                    sortedWorlds.forEach((world, wIdx) => {
+                        const ids = world.stations.map(s => s.id)
+                        const hasStarted = ids.some(id => isStationCompleted(id) || id === currentStationId)
+                        items.push({ kind: 'world', world, wIdx, hasStarted })
+                        world.stations
+                            .slice()
+                            .sort((a, b) => a.orderIndex - b.orderIndex)
+                            .forEach(station => items.push({ kind: 'station', station, world }))
                     })
 
-                    // worlds to render individually: all started + first unstarted
-                    const cutoff = firstUnstartedIdx === -1
-                        ? sortedWorlds.length
-                        : firstUnstartedIdx + 1
-
-                    const visibleWorlds = sortedWorlds.slice(0, cutoff)
-                    const hiddenWorlds = sortedWorlds.slice(cutoff)
-
                     return (
-                        <>
-                            {visibleWorlds.map((world, wIdx) => {
-                                const worldStationIds = world.stations.map(s => s.id)
-                                const worldHasStarted = worldStationIds.some(
-                                    id => isStationCompleted(id) || id === currentStationId
-                                )
+                        <div className="ml-1">
+                            {items.map((item, itemIdx) => {
+                                const isLastItem = itemIdx === items.length - 1
 
-                                return (
-                                    <div key={world.id}>
-                                        {/* World header */}
-                                        <div className="flex items-center gap-3 mb-5">
-                                            <div
-                                                className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
-                                                style={{ background: worldHasStarted ? C.red : C.surface2, color: worldHasStarted ? '#fff' : C.textMuted, border: `1px solid ${worldHasStarted ? C.red : C.border}` }}
-                                            >
-                                                {wIdx + 1}
+                                // ── World header row ──
+                                if (item.kind === 'world') {
+                                    const lineColor = item.hasStarted ? C.green : C.border
+                                    return (
+                                        <div key={`world-${item.world.id}`} className="flex gap-4 items-center">
+                                            {/* Track: line → number circle → line */}
+                                            <div className="flex flex-col items-center" style={{ width: 28, flexShrink: 0 }}>
+                                                {itemIdx > 0 && (
+                                                    <div style={{ width: 2, height: 10, borderLeft: `2px dashed ${lineColor}` }} />
+                                                )}
+                                                <div
+                                                    className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                                                    style={{ background: item.hasStarted ? C.red : C.surface2, color: item.hasStarted ? '#fff' : C.textMuted, border: `1px solid ${item.hasStarted ? C.red : C.border}` }}
+                                                >
+                                                    {item.wIdx + 1}
+                                                </div>
+                                                <div style={{ width: 2, height: 10, borderLeft: `2px dashed ${lineColor}` }} />
                                             </div>
-                                            <div>
-                                                <p className="text-xs tracking-[0.12em] uppercase" style={{ color: C.textMuted }}>
-                                                    Mundo {wIdx + 1}
+                                            {/* World label */}
+                                            <div className="py-1">
+                                                <p className="text-[10px] tracking-[0.14em] uppercase" style={{ color: C.textMuted }}>
+                                                    Mundo {item.wIdx + 1}
                                                 </p>
                                                 <h2
-                                                    className="font-bold leading-tight"
-                                                    style={{ fontFamily: 'Georgia, "Times New Roman", serif', color: worldHasStarted ? C.text : C.textMuted }}
+                                                    className="font-bold text-sm leading-tight"
+                                                    style={{ fontFamily: 'Georgia, "Times New Roman", serif', color: item.hasStarted ? C.text : C.textMuted }}
                                                 >
-                                                    {world.title}
+                                                    {item.world.title}
                                                 </h2>
                                             </div>
                                         </div>
+                                    )
+                                }
 
-                                        {/* Connector + stations */}
-                                        <div className="ml-4 pl-6 border-l-2 space-y-3" style={{ borderColor: C.border }}>
-                                            {worldHasStarted ? (
-                                                world.stations
-                                                    .slice()
-                                                    .sort((a, b) => a.orderIndex - b.orderIndex)
-                                                    .map((station, sIdx) => {
-                                                        const sp = progressMap.get(station.id)
-                                                        const completed = sp?.isCompleted === true
-                                                        const unlocked = isStationUnlocked(station.id)
-                                                        const xpSp = sp?.xpEarned ?? 0
-                                                        return (
-                                                            <StationCard
-                                                                key={station.id}
-                                                                index={sIdx + 1}
-                                                                title={station.title}
-                                                                xpMax={station.xp}
-                                                                xpEarned={xpSp}
-                                                                badgeName={station.badgeName}
-                                                                blockCount={station.blocks?.length ?? 0}
-                                                                completed={completed}
-                                                                unlocked={unlocked}
-                                                                isCurrent={station.id === currentStationId}
-                                                                onClick={() => {
-                                                                    if (unlocked) navigate(`/worlds/${journeyId}/station/${station.id}`)
-                                                                }}
-                                                            />
-                                                        )
-                                                    })
+                                // ── Station row ──
+                                const { station } = item
+                                const sp = progressMap.get(station.id)
+                                const completed = sp?.isCompleted === true
+                                const unlocked = isStationUnlocked(station.id)
+                                const isCurrent = station.id === currentStationId
+                                const xpSp = sp?.xpEarned ?? 0
+                                const statusColor = completed ? C.green : isCurrent ? C.red : C.border
+
+                                // Check if next item is also a station (to decide line style)
+                                const nextItem = items[itemIdx + 1]
+                                const showLine = !isLastItem
+
+                                return (
+                                    <div key={station.id} className="flex gap-4">
+                                        {/* Track: circle node + dotted line below */}
+                                        <div className="flex flex-col items-center" style={{ width: 28, flexShrink: 0 }}>
+                                            {isCurrent ? (
+                                                <div style={{ filter: `drop-shadow(0 2px 10px ${C.red}99)` }}>
+                                                    <PinIcon color={C.red} size={28} />
+                                                </div>
                                             ) : (
                                                 <div
-                                                    className="w-full rounded-xl p-4 flex items-center gap-3"
-                                                    style={{ background: C.surface1, border: `1px solid ${C.border}`, minHeight: '72px' }}
+                                                    className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                                                    style={{
+                                                        background: completed ? `${C.green}25` : unlocked ? `${C.red}15` : C.surface2,
+                                                        border: `1.5px solid ${statusColor}`,
+                                                        color: completed ? C.green : unlocked ? C.red : C.textMuted,
+                                                    }}
                                                 >
-                                                    <Compass size={20} style={{ color: C.textMuted, flexShrink: 0 }} />
-                                                    <p className="text-sm italic leading-snug" style={{ color: C.textMuted }}>
-                                                        Sigue tu camino — este mundo se revelará cuando llegues aquí.
-                                                    </p>
+                                                    {completed ? '✓' : <Lock size={10} />}
                                                 </div>
                                             )}
+                                            {showLine && (
+                                                <div
+                                                    className="flex-1 my-1"
+                                                    style={{
+                                                        width: 2,
+                                                        minHeight: nextItem?.kind === 'world' ? 14 : 28,
+                                                        borderLeft: `2px dashed ${completed ? C.green : C.border}`,
+                                                    }}
+                                                />
+                                            )}
+                                        </div>
+                                        {/* Card */}
+                                        <div className="flex-1 pb-3">
+                                            <StationCard
+                                                title={station.title}
+                                                xpMax={station.xp}
+                                                xpEarned={xpSp}
+                                                badgeName={station.badgeName}
+                                                blockCount={station.blocks?.length ?? 0}
+                                                completed={completed}
+                                                unlocked={unlocked}
+                                                isCurrent={isCurrent}
+                                                onClick={() => {
+                                                    if (unlocked) navigate(`/worlds/${journeyId}/station/${station.id}`)
+                                                }}
+                                            />
                                         </div>
                                     </div>
                                 )
                             })}
-
-                            {/* Mundos futuros colapsados */}
-                            {hiddenWorlds.map((w, i) => (
-                                <div key={w.id} style={{ opacity: 0.38 }}>
-                                    <div className="flex items-center gap-3 mb-5">
-                                        <div
-                                            className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
-                                            style={{ background: C.surface2, color: C.textMuted, border: `1px solid ${C.border}` }}
-                                        >
-                                            {cutoff + i + 1}
-                                        </div>
-                                        <div>
-                                            <p className="text-xs tracking-[0.12em] uppercase" style={{ color: C.textMuted }}>
-                                                Mundo {cutoff + i + 1}
-                                            </p>
-                                            <h2
-                                                className="font-bold leading-tight"
-                                                style={{ fontFamily: 'Georgia, "Times New Roman", serif', color: C.textMuted }}
-                                            >
-                                                {w.title}
-                                            </h2>
-                                        </div>
-                                        <span className="ml-auto text-xs" style={{ color: C.border }}>
-                                            {w.stations.length} estaciones
-                                        </span>
-                                    </div>
-                                    <div className="ml-4 pl-6 border-l-2" style={{ borderColor: C.border }}>
-                                        <div className="h-8" />
-                                    </div>
-                                </div>
-                            ))}
-                        </>
+                        </div>
                     )
                 })()}
 
@@ -305,7 +304,6 @@ export default function WorldsJourney() {
 }
 
 function StationCard({
-    index,
     title,
     xpMax,
     xpEarned,
@@ -316,7 +314,6 @@ function StationCard({
     isCurrent,
     onClick,
 }: {
-    index: number
     title: string
     xpMax: number
     xpEarned: number
@@ -332,85 +329,48 @@ function StationCard({
     if (!unlocked) {
         return (
             <div
-                className="w-full rounded-xl p-4 flex flex-col items-center justify-center gap-1"
-                style={{ background: C.surface1, border: `1px solid ${C.border}`, minHeight: '72px' }}
+                className="w-full rounded-xl p-4 flex items-center gap-3"
+                style={{ background: C.surface1, border: `1px solid ${C.border}` }}
             >
-                <p className="text-[10px] font-bold tracking-widest uppercase flex items-center justify-center gap-1" style={{ color: C.textMuted, letterSpacing: '0.16em' }}>
-                    <Lock size={10} /> Siguiente parada
-                </p>
-                <p className="text-sm font-semibold text-center" style={{ color: C.textMuted }}>
-                    {title}
-                </p>
+                <Lock size={12} style={{ color: C.textMuted, flexShrink: 0 }} />
+                <p className="text-sm font-semibold" style={{ color: C.textMuted }}>{title}</p>
             </div>
         )
     }
 
     return (
         <div className="relative">
-            {isCurrent && (
-                <div className="absolute -top-4 right-3 z-10 flex items-center gap-1.5">
-                    <span
-                        className="text-[10px] font-semibold tracking-widest uppercase px-2.5 py-1 rounded-full whitespace-nowrap"
-                        style={{ background: C.red, color: '#fff', letterSpacing: '0.12em' }}
-                    >
-                        Estás aquí
-                    </span>
-                    <div style={{ filter: `drop-shadow(0 2px 6px ${C.red}99)` }}>
-                        <PinIcon color={C.red} size={32} />
-                    </div>
-                </div>
-            )}
             <button
                 onClick={onClick}
-                disabled={!unlocked}
                 className="w-full text-left rounded-xl p-4 transition-all duration-200"
                 style={{
                     background: C.surface1,
                     border: `1px solid ${statusColor}`,
-                    opacity: unlocked ? 1 : 0.45,
-                    cursor: unlocked ? 'pointer' : 'default',
-                    boxShadow: isCurrent ? `0 0 0 2px ${C.red}40` : undefined,
-                    paddingTop: isCurrent ? '20px' : undefined,
+                    boxShadow: isCurrent ? `0 0 0 2px ${C.red}30` : undefined,
                 }}
             >
-                <div className="flex items-start gap-3">
-                    <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 mt-0.5"
-                        style={{
-                            background: completed ? C.green + '30' : unlocked ? C.red + '20' : C.surface2,
-                            color: completed ? C.green : unlocked ? C.red : C.textMuted,
-                            border: `1px solid ${statusColor}`,
-                        }}
-                    >
-                        {completed ? '✓' : unlocked ? index : '🔒'}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2 flex-wrap">
-                            <p className="font-semibold text-sm leading-snug" style={{ color: unlocked ? C.text : C.textMuted }}>
-                                {title}
-                            </p>
-                            {xpMax > 0 && (
-                                <span className="text-xs font-mono shrink-0" style={{ color: completed ? C.green : C.amber }}>
-                                    {completed ? `+${xpEarned} XP` : `${xpMax} XP`}
-                                </span>
-                            )}
-                        </div>
-
-                        <div className="flex items-center gap-3 mt-1 flex-wrap">
-                            <span className="text-[11px]" style={{ color: C.textMuted }}>{blockCount} bloques</span>
-                            {badgeName && (
-                                <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: C.amber + '20', color: C.amber }}>
-                                    🏅 {badgeName}
-                                </span>
-                            )}
-                            {completed && (
-                                <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: C.green + '20', color: C.green }}>
-                                    Completada
-                                </span>
-                            )}
-                        </div>
-                    </div>
+                <div className="flex items-start justify-between gap-2 flex-wrap">
+                    <p className="font-semibold text-sm leading-snug" style={{ color: C.text }}>
+                        {title}
+                    </p>
+                    {xpMax > 0 && (
+                        <span className="text-xs font-mono shrink-0" style={{ color: completed ? C.green : C.amber }}>
+                            {completed ? `+${xpEarned} XP` : `${xpMax} XP`}
+                        </span>
+                    )}
+                </div>
+                <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                    <span className="text-[11px]" style={{ color: C.textMuted }}>{blockCount} bloques</span>
+                    {badgeName && (
+                        <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: C.amber + '20', color: C.amber }}>
+                            <Award size={10} className="inline mr-1" />{badgeName}
+                        </span>
+                    )}
+                    {completed && (
+                        <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: C.green + '20', color: C.green }}>
+                            Completada
+                        </span>
+                    )}
                 </div>
             </button>
         </div>
