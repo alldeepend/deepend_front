@@ -1273,6 +1273,7 @@ function AccionReal({
     content, value, onChange, disabled,
 }: { content: any; value: any; onChange: (v: any) => void; disabled: boolean }) {
     const phrase = content.phrase ?? ''
+    const prompt = content.prompt ?? ''
     const isSeleccion = content.actionType === 'seleccion'
 
     const freeText: string = typeof value === 'object' && value !== null && 'text' in value
@@ -1473,7 +1474,7 @@ function AccionReal({
                 <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${C.border}` }}>
                     <div className="px-4 pt-4 pb-2" style={{ background: C.surface1 }}>
                         <p className="text-[10px] tracking-[0.16em] uppercase mb-3" style={{ color: C.textMuted }}>
-                            Tu frase
+                            {prompt || 'Tu frase'}
                         </p>
                         <p
                             className="text-base leading-relaxed italic mb-3"
