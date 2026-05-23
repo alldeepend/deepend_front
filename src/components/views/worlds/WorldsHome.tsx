@@ -130,7 +130,7 @@ export default function WorldsHome() {
                                 />
                                 <h1
                                     className="text-3xl font-bold leading-snug"
-                                    style={{ fontFamily: 'Georgia, "Times New Roman", serif', color: C.text }}
+                                    style={{ fontFamily: "'American Typewriter', Georgia, serif", color: C.text }}
                                 >
                                     Bienvenido a los Mundos
                                 </h1>
@@ -182,7 +182,7 @@ export default function WorldsHome() {
                                         </div>
                                         <h1
                                             className="text-5xl font-bold leading-tight"
-                                            style={{ fontFamily: 'Georgia, "Times New Roman", serif', color: C.text }}
+                                            style={{ fontFamily: "'American Typewriter', Georgia, serif", color: C.text }}
                                         >
                                             {journey.title}
                                         </h1>
@@ -226,7 +226,7 @@ export default function WorldsHome() {
                                             <div className="space-y-2">
                                                 <div className="flex justify-between text-xs" style={{ color: C.textMuted }}>
                                                     <span>Progreso</span>
-                                                    <span style={{ color: C.amber, fontFamily: 'monospace' }}>
+                                                    <span style={{ color: C.amber, fontFamily: "'DM Mono', monospace" }}>
                                                         {xpEarned} / {xpMax} XP
                                                     </span>
                                                 </div>
@@ -298,7 +298,7 @@ function StatCell({ value, label, amber }: { value: string; label: string; amber
         <div className="py-4 flex flex-col items-center gap-1">
             <span
                 className="text-xl font-bold"
-                style={{ fontFamily: 'monospace', color: amber ? C.amber : C.text }}
+                style={{ fontFamily: "'DM Mono', monospace", color: amber ? C.amber : C.text }}
             >
                 {value}
             </span>

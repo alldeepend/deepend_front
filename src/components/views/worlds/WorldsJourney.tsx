@@ -117,7 +117,7 @@ export default function WorldsJourney() {
                         </p>
                         <h1
                             className="text-2xl font-bold mt-1 leading-tight"
-                            style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+                            style={{ fontFamily: "'American Typewriter', Georgia, serif" }}
                         >
                             {journey.title}
                         </h1>
@@ -137,7 +137,7 @@ export default function WorldsJourney() {
                 <div className="px-6 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
                     <div className="flex justify-between text-xs mb-2" style={{ color: C.textMuted }}>
                         <span>Progreso total</span>
-                        <span style={{ color: C.amber, fontFamily: 'monospace' }}>
+                        <span style={{ color: C.amber, fontFamily: "'DM Mono', monospace" }}>
                             {xpEarned} / {totalXpMax} XP  ·  {overallProgress}%
                         </span>
                     </div>
@@ -208,7 +208,7 @@ export default function WorldsJourney() {
                                                 </p>
                                                 <h2
                                                     className="font-bold text-sm leading-tight"
-                                                    style={{ fontFamily: 'Georgia, "Times New Roman", serif', color: item.hasStarted ? C.text : C.textMuted }}
+                                                    style={{ fontFamily: "'American Typewriter', Georgia, serif", color: item.hasStarted ? C.text : C.textMuted }}
                                                 >
                                                     {item.world.title}
                                                 </h2>
@@ -293,7 +293,7 @@ export default function WorldsJourney() {
                     </div>
                     <p
                         className="text-xs tracking-[0.18em] uppercase"
-                        style={{ color: C.textMuted, fontFamily: 'Georgia, "Times New Roman", serif' }}
+                        style={{ color: C.textMuted, fontFamily: "'American Typewriter', Georgia, serif" }}
                     >
                         Sigue en tu próximo viaje
                     </p>
@@ -354,7 +354,7 @@ function StationCard({
                         {title}
                     </p>
                     {xpMax > 0 && (
-                        <span className="text-xs font-mono shrink-0" style={{ color: completed ? C.green : C.amber }}>
+                        <span className="text-xs shrink-0" style={{ color: completed ? C.green : C.amber, fontFamily: "'DM Mono', monospace" }}>
                             {completed ? `+${xpEarned} XP` : `${xpMax} XP`}
                         </span>
                     )}
