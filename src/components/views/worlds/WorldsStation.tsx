@@ -54,6 +54,7 @@ export default function WorldsStation() {
         world: any; nextWorld: any; xpEarned: number; badges: string[]; currentBadge: string | null; streak: number
     } | null>(null)
     const [xpFlash, setXpFlash] = useState<number | null>(null)
+    const [xpFlashGreen, setXpFlashGreen] = useState(false)
     const [reviewMode, setReviewMode] = useState(false)
 
     const topRef = useRef<HTMLDivElement>(null)
@@ -146,6 +147,8 @@ export default function WorldsStation() {
                 const isLastEligible = eligibleBlocks[eligibleBlocks.length - 1]?.id === currentBlock.id
                 const remainder = (station?.xp ?? 0) - xpPerBlock * (eligibleBlocks.length - 1)
                 setXpFlash(isLastEligible ? remainder : xpPerBlock)
+                setXpFlashGreen(true)
+                setTimeout(() => setXpFlashGreen(false), 1400)
                 setTimeout(() => setXpFlash(null), 1800)
             }
 
@@ -359,7 +362,7 @@ export default function WorldsStation() {
                         {station.title}
                     </p>
                 </div>
-                <span className="text-xs font-mono shrink-0" style={{ color: C.amber }}>
+                <span className="text-xs shrink-0" style={{ color: C.amber, fontFamily: "'DM Mono', monospace" }}>
                     {station.xp} XP
                 </span>
             </div>
@@ -371,13 +374,17 @@ export default function WorldsStation() {
                     <div className="relative flex items-center gap-2">
                         {xpFlash && (
                             <span
-                                className="font-bold font-mono text-[11px] animate-bounce"
-                                style={{ color: C.amber }}
+                                className="font-bold text-[11px] animate-bounce"
+                                style={{
+                                    color: xpFlashGreen ? C.green : C.amber,
+                                    fontFamily: "'DM Mono', monospace",
+                                    transition: 'color 0.4s ease',
+                                }}
                             >
                                 +{xpFlash} XP
                             </span>
                         )}
-                        <span style={{ color: C.amber, fontFamily: 'monospace' }}>
+                        <span style={{ color: C.amber, fontFamily: "'DM Mono', monospace" }}>
                             {visualXpEarned} / {station?.xp ?? 0} XP
                         </span>
                     </div>
@@ -870,9 +877,9 @@ function Activacion({
         multiple ? (v.selected ?? []).includes(opt) : (v.selected ?? [])[0] === opt
 
     const TABS = [
-        { id: 'text',   label: 'Escribir', enabled: true },
-        { id: 'select', label: 'Elegir',   enabled: options.length > 0 },
-        { id: 'audio',  label: 'Audio',    enabled: false },
+        { id: 'text',   label: 'Escribe tu respuesta', enabled: true },
+        { id: 'select', label: 'Elegir',               enabled: options.length > 0 },
+        { id: 'audio',  label: 'Audio',                enabled: false },
     ]
 
     // ── Preguntas con banco de frases ──
@@ -902,8 +909,8 @@ function Activacion({
                     <p className="text-xs" style={{ color: C.textMuted }}>Opciones de respuesta — para cada una de las {pQuestions.length} preguntas</p>
                     <div className="grid grid-cols-2 gap-2">
                         {[
-                            { id: 'texto', label: 'Escribir las respuestas' },
-                            { id: 'banco', label: 'Banco de frases' },
+                            { id: 'texto', label: 'Escribe tu respuesta' },
+                            { id: 'banco', label: 'Te ayudo con frases' },
                         ].map(opt => (
                             <button
                                 key={opt.id}
@@ -911,8 +918,8 @@ function Activacion({
                                 disabled={disabled}
                                 className="py-3 px-3 rounded-xl text-xs font-semibold text-center transition-all"
                                 style={{
-                                    border: `1px solid ${responseMode === opt.id ? C.red : C.border}`,
-                                    color: responseMode === opt.id ? C.red : C.textMuted,
+                                    border: `1px solid ${responseMode === opt.id ? C.green : C.amber}`,
+                                    color: responseMode === opt.id ? C.green : C.amber,
                                     background: C.surface2,
                                     cursor: disabled ? 'default' : 'pointer',
                                 }}
@@ -925,7 +932,9 @@ function Activacion({
 
                 {/* Banco de frases — sequential banks */}
                 {responseMode === 'banco' && pQuestions.map((q, i) => {
-                    const isUnlocked = i === 0 || !!(pAnswers[i - 1]?.trim())
+                    const isUnlocked = i === 0 || pAnswers.slice(0, i).every(a =>
+                        typeof a === 'string' ? !!a.trim() : !!(a?.text?.trim())
+                    )
                     const sel = pAnswers[i] ?? ''
                     return (
                         <div key={i} className="space-y-2">
@@ -933,7 +942,7 @@ function Activacion({
                                 className="text-[10px] tracking-[0.14em] uppercase font-semibold"
                                 style={{ color: isUnlocked ? C.textMuted : C.border }}
                             >
-                                Banco de frases — Pregunta {i + 1}: {q.text}
+                                {q.text}
                             </p>
                             {isUnlocked ? (
                                 <div className="space-y-2">
@@ -986,17 +995,17 @@ function Activacion({
                                                 disabled={disabled}
                                                 className="w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-200"
                                                 style={{
-                                                    background: isChosen ? `${C.red}20` : C.surface2,
-                                                    border: `1px solid ${isChosen ? C.red : C.border}`,
-                                                    color: isChosen ? C.text : C.textMuted,
+                                                    background: isChosen ? `${C.green}20` : C.surface2,
+                                                    border: `1px solid ${isChosen ? C.green : C.amber}`,
+                                                    color: isChosen ? C.text : C.amber,
                                                     opacity: disabled && !isChosen ? 0.5 : 1,
                                                 }}
                                             >
                                                 <span
                                                     className="inline-flex w-5 h-5 rounded-full border items-center justify-center text-xs mr-3 shrink-0"
                                                     style={{
-                                                        borderColor: isChosen ? C.red : C.border,
-                                                        background: isChosen ? C.red : 'transparent',
+                                                        borderColor: isChosen ? C.green : C.amber,
+                                                        background: isChosen ? C.green : 'transparent',
                                                         color: '#fff',
                                                     }}
                                                 >
@@ -1111,8 +1120,8 @@ function Activacion({
                         disabled={!tab.enabled || disabled}
                         className="flex-1 py-2.5 px-2 rounded-xl text-xs font-semibold text-center transition-all"
                         style={{
-                            border: `1px solid ${mode === tab.id && tab.enabled ? C.red : C.border}`,
-                            color: mode === tab.id && tab.enabled ? C.red : tab.enabled ? C.text : C.border,
+                            border: `1px solid ${mode === tab.id && tab.enabled ? C.green : tab.enabled ? C.amber : C.border}`,
+                            color: mode === tab.id && tab.enabled ? C.green : tab.enabled ? C.amber : C.border,
                             background: C.surface2,
                             cursor: tab.enabled && !disabled ? 'pointer' : 'default',
                             opacity: !tab.enabled ? 0.35 : 1,
@@ -1154,17 +1163,17 @@ function Activacion({
                                     disabled={disabled}
                                     className="w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-200"
                                     style={{
-                                        background: sel ? C.red + '20' : C.surface2,
-                                        border: `1px solid ${sel ? C.red : C.border}`,
-                                        color: sel ? C.text : C.textMuted,
+                                        background: sel ? `${C.green}20` : C.surface2,
+                                        border: `1px solid ${sel ? C.green : C.amber}`,
+                                        color: sel ? C.text : C.amber,
                                         opacity: disabled && !sel ? 0.5 : 1,
                                     }}
                                 >
                                     <span
                                         className="inline-flex w-5 h-5 rounded-full border items-center justify-center text-xs mr-3 shrink-0"
                                         style={{
-                                            borderColor: sel ? C.red : C.border,
-                                            background: sel ? C.red : 'transparent',
+                                            borderColor: sel ? C.green : C.amber,
+                                            background: sel ? C.green : 'transparent',
                                             color: '#fff',
                                         }}
                                     >
@@ -1183,7 +1192,7 @@ function Activacion({
                                         className="w-full rounded-xl px-4 py-2.5 text-sm outline-none placeholder:opacity-30"
                                         style={{
                                             background: C.surface2,
-                                            border: `1px solid ${C.red}`,
+                                            border: `1px solid ${C.green}`,
                                             color: C.text,
                                             opacity: disabled ? 0.6 : 1,
                                         }}
@@ -1245,17 +1254,17 @@ function OpcionesRespuesta({
                         disabled={disabled}
                         className="w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-200"
                         style={{
-                            background: isSelected(opt) ? C.red + '20' : C.surface2,
-                            border: `1px solid ${isSelected(opt) ? C.red : C.border}`,
-                            color: isSelected(opt) ? C.text : C.textMuted,
+                            background: isSelected(opt) ? `${C.green}20` : C.surface2,
+                            border: `1px solid ${isSelected(opt) ? C.green : C.amber}`,
+                            color: isSelected(opt) ? C.text : C.amber,
                             opacity: disabled && !isSelected(opt) ? 0.5 : 1,
                         }}
                     >
                         <span
                             className="inline-flex w-5 h-5 rounded-full border items-center justify-center text-xs mr-3"
                             style={{
-                                borderColor: isSelected(opt) ? C.red : C.border,
-                                background: isSelected(opt) ? C.red : 'transparent',
+                                borderColor: isSelected(opt) ? C.green : C.amber,
+                                background: isSelected(opt) ? C.green : 'transparent',
                                 color: '#fff',
                             }}
                         >
@@ -1308,7 +1317,7 @@ function AccionReal({
         return (
             <div className="space-y-3">
                 {prompt && (
-                    <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>{prompt}</p>
+                    <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>{parseBold(prompt)}</p>
                 )}
                 <div className="space-y-2">
                     {opts.map((opt, i) => {
@@ -1320,17 +1329,17 @@ function AccionReal({
                                 disabled={disabled}
                                 className="w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-200"
                                 style={{
-                                    background: sel ? `${C.red}20` : C.surface2,
-                                    border: `1px solid ${sel ? C.red : C.border}`,
-                                    color: sel ? C.text : C.textMuted,
+                                    background: sel ? `${C.green}20` : C.surface2,
+                                    border: `1px solid ${sel ? C.green : C.amber}`,
+                                    color: sel ? C.text : C.amber,
                                     opacity: disabled && !sel ? 0.5 : 1,
                                 }}
                             >
                                 <span
                                     className="inline-flex w-5 h-5 rounded-full border items-center justify-center text-xs mr-3 shrink-0"
                                     style={{
-                                        borderColor: sel ? C.red : C.border,
-                                        background: sel ? C.red : 'transparent',
+                                        borderColor: sel ? C.green : C.amber,
+                                        background: sel ? C.green : 'transparent',
                                         color: '#fff',
                                     }}
                                 >
@@ -1419,7 +1428,7 @@ function AccionReal({
                             className="text-base leading-relaxed italic"
                             style={{ color: C.text, fontFamily: 'Georgia, "Times New Roman", serif' }}
                         >
-                            {instruction}
+                            {parseBold(instruction)}
                         </p>
                     </div>
                 )}
@@ -1463,27 +1472,74 @@ function AccionReal({
 
     // ── Frase a completar mode (original) ──
     const TABS = [
-        { id: 'text'  as const, label: 'Escritura libre',   clickable: true },
-        { id: 'photo' as const, label: 'Foto escrita', clickable: true },
-        { id: 'audio' as const, label: 'Audio',        clickable: false },
+        { id: 'text'  as const, label: 'Escribe tu respuesta', clickable: true },
+        { id: 'photo' as const, label: 'Foto escrita',         clickable: true },
+        { id: 'audio' as const, label: 'Audio',                clickable: false },
     ]
 
     return (
         <div className="space-y-5">
+            {/* Frase estática — siempre visible arriba */}
             {phrase && (
-                <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${C.border}` }}>
-                    <div className="px-4 pt-4 pb-2" style={{ background: C.surface1 }}>
-                        <p className="text-[10px] tracking-[0.16em] uppercase mb-3" style={{ color: C.textMuted }}>
-                            {prompt || 'Tu frase'}
-                        </p>
-                        <p
-                            className="text-base leading-relaxed italic mb-3"
-                            style={{ color: C.text, fontFamily: 'Georgia, "Times New Roman", serif' }}
+                <div className="rounded-xl px-4 py-4" style={{ background: C.surface1, border: `1px solid ${C.border}` }}>
+                    <p className="text-[10px] tracking-[0.16em] uppercase mb-3" style={{ color: C.textMuted }}>
+                        Tu frase
+                    </p>
+                    <p
+                        className="text-base leading-relaxed italic"
+                        style={{ color: C.text, fontFamily: "'American Typewriter', Georgia, serif" }}
+                    >
+                        {parseBold(`"${phrase}"`)}
+                    </p>
+                </div>
+            )}
+
+            {/* Tabs */}
+            <div className="space-y-3">
+                <p className="text-sm" style={{ color: C.textMuted }}>¿Cómo envías tu evidencia?</p>
+                <div className="flex gap-2">
+                    {TABS.map(tab => (
+                        <button
+                            key={tab.id}
+                            type="button"
+                            onClick={() => {
+                                if (tab.clickable) {
+                                    setActiveTab(tab.id)
+                                    onChange({ text: freeText, activeTab: tab.id })
+                                }
+                            }}
+                            disabled={!tab.clickable}
+                            className="flex-1 py-2.5 px-2 rounded-xl text-xs font-semibold text-center transition-colors"
+                            style={{
+                                border: `1px solid ${activeTab === tab.id ? C.green : tab.clickable ? C.amber : C.border}`,
+                                color: activeTab === tab.id ? C.green : tab.clickable ? C.amber : C.border,
+                                background: C.surface2,
+                                cursor: tab.clickable ? 'pointer' : 'default',
+                            }}
                         >
-                            "{phrase}"
-                        </p>
-                    </div>
-                    <div className="px-4 pb-4" style={{ background: C.surface1 }}>
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Área de respuesta con frase repetida como guía */}
+            {activeTab === 'text' && (
+                <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${C.border}` }}>
+                    {phrase && (
+                        <div className="px-4 pt-3 pb-2" style={{ background: C.surface1 }}>
+                            <p className="text-[10px] tracking-[0.14em] uppercase mb-2" style={{ color: C.textMuted }}>
+                                Completa la frase
+                            </p>
+                            <p
+                                className="text-sm leading-relaxed italic"
+                                style={{ color: `${C.textMuted}99`, fontFamily: "'American Typewriter', Georgia, serif" }}
+                            >
+                                {parseBold(`"${phrase}"`)}
+                            </p>
+                        </div>
+                    )}
+                    <div className="px-4 pb-4 pt-2" style={{ background: C.surface1 }}>
                         <textarea
                             rows={3}
                             placeholder="completa aquí..."
@@ -1502,48 +1558,20 @@ function AccionReal({
                 </div>
             )}
 
-            <div className="space-y-3">
-                <p className="text-sm" style={{ color: C.textMuted }}>¿Cómo envías tu evidencia?</p>
-                <div className="flex gap-2">
-                    {TABS.map(tab => (
-                        <button
-                            key={tab.id}
-                            type="button"
-                            onClick={() => {
-                                if (tab.clickable) {
-                                    setActiveTab(tab.id)
-                                    onChange({ text: freeText, activeTab: tab.id })
-                                }
-                            }}
-                            disabled={!tab.clickable}
-                            className="flex-1 py-2.5 px-2 rounded-xl text-xs font-semibold text-center transition-colors"
-                            style={{
-                                border: `1px solid ${activeTab === tab.id ? C.red : C.border}`,
-                                color: activeTab === tab.id ? C.red : tab.clickable ? C.textMuted : C.border,
-                                background: C.surface2,
-                                cursor: tab.clickable ? 'pointer' : 'default',
-                            }}
-                        >
-                            {tab.label}
-                        </button>
-                    ))}
+            {activeTab === 'photo' && (
+                <div
+                    className="rounded-xl p-6 flex flex-col items-center justify-center gap-2"
+                    style={{ background: C.surface1, border: `1px dashed ${C.border}`, cursor: 'pointer' }}
+                >
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: C.textMuted }}>
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                        <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                    <p className="text-xs text-center" style={{ color: C.textMuted }}>
+                        Sube foto de lo escrito a mano
+                    </p>
                 </div>
-
-                {activeTab === 'photo' && (
-                    <div
-                        className="rounded-xl p-6 flex flex-col items-center justify-center gap-2"
-                        style={{ background: C.surface1, border: `1px dashed ${C.border}`, cursor: 'pointer' }}
-                    >
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: C.textMuted }}>
-                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                            <circle cx="12" cy="13" r="4"/>
-                        </svg>
-                        <p className="text-xs text-center" style={{ color: C.textMuted }}>
-                            Sube foto de lo escrito a mano
-                        </p>
-                    </div>
-                )}
-            </div>
+            )}
         </div>
     )
 }
@@ -1593,7 +1621,7 @@ function Refuerzo({ content, station }: { content: any; station: Station }) {
                             boxShadow: `0 0 18px ${C.amber}30, inset 0 0 12px ${C.amber}10`,
                         }}
                     >
-                        <span className="text-lg font-bold font-mono leading-none" style={{ color: C.amber }}>
+                        <span className="text-lg font-bold leading-none" style={{ color: C.amber, fontFamily: "'DM Mono', monospace" }}>
                             +{station.xp}
                         </span>
                         <span className="text-[9px] tracking-widest uppercase font-semibold" style={{ color: `${C.amber}90` }}>
@@ -1682,8 +1710,8 @@ function Recompensa({ content }: { content: any }) {
             )}
             {content.xp && (
                 <div
-                    className="inline-block px-6 py-2 rounded-full font-mono font-bold text-xl"
-                    style={{ background: C.amber + '20', color: C.amber }}
+                    className="inline-block px-6 py-2 rounded-full font-bold text-xl"
+                    style={{ background: C.amber + '20', color: C.amber, fontFamily: "'DM Mono', monospace" }}
                 >
                     +{content.xp} XP
                 </div>
@@ -1804,31 +1832,30 @@ function WorldCompletionScreen({
                     className="rounded-xl px-5 py-4 flex items-center justify-between"
                     style={{ background: C.surface1, border: `1px solid ${C.border}` }}
                 >
-                    <span className="text-xs tracking-[0.14em] uppercase" style={{ color: C.textMuted }}>
+                    <span className="text-xs tracking-[0.14em] uppercase" style={{ color: C.amber }}>
                         XP Total
                     </span>
-                    <span className="text-3xl font-bold font-mono" style={{ color: C.amber }}>
-                        {xpEarned}
+                    <span className="text-3xl font-bold" style={{ color: C.amber, fontFamily: "'DM Mono', monospace" }}>
+                        +{xpEarned}
                     </span>
                 </div>
 
                 {/* Badges */}
                 {badges.length > 0 && (
                     <div className="space-y-3">
-                        <p className="text-[10px] tracking-[0.18em] uppercase" style={{ color: C.textMuted }}>
+                        <p className="text-[10px] tracking-[0.18em] uppercase text-center" style={{ color: C.textMuted }}>
                             Insignias ganadas
                         </p>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap justify-center gap-2">
                             {badges.map((b, i) => {
-                                const accent = i % 2 === 0 ? '#1B4332' : '#52B788'
                                 return (
                                 <span
                                     key={i}
-                                    className="text-xs px-3 py-2 rounded-full font-semibold flex items-center gap-1.5 flex-none"
+                                    className="text-xs px-3 py-2 rounded-full font-semibold flex items-center gap-1.5"
                                     style={{
-                                        border: `1px solid ${accent}`,
-                                        color: accent,
-                                        background: `${accent}18`,
+                                        border: `1px solid ${C.green}`,
+                                        color: C.green,
+                                        background: `${C.green}20`,
                                     }}
                                 >
                                     <Award size={14} />
@@ -1914,10 +1941,10 @@ function CelebrationScreen({
                     style={{ background: C.surface1, border: `1px solid ${C.border}` }}
                 >
                     <div className="flex items-center justify-center gap-2">
-                        <span className="text-4xl font-bold font-mono" style={{ color: C.amber }}>
+                        <span className="text-4xl font-bold" style={{ color: C.amber, fontFamily: "'DM Mono', monospace" }}>
                             +{result.xpEarned ?? 0}
                         </span>
-                        <span className="text-lg" style={{ color: C.amber }}>XP</span>
+                        <span className="text-lg" style={{ color: C.amber, fontFamily: "'DM Mono', monospace" }}>XP</span>
                     </div>
 
                     {(result.streakBonus ?? 0) > 0 && (

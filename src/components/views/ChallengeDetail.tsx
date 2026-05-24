@@ -53,7 +53,8 @@ const AccordionSection = ({ title, content }: { title: string, content: string }
             {isOpen && (
                 <div className="px-6 pb-6 animate-in slide-in-from-top-2 duration-200">
                     <div
-                        className="prose prose-slate max-w-none text-slate-600"
+                        className="prose prose-slate max-w-none text-slate-600 leading-relaxed [&_h3]:text-base [&_h3]:font-normal [&_h3]:mb-3 [&_h3:empty]:mb-0 [&_h3:last-child]:mb-0"
+                        style={{ lineHeight: '1.75' }}
                         dangerouslySetInnerHTML={{ __html: content.replaceAll('&nbsp;', ' ') }}
                     />
                 </div>
@@ -364,6 +365,13 @@ export default function ChallengeDetail() {
                         <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden mb-8">
                             {/* Banner Image - Dynamic based on category if available, or static fallback */}
                             <div className={`h-64 relative overflow-hidden ${challenge.category === 'Finanzas' ? 'bg-emerald-900' : 'bg-slate-900'}`}>
+                                {challengeId === 'dcf4574f-8cd3-4925-b88f-c66df26ed8cc' && (
+                                    <img
+                                        src="/Reto Desde Aquí.png"
+                                        alt=""
+                                        className="absolute inset-0 w-full h-full object-cover md:object-center object-left"
+                                    />
+                                )}
                                 {/* Gradient Overlay */}
                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent z-10"></div>
 
@@ -561,7 +569,7 @@ export default function ChallengeDetail() {
                         <div className="lg:col-span-2">
                             <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 mb-8">
                                 <div className="flex justify-between items-end mb-6">
-                                    <h3 className="text-xl font-bold text-slate-800">Pasos de Acción</h3>
+                                    <h3 className="text-xl font-bold text-slate-800">Toma acción</h3>
                                     <span className="text-sm text-slate-400 font-medium">{completedSteps}/{steps.length} Completados</span>
                                 </div>
 
@@ -614,7 +622,11 @@ export default function ChallengeDetail() {
                                                         {step.text}
                                                     </span>
                                                     {step.formSchema && !step.completed && (
-                                                        <span className="block text-xs text-[#ed2629] font-bold mt-1">Requiere completar formulario</span>
+                                                        <span className="block text-xs text-[#ed2629] font-bold mt-1">
+                                                            {challengeId === 'dcf4574f-8cd3-4925-b88f-c66df26ed8cc'
+                                                                ? 'Es importante definir tu punto de partida'
+                                                                : 'Requiere completar formulario'}
+                                                        </span>
                                                     )}
                                                 </div>
                                                 {step.formSchema && (
