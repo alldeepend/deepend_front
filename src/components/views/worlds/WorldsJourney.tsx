@@ -187,7 +187,7 @@ export default function WorldsJourney() {
                                 if (item.kind === 'world') {
                                     const lineColor = item.hasStarted ? C.green : C.border
                                     return (
-                                        <div key={`world-${item.world.id}`} className="flex gap-4 items-center">
+                                        <div key={`world-${item.world.id}`} className="flex gap-4 items-stretch">
                                             {/* Track: line → number circle → line */}
                                             <div className="flex flex-col items-center" style={{ width: 28, flexShrink: 0 }}>
                                                 {itemIdx > 0 && (
@@ -199,11 +199,11 @@ export default function WorldsJourney() {
                                                 >
                                                     {item.wIdx + 1}
                                                 </div>
-                                                <div style={{ width: 2, height: 10, borderLeft: `2px dashed ${lineColor}` }} />
+                                                <div className="flex-1" style={{ width: 2, minHeight: 8, borderLeft: `2px dashed ${lineColor}` }} />
                                             </div>
                                             {/* World label */}
-                                            <div className="py-1">
-                                                <p className="text-[10px] tracking-[0.14em] uppercase" style={{ color: C.textMuted }}>
+                                            <div className="py-3">
+                                                <p className="text-[10px] tracking-[0.14em] uppercase mb-1" style={{ color: C.textMuted }}>
                                                     Mundo {item.wIdx + 1}
                                                 </p>
                                                 <h2
@@ -231,7 +231,7 @@ export default function WorldsJourney() {
                                 const showLine = !isLastItem
 
                                 return (
-                                    <div key={station.id} className="flex gap-4">
+                                    <div key={station.id} className="flex gap-4 items-stretch">
                                         {/* Track: circle node + dotted line below */}
                                         <div className="flex flex-col items-center" style={{ width: 28, flexShrink: 0 }}>
                                             {isCurrent ? (
@@ -255,7 +255,7 @@ export default function WorldsJourney() {
                                                     className="flex-1 my-1"
                                                     style={{
                                                         width: 2,
-                                                        minHeight: nextItem?.kind === 'world' ? 14 : 28,
+                                                        minHeight: 32,
                                                         borderLeft: `2px dashed ${completed ? C.green : C.border}`,
                                                     }}
                                                 />
