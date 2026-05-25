@@ -56,6 +56,7 @@ export default function WorldsStation() {
     const [xpFlash, setXpFlash] = useState<number | null>(null)
     const [xpFlashGreen, setXpFlashGreen] = useState(false)
     const [reviewMode, setReviewMode] = useState(false)
+    const [showExitWarning, setShowExitWarning] = useState(false)
 
     const topRef = useRef<HTMLDivElement>(null)
 
@@ -272,7 +273,7 @@ export default function WorldsStation() {
                     </div>
 
                     <div>
-                        <h2 className="text-lg font-bold" style={{ fontFamily: 'Georgia, serif' }}>
+                        <h2 className="text-lg font-bold" style={{ fontFamily: "'American Typewriter', Georgia, serif" }}>
                             {station.title}
                         </h2>
                         <p className="text-sm mt-1" style={{ color: C.textMuted }}>
@@ -345,13 +346,55 @@ export default function WorldsStation() {
             className="min-h-screen flex flex-col"
             style={{ background: C.bg, color: C.text, fontFamily: 'Montserrat, sans-serif' }}
         >
+            {/* Exit warning popup */}
+            {showExitWarning && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center px-6"
+                    style={{ background: 'rgba(35,31,32,0.85)', backdropFilter: 'blur(4px)' }}
+                >
+                    <div
+                        className="w-full max-w-sm rounded-2xl p-6 space-y-5"
+                        style={{ background: C.surface1, border: `1px solid ${C.border}` }}
+                    >
+                        <div className="space-y-2">
+                            <h3
+                                className="text-base font-bold leading-snug text-center"
+                                style={{ fontFamily: "'American Typewriter', Georgia, serif", color: C.text }}
+                            >
+                                ¿Salir de la estación?
+                            </h3>
+                            <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>
+                                Tu progreso parcial se guarda, pero si no completas esta estación en los próximos{' '}
+                                <span style={{ color: C.amber }}>7 días</span>, tendrás que comenzarla de nuevo desde el primer bloque.
+                            </p>
+                        </div>
+                        <div className="space-y-2">
+                            <button
+                                onClick={() => setShowExitWarning(false)}
+                                className="w-full py-3 rounded-xl font-semibold text-sm"
+                                style={{ background: C.red, color: '#fff' }}
+                            >
+                                Continuar estación
+                            </button>
+                            <button
+                                onClick={() => navigate(`/worlds/${journeyId}`)}
+                                className="w-full py-3 rounded-xl text-sm"
+                                style={{ color: C.textMuted, border: `1px solid ${C.border}` }}
+                            >
+                                Salir de todas formas
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Top bar */}
             <div
                 className="px-6 pt-6 pb-4 flex items-center justify-between gap-4"
                 style={{ borderBottom: `1px solid ${C.border}` }}
             >
                 <button
-                    onClick={() => navigate(`/worlds/${journeyId}`)}
+                    onClick={() => stationAlreadyCompleted ? navigate(`/worlds/${journeyId}`) : setShowExitWarning(true)}
                     className="text-sm shrink-0"
                     style={{ color: C.textMuted }}
                 >
@@ -446,6 +489,7 @@ export default function WorldsStation() {
                         canGoPrev={blockIndex > 0}
                         canGoNext={blockIndex < blocks.length - 1}
                         isLast={blockIndex === blocks.length - 1}
+                        nextBlockType={blocks[blockIndex + 1]?.type ?? null}
                         nextStationId={nextStation?.id ?? null}
                         journeyId={journeyId!}
                         onGoToNextStation={nextStation
@@ -547,6 +591,7 @@ function BlockPlayer({
     isLastStation,
     nextStationId,
     journeyId: _journeyId,
+    nextBlockType,
     onCierreSubmit,
     onGoToNextStation,
 }: {
@@ -565,6 +610,7 @@ function BlockPlayer({
     isLastStation: boolean
     nextStationId: string | null
     journeyId: string
+    nextBlockType: string | null
     onCierreSubmit: (destination: 'next' | 'world') => void
     onGoToNextStation?: () => void
 }) {
@@ -625,7 +671,7 @@ function BlockPlayer({
             {block.title && (
                 <h2
                     className="text-xl font-bold leading-snug"
-                    style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+                    style={{ fontFamily: "'American Typewriter', Georgia, serif" }}
                 >
                     {block.title}
                 </h2>
@@ -661,6 +707,17 @@ function BlockPlayer({
             {/* CTA — oculto para cierre (maneja su propia navegación) */}
             {!isCierre && (
                 <div className="space-y-2 pt-1">
+                    {!alreadyDone && nextBlockType === 'refuerzo' && canSubmit && (
+                        <div
+                            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm leading-relaxed"
+                            style={{ background: `${C.amber}20`, border: `1px solid ${C.amber}50` }}
+                        >
+                            <span className="shrink-0 text-base" style={{ color: C.amber }}>⚠</span>
+                            <p style={{ color: C.text }}>
+                                Si quieres modificar tu respuesta, <strong>este es el momento</strong> — una vez que avances no podrás editar esta estación.
+                            </p>
+                        </div>
+                    )}
                     {!alreadyDone && (
                         <>
                             <button
@@ -688,7 +745,7 @@ function BlockPlayer({
                         <button
                             onClick={onNext}
                             className="w-full py-3.5 rounded-xl font-semibold text-sm"
-                            style={{ background: C.surface2, color: C.text, border: `2px solid ${C.text}`, cursor: 'pointer' }}
+                            style={{ background: `${C.green}20`, color: C.green, border: `2px solid ${C.green}`, cursor: 'pointer' }}
                         >
                             Siguiente →
                         </button>
@@ -726,15 +783,15 @@ function PuntoPartida({ content }: { content: any }) {
         <div className="space-y-4">
             {content.text && (
                 <p className="text-base leading-relaxed" style={{ color: C.text }}>
-                    {content.text}
+                    {parseBold(content.text)}
                 </p>
             )}
             {content.quote && (
                 <blockquote
                     className="border-l-4 pl-4 py-1 italic text-sm"
-                    style={{ borderColor: C.red, color: C.textMuted }}
+                    style={{ borderColor: C.red, color: C.textMuted, fontFamily: "'American Typewriter', Georgia, serif" }}
                 >
-                    "{content.quote}"
+                    "{parseBold(content.quote)}"
                     {content.quoteAuthor && (
                         <footer className="mt-1 not-italic text-xs" style={{ color: C.textMuted }}>
                             — {content.quoteAuthor}
@@ -748,10 +805,12 @@ function PuntoPartida({ content }: { content: any }) {
 }
 
 function parseBold(text: string): React.ReactNode {
-    const parts = text.split(/\*\*(.+?)\*\*/g)
-    return parts.map((part, i) =>
-        i % 2 === 1 ? <strong key={i}>{part}</strong> : part
-    )
+    const parts = text.split(/(\*\*.+?\*\*|_.+?_)/g)
+    return parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) return <strong key={i}>{part.slice(2, -2)}</strong>
+        if (part.startsWith('_') && part.endsWith('_')) return <em key={i}>{part.slice(1, -1)}</em>
+        return part
+    })
 }
 
 function Capsula({ content }: { content: any }) {
@@ -800,10 +859,10 @@ function Capsula({ content }: { content: any }) {
                     >
                         {content.quoteSource && (
                             <p className="text-[10px] tracking-[0.16em] uppercase font-semibold" style={{ color: C.red }}>
-                                {content.quoteSource}
+                                {parseBold(content.quoteSource)}
                             </p>
                         )}
-                        <p className="text-sm leading-relaxed" style={{ color: C.text }}>
+                        <p className="text-sm leading-relaxed" style={{ color: C.text, fontFamily: "'American Typewriter', Georgia, serif" }}>
                             {parseBold(content.quote)}
                         </p>
                     </div>
@@ -816,7 +875,7 @@ function Capsula({ content }: { content: any }) {
                         </p>
                         <p
                             className="text-sm leading-relaxed italic"
-                            style={{ color: C.text, fontFamily: 'Georgia, "Times New Roman", serif' }}
+                            style={{ color: C.text, fontFamily: "'American Typewriter', Georgia, serif" }}
                         >
                             {parseBold(content.bridge)}
                         </p>
@@ -830,6 +889,7 @@ function Capsula({ content }: { content: any }) {
 function Activacion({
     content, value, onChange, disabled,
 }: { content: any; value: any; onChange: (v: any) => void; disabled: boolean }) {
+    const [showRouteChangeWarning, setShowRouteChangeWarning] = useState(false)
     const question = content.question ?? content.prompt ?? ''
     const options: string[] = content.options ?? []
     const multiple = content.selectionType === 'multiple'
@@ -963,7 +1023,7 @@ function Activacion({
                                                     <div className="px-4 pt-3 pb-1" style={{ background: C.surface1 }}>
                                                         <p
                                                             className="text-sm leading-relaxed italic"
-                                                            style={{ color: C.textMuted, fontFamily: 'Georgia, "Times New Roman", serif' }}
+                                                            style={{ color: C.textMuted, fontFamily: "'American Typewriter', Georgia, serif" }}
                                                         >
                                                             {phrase.prefix}
                                                         </p>
@@ -1067,16 +1127,17 @@ function Activacion({
         const allRouteAnswers: Record<string, string[]> = value?.allRouteAnswers ?? {}
         const routeAnswers: string[] = allRouteAnswers[selectedRoute ?? ''] ?? []
         const activeRoute = routes.find(r => r.id === selectedRoute) ?? null
+        const hasChangedRoute: boolean = value?.hasChangedRoute ?? false
 
         const selectRoute = (id: string) => {
             if (disabled) return
-            onChange({ selectedRoute: id, allRouteAnswers })
+            onChange({ selectedRoute: id, allRouteAnswers, hasChangedRoute })
         }
         const setRouteAnswer = (i: number, text: string) => {
             const next = [...routeAnswers]
             while (next.length < (activeRoute?.questions.length ?? 0)) next.push('')
             next[i] = text
-            onChange({ selectedRoute, allRouteAnswers: { ...allRouteAnswers, [selectedRoute!]: next } })
+            onChange({ selectedRoute, allRouteAnswers: { ...allRouteAnswers, [selectedRoute!]: next }, hasChangedRoute })
         }
 
         return (
@@ -1151,14 +1212,58 @@ function Activacion({
                                 />
                             </div>
                         ))}
-                        {!disabled && (
+                        {!disabled && !hasChangedRoute && (
                             <button
-                                onClick={() => onChange({ selectedRoute: null, allRouteAnswers })}
+                                onClick={() => setShowRouteChangeWarning(true)}
                                 className="text-xs underline"
                                 style={{ color: C.textMuted }}
                             >
                                 Cambiar ruta
                             </button>
+                        )}
+
+                        {/* Route change warning popup */}
+                        {showRouteChangeWarning && (
+                            <div
+                                className="fixed inset-0 z-50 flex items-center justify-center px-6"
+                                style={{ background: 'rgba(35,31,32,0.85)', backdropFilter: 'blur(4px)' }}
+                            >
+                                <div
+                                    className="w-full max-w-sm rounded-2xl p-6 space-y-5"
+                                    style={{ background: C.surface1, border: `1px solid ${C.border}` }}
+                                >
+                                    <div className="space-y-2">
+                                        <h3
+                                            className="text-base font-bold leading-snug text-center"
+                                            style={{ fontFamily: "'American Typewriter', Georgia, serif", color: C.text }}
+                                        >
+                                            ¿Cambiar de ruta?
+                                        </h3>
+                                        <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>
+                                            Solo tienes <span style={{ color: C.amber }}>un intento</span> para cambiar de ruta. Una vez que lo hagas, esta opción no estará disponible nuevamente.
+                                        </p>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <button
+                                            onClick={() => {
+                                                onChange({ selectedRoute: null, allRouteAnswers, hasChangedRoute: true })
+                                                setShowRouteChangeWarning(false)
+                                            }}
+                                            className="w-full py-3 rounded-xl font-semibold text-sm"
+                                            style={{ background: C.red, color: '#fff' }}
+                                        >
+                                            Sí, cambiar ruta
+                                        </button>
+                                        <button
+                                            onClick={() => setShowRouteChangeWarning(false)}
+                                            className="w-full py-3 rounded-xl text-sm"
+                                            style={{ color: C.textMuted, border: `1px solid ${C.border}` }}
+                                        >
+                                            Cancelar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         )}
                     </div>
                 )}
@@ -1185,7 +1290,7 @@ function Activacion({
                             <div className="px-4 pt-3 pb-1" style={{ background: C.surface1 }}>
                                 <p
                                     className="text-sm leading-relaxed italic"
-                                    style={{ color: C.textMuted, fontFamily: 'Georgia, "Times New Roman", serif' }}
+                                    style={{ color: C.textMuted, fontFamily: "'American Typewriter', Georgia, serif" }}
                                 >
                                     {prefix}
                                 </p>
@@ -1274,15 +1379,15 @@ function Activacion({
                                     className="w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-200"
                                     style={{
                                         background: sel ? `${C.green}20` : C.surface2,
-                                        border: `1px solid ${sel ? C.green : C.amber}`,
-                                        color: sel ? C.text : C.amber,
+                                        border: `1px solid ${sel ? C.green : C.border}`,
+                                        color: sel ? C.text : C.textMuted,
                                         opacity: disabled && !sel ? 0.5 : 1,
                                     }}
                                 >
                                     <span
                                         className="inline-flex w-5 h-5 rounded-full border items-center justify-center text-xs mr-3 shrink-0"
                                         style={{
-                                            borderColor: sel ? C.green : C.amber,
+                                            borderColor: sel ? C.green : C.border,
                                             background: sel ? C.green : 'transparent',
                                             color: '#fff',
                                         }}
@@ -1456,15 +1561,15 @@ function AccionReal({
                                 className="w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-200"
                                 style={{
                                     background: sel ? `${C.green}20` : C.surface2,
-                                    border: `1px solid ${sel ? C.green : C.amber}`,
-                                    color: sel ? C.text : C.amber,
+                                    border: `1px solid ${sel ? C.green : C.border}`,
+                                    color: sel ? C.text : C.textMuted,
                                     opacity: disabled && !sel ? 0.5 : 1,
                                 }}
                             >
                                 <span
                                     className="inline-flex w-5 h-5 rounded-full border items-center justify-center text-xs mr-3 shrink-0"
                                     style={{
-                                        borderColor: sel ? C.green : C.amber,
+                                        borderColor: sel ? C.green : C.border,
                                         background: sel ? C.green : 'transparent',
                                         color: '#fff',
                                     }}
@@ -1509,7 +1614,7 @@ function AccionReal({
                                 <div className="px-4 pt-3 pb-1" style={{ background: C.surface1 }}>
                                     <p
                                         className="text-sm italic leading-relaxed"
-                                        style={{ color: C.textMuted, fontFamily: 'Georgia, "Times New Roman", serif' }}
+                                        style={{ color: C.textMuted, fontFamily: "'American Typewriter', Georgia, serif" }}
                                     >
                                         {guidedPrefix}
                                     </p>
@@ -1552,7 +1657,7 @@ function AccionReal({
                     >
                         <p
                             className="text-base leading-relaxed italic"
-                            style={{ color: C.text, fontFamily: 'Georgia, "Times New Roman", serif' }}
+                            style={{ color: C.text, fontFamily: "'American Typewriter', Georgia, serif" }}
                         >
                             {parseBold(instruction)}
                         </p>
@@ -1599,7 +1704,7 @@ function AccionReal({
     // ── Frase a completar mode (original) ──
     const TABS = [
         { id: 'text'  as const, label: 'Escribe',      clickable: true },
-        { id: 'photo' as const, label: 'Foto Escrita', clickable: true },
+        { id: 'photo' as const, label: 'Foto o Imagen', clickable: true },
         { id: 'audio' as const, label: 'Nota de voz',  clickable: true },
     ]
 
@@ -1734,11 +1839,11 @@ function AccionReal({
 function Evidencia({
     content, value, onChange, disabled,
 }: { content: any; value: any; onChange: (v: any) => void; disabled: boolean }) {
-    const prompt = content.prompt ?? content.instruction ?? ''
+    const prompt = content.description ?? content.prompt ?? content.instruction ?? ''
 
     return (
         <div className="space-y-4">
-            {prompt && <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>{prompt}</p>}
+            {prompt && <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>{parseBold(prompt)}</p>}
             <textarea
                 rows={4}
                 placeholder="Describe tu evidencia, aprendizajes o reflexiones..."
@@ -1817,7 +1922,7 @@ function Refuerzo({ content, station }: { content: any; station: Station }) {
                             <div className="flex-none w-0.5 rounded-full mt-1" style={{ background: C.green }} />
                             <p
                                 className="text-base leading-relaxed"
-                                style={{ fontFamily: 'Georgia, "Times New Roman", serif', color: C.text }}
+                                style={{ fontFamily: 'Montserrat, sans-serif', color: C.text }}
                             >
                                 {parseBold(msg1)}
                             </p>
@@ -1860,7 +1965,7 @@ function Recompensa({ content }: { content: any }) {
             {content.message && (
                 <p
                     className="text-lg leading-relaxed"
-                    style={{ fontFamily: 'Georgia, "Times New Roman", serif', color: C.text }}
+                    style={{ fontFamily: "'American Typewriter', Georgia, serif", color: C.text }}
                 >
                     {content.message}
                 </p>
@@ -1896,7 +2001,7 @@ function Cierre({
         <div className="space-y-5">
             {content.text && (
                 <p className="text-sm leading-relaxed" style={{ color: C.text }}>
-                    {content.text}
+                    {parseBold(content.text)}
                 </p>
             )}
 
@@ -1972,7 +2077,7 @@ function WorldCompletionScreen({
                 </svg>
                 <h1
                     className="text-2xl font-bold text-center leading-tight"
-                    style={{ fontFamily: 'Georgia, "Times New Roman", serif', color: '#fff' }}
+                    style={{ fontFamily: "'American Typewriter', Georgia, serif", color: '#fff' }}
                 >
                     {world.title}
                 </h1>
@@ -2025,7 +2130,7 @@ function WorldCompletionScreen({
                 )}
 
                 <img
-                    src={data.world?.imageUrl ?? '/1 16 marzo portada.jpg'}
+                    src="/Final Mundo El Despertar.jpg"
                     alt="Portada"
                     className="w-full rounded-xl object-cover"
                 />
@@ -2081,7 +2186,7 @@ function CelebrationScreen({
 
                 <h1
                     className="text-3xl font-bold leading-tight"
-                    style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+                    style={{ fontFamily: "'American Typewriter', Georgia, serif" }}
                 >
                     ¡Estación completada!
                 </h1>
@@ -2091,11 +2196,7 @@ function CelebrationScreen({
                 </p>
 
                 <img
-                    src={
-                        station.id === 'd96b0806-b566-4a7b-b7d0-1a48c2e24707' || station.id === '1a11bb3d-b69a-4444-926c-23d393540712'
-                            ? '/Fin Estación El Observador.png'
-                            : '/StationPhoto.jpg'
-                    }
+                    src="/Fin Estación El Observador.png"
                     alt=""
                     className="w-full rounded-2xl object-cover object-[center_70%]"
                     style={{ height: '280px' }}
