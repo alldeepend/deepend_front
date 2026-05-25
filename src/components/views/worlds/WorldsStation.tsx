@@ -478,6 +478,10 @@ function isResponseValid(blockType: string, response: any): boolean {
 
         case 'activacion': {
             const v = response ?? {}
+            if (v.selectedRoute) {
+                const answers: string[] = (v.allRouteAnswers ?? {})[v.selectedRoute] ?? []
+                return answers.length > 0 && answers.every(a => !!(a?.trim()))
+            }
             const mode = v.mode ?? 'text'
             if (mode === 'reescritura_guiada') {
                 const completions: string[] = v.completions ?? []
@@ -613,14 +617,12 @@ function BlockPlayer({
             )}
 
             {/* Block type label */}
-            {block.type !== 'refuerzo' && (
-                <p className="text-[10px] tracking-[0.2em] uppercase" style={{ color: C.textMuted }}>
-                    {label}
-                </p>
-            )}
+            <p className="text-[10px] tracking-[0.2em] uppercase" style={{ color: C.textMuted }}>
+                {label}
+            </p>
 
             {/* Block title */}
-            {block.title && block.type !== 'refuerzo' && (
+            {block.title && (
                 <h2
                     className="text-xl font-bold leading-snug"
                     style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
@@ -686,7 +688,7 @@ function BlockPlayer({
                         <button
                             onClick={onNext}
                             className="w-full py-3.5 rounded-xl font-semibold text-sm"
-                            style={{ background: C.surface2, color: C.text, border: `1px solid ${C.border}` }}
+                            style={{ background: C.surface2, color: C.text, border: `2px solid ${C.text}`, cursor: 'pointer' }}
                         >
                             Siguiente →
                         </button>
@@ -833,6 +835,7 @@ function Activacion({
     const multiple = content.selectionType === 'multiple'
     const isReescritura = content.selectionType === 'reescritura_guiada'
     const isPreguntas = content.selectionType === 'preguntas'
+    const isArbol = content.selectionType === 'arbol_decision'
     const fields: string[] = content.fields?.length
         ? content.fields
         : ['Antes creía que:', 'Eso me llevó a:', 'Lo que ahora comprendo es:', 'Desde esta comprensión, puedo:']
@@ -877,9 +880,9 @@ function Activacion({
         multiple ? (v.selected ?? []).includes(opt) : (v.selected ?? [])[0] === opt
 
     const TABS = [
-        { id: 'text',   label: 'Escribe tu respuesta', enabled: true },
-        { id: 'select', label: 'Elegir',               enabled: options.length > 0 },
-        { id: 'audio',  label: 'Audio',                enabled: false },
+        { id: 'text',   label: 'Escribe',      enabled: true },
+        { id: 'select', label: 'Elige',        enabled: options.length > 0 },
+        { id: 'audio',  label: 'Nota de voz',  enabled: true },
     ]
 
     // ── Preguntas con banco de frases ──
@@ -1056,6 +1059,113 @@ function Activacion({
         )
     }
 
+    // ── Árbol de decisiones ──
+    if (isArbol) {
+        const routes: { id: string; label: string; description: string; questions: string[] }[] = content.routes ?? []
+        const selectedRoute: string | null = value?.selectedRoute ?? null
+        // allRouteAnswers guarda respuestas por ruta: { A: [...], B: [...] }
+        const allRouteAnswers: Record<string, string[]> = value?.allRouteAnswers ?? {}
+        const routeAnswers: string[] = allRouteAnswers[selectedRoute ?? ''] ?? []
+        const activeRoute = routes.find(r => r.id === selectedRoute) ?? null
+
+        const selectRoute = (id: string) => {
+            if (disabled) return
+            onChange({ selectedRoute: id, allRouteAnswers })
+        }
+        const setRouteAnswer = (i: number, text: string) => {
+            const next = [...routeAnswers]
+            while (next.length < (activeRoute?.questions.length ?? 0)) next.push('')
+            next[i] = text
+            onChange({ selectedRoute, allRouteAnswers: { ...allRouteAnswers, [selectedRoute!]: next } })
+        }
+
+        return (
+            <div className="space-y-4">
+                {question && (
+                    <p className="text-base leading-relaxed" style={{ color: C.text }}>{question}</p>
+                )}
+
+                {/* Route selector */}
+                <div className="space-y-2">
+                    {routes.map(route => {
+                        const isSelected = selectedRoute === route.id
+                        const isLocked = !!selectedRoute && !isSelected
+                        return (
+                            <button
+                                key={route.id}
+                                onClick={() => selectRoute(route.id)}
+                                disabled={disabled || isLocked}
+                                className="w-full text-left rounded-xl px-4 py-3 flex gap-3 items-start transition-all"
+                                style={{
+                                    background: isSelected ? `${C.green}15` : C.surface2,
+                                    border: `1px solid ${isSelected ? C.green : isLocked ? C.border : C.amber}`,
+                                    opacity: isLocked ? 0.35 : 1,
+                                    cursor: disabled || isLocked ? 'default' : 'pointer',
+                                }}
+                            >
+                                <span
+                                    className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5"
+                                    style={{
+                                        background: isSelected ? C.green : 'transparent',
+                                        border: `1.5px solid ${isSelected ? C.green : C.amber}`,
+                                        color: isSelected ? '#fff' : C.amber,
+                                    }}
+                                >
+                                    {route.id}
+                                </span>
+                                <div>
+                                    <p className="text-sm font-semibold" style={{ color: isSelected ? C.text : C.amber }}>
+                                        {route.label}
+                                    </p>
+                                    {route.description && (
+                                        <p className="text-xs mt-0.5 leading-relaxed" style={{ color: C.textMuted }}>
+                                            {route.description}
+                                        </p>
+                                    )}
+                                </div>
+                            </button>
+                        )
+                    })}
+                </div>
+
+                {/* Questions for selected route */}
+                {activeRoute && activeRoute.questions.length > 0 && (
+                    <div className="space-y-3 pt-1">
+                        <div className="h-px" style={{ background: C.border }} />
+                        {activeRoute.questions.map((q, i) => (
+                            <div key={i} className="space-y-1.5">
+                                <p className="text-sm font-medium" style={{ color: C.text }}>{q}</p>
+                                <textarea
+                                    rows={2}
+                                    placeholder="Escribe tu respuesta..."
+                                    value={routeAnswers[i] ?? ''}
+                                    onChange={e => setRouteAnswer(i, e.target.value)}
+                                    disabled={disabled}
+                                    className="w-full rounded-xl p-3 text-sm resize-none outline-none"
+                                    style={{
+                                        background: C.surface2,
+                                        border: `1px solid ${C.border}`,
+                                        color: C.text,
+                                        opacity: disabled ? 0.6 : 1,
+                                    }}
+                                />
+                            </div>
+                        ))}
+                        {!disabled && (
+                            <button
+                                onClick={() => onChange({ selectedRoute: null, allRouteAnswers })}
+                                className="text-xs underline"
+                                style={{ color: C.textMuted }}
+                            >
+                                Cambiar ruta
+                            </button>
+                        )}
+                    </div>
+                )}
+            </div>
+        )
+    }
+
     // ── Reescritura guiada — renders completely different UI (no tabs) ──
     if (isReescritura) {
         return (
@@ -1204,15 +1314,32 @@ function Activacion({
                 </div>
             )}
 
-            {/* Audio — deshabilitado */}
             {mode === 'audio' && (
                 <div
-                    className="rounded-xl p-6 flex flex-col items-center justify-center gap-2"
-                    style={{ background: C.surface1, border: `1px dashed ${C.border}`, opacity: 0.38 }}
+                    className="rounded-xl p-6 flex flex-col items-center justify-center gap-4"
+                    style={{ background: C.surface1, border: `1px solid ${C.border}` }}
                 >
-                    <p className="text-xs text-center" style={{ color: C.textMuted }}>
-                        Nota de voz — próximamente
+                    <div
+                        className="w-16 h-16 rounded-full flex items-center justify-center"
+                        style={{ background: C.red }}
+                    >
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                            <line x1="12" y1="19" x2="12" y2="23" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                            <line x1="8" y1="23" x2="16" y2="23" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                    </div>
+                    <p className="text-xs" style={{ color: C.textMuted }}>
+                        Habla libremente · max 60 seg
                     </p>
+                    <button
+                        className="w-full py-3 rounded-xl text-sm font-semibold"
+                        style={{ background: C.surface2, border: `1px solid ${C.border}`, color: C.textMuted }}
+                        disabled
+                    >
+                        Empezar a grabar
+                    </button>
                 </div>
             )}
         </div>
@@ -1282,7 +1409,6 @@ function AccionReal({
     content, value, onChange, disabled,
 }: { content: any; value: any; onChange: (v: any) => void; disabled: boolean }) {
     const phrase = content.phrase ?? ''
-    const prompt = content.prompt ?? ''
     const isSeleccion = content.actionType === 'seleccion'
 
     const freeText: string = typeof value === 'object' && value !== null && 'text' in value
@@ -1472,9 +1598,9 @@ function AccionReal({
 
     // ── Frase a completar mode (original) ──
     const TABS = [
-        { id: 'text'  as const, label: 'Escribe tu respuesta', clickable: true },
-        { id: 'photo' as const, label: 'Foto escrita',         clickable: true },
-        { id: 'audio' as const, label: 'Audio',                clickable: false },
+        { id: 'text'  as const, label: 'Escribe',      clickable: true },
+        { id: 'photo' as const, label: 'Foto Escrita', clickable: true },
+        { id: 'audio' as const, label: 'Nota de voz',  clickable: true },
     ]
 
     return (
@@ -1496,7 +1622,7 @@ function AccionReal({
 
             {/* Tabs */}
             <div className="space-y-3">
-                <p className="text-sm" style={{ color: C.textMuted }}>¿Cómo envías tu evidencia?</p>
+                <p className="text-sm" style={{ color: C.textMuted }}>Elige cómo enviar tu evidencia</p>
                 <div className="flex gap-2">
                     {TABS.map(tab => (
                         <button
@@ -1572,6 +1698,35 @@ function AccionReal({
                     </p>
                 </div>
             )}
+
+            {activeTab === 'audio' && (
+                <div
+                    className="rounded-xl p-6 flex flex-col items-center justify-center gap-4"
+                    style={{ background: C.surface1, border: `1px solid ${C.border}` }}
+                >
+                    <div
+                        className="w-16 h-16 rounded-full flex items-center justify-center"
+                        style={{ background: C.red }}
+                    >
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                            <line x1="12" y1="19" x2="12" y2="23" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                            <line x1="8" y1="23" x2="16" y2="23" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                    </div>
+                    <p className="text-xs" style={{ color: C.textMuted }}>
+                        Habla libremente · max 60 seg
+                    </p>
+                    <button
+                        className="w-full py-3 rounded-xl text-sm font-semibold"
+                        style={{ background: C.surface2, border: `1px solid ${C.border}`, color: C.textMuted }}
+                        disabled
+                    >
+                        Empezar a grabar
+                    </button>
+                </div>
+            )}
         </div>
     )
 }
@@ -1631,14 +1786,16 @@ function Refuerzo({ content, station }: { content: any; station: Station }) {
                     {/* Title + label */}
                     <div className="space-y-0.5">
                         <p className="text-[10px] tracking-[0.2em] uppercase font-semibold" style={{ color: C.green }}>
-                            Refuerzo
+                            Insignia
                         </p>
-                        <h2
-                            className="text-2xl font-bold leading-tight"
-                            style={{ fontFamily: 'Georgia, "Times New Roman", serif', color: C.text }}
-                        >
-                            {station.title}
-                        </h2>
+                        {station.badgeName && (
+                            <h2
+                                className="text-2xl font-bold leading-tight"
+                                style={{ fontFamily: "'American Typewriter', Georgia, serif", color: C.text }}
+                            >
+                                {station.badgeName}
+                            </h2>
+                        )}
                     </div>
                 </div>
                 <div style={{ height: '1px', background: `linear-gradient(to right, ${C.green}60, transparent)` }} />
@@ -1933,7 +2090,16 @@ function CelebrationScreen({
                     {station.title}
                 </p>
 
-                <img src="/StationPhoto.jpg" alt="" className="w-full rounded-2xl object-cover" style={{ height: '280px' }} />
+                <img
+                    src={
+                        station.id === 'd96b0806-b566-4a7b-b7d0-1a48c2e24707' || station.id === '1a11bb3d-b69a-4444-926c-23d393540712'
+                            ? '/Fin Estación El Observador.png'
+                            : '/StationPhoto.jpg'
+                    }
+                    alt=""
+                    className="w-full rounded-2xl object-cover object-[center_70%]"
+                    style={{ height: '280px' }}
+                />
 
                 {/* XP earned */}
                 <div
