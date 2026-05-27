@@ -1,31 +1,100 @@
-
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { X, Upload, Clock, Activity, Loader2, CheckCircle2 } from 'lucide-react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface ActivityLogModalProps {
     isOpen: boolean;
     onClose: () => void;
 }
 
+const CHECKIN_OPTIONS = [
+    { value: 'EN_RITMO',        emoji: '🟢', label: 'Voy en ritmo' },
+    { value: 'LENTO_PERO_VOY',  emoji: '🟡', label: 'Voy lento, pero voy' },
+    { value: 'NECESITO_VOLVER', emoji: '🔁', label: 'Necesito volver' },
+    { value: 'EN_PAUSA',        emoji: '⚪', label: 'Esta semana estoy en pausa' },
+];
+
 export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalProps) {
     const [activity, setActivity] = useState('');
     const [duration, setDuration] = useState('');
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [checkinResponse, setCheckinResponse] = useState('');
+
+    // Goal popup state
+    const [showGoalPopup, setShowGoalPopup] = useState(false);
+    const [goalInput, setGoalInput] = useState('');
+    const [modifyingGoal, setModifyingGoal] = useState(false);
+
     const fileInputRef = useRef<HTMLInputElement>(null);
     const queryClient = useQueryClient();
-
     const host = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/api\/?$/, '');
+
+    const { data: challengeData } = useQuery({
+        queryKey: ['challenge-me'],
+        queryFn: async () => {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${host}/api/challenge/me`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) return null;
+            return await res.json();
+        },
+        enabled: isOpen,
+    });
+
+    const resetForm = () => {
+        setActivity('');
+        setDuration('');
+        setSelectedFile(null);
+        setPreviewUrl(null);
+        setCheckinResponse('');
+    };
+
+    const goalMutation = useMutation({
+        mutationFn: async (goalMinutes: number) => {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${host}/api/challenge/goal`, {
+                method: 'PUT',
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ goalMinutes })
+            });
+            if (!res.ok) throw new Error('Error al guardar meta');
+            return await res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['challenge-me'] });
+            queryClient.invalidateQueries({ queryKey: ['challenge-progress'] });
+            setShowGoalPopup(false);
+            setModifyingGoal(false);
+            onClose();
+            resetForm();
+            alert('Actividad registrada con éxito!');
+        }
+    });
+
+    const checkinMutation = useMutation({
+        mutationFn: async (response: string) => {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${host}/api/challenge/checkin`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ response })
+            });
+            if (!res.ok) throw new Error('Error al guardar check-in');
+            return await res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['challenge-me'] });
+        }
+    });
 
     const logMutation = useMutation({
         mutationFn: async (formData: FormData) => {
             const token = localStorage.getItem('token');
             const res = await fetch(`${host}/api/activity-log`, {
                 method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${token}`
-                },
+                headers: { Authorization: `Bearer ${token}` },
                 body: formData
             });
             if (!res.ok) {
@@ -34,27 +103,33 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
             }
             return await res.json();
         },
-        onSuccess: () => {
-            // Invalidate/refetch queries
+        onSuccess: async () => {
             queryClient.invalidateQueries({ queryKey: ['recent-activities'] });
             queryClient.invalidateQueries({ queryKey: ['all-activities'] });
+            queryClient.invalidateQueries({ queryKey: ['challenge-progress'] });
 
-            onClose();
-            // Reset form
-            setActivity('');
-            setDuration('');
-            setSelectedFile(null);
-            setPreviewUrl(null);
-            alert("Actividad registrada con éxito!");
+            // Save check-in if provided
+            if (checkinResponse && challengeData?.isParticipant && !challengeData?.hasCheckedInThisWeek) {
+                try { await checkinMutation.mutateAsync(checkinResponse); } catch {}
+            }
+
+            // Show goal popup after saving if participant and Wednesday
+            if (challengeData?.isParticipant && challengeData?.isWednesday) {
+                setGoalInput(String(challengeData.goalMinutes ?? ''));
+                setShowGoalPopup(true);
+            } else {
+                onClose();
+                resetForm();
+                alert('Actividad registrada con éxito!');
+            }
         },
         onError: (err: any) => {
             alert(err.message === "Unexpected token '<', \"<html>...\" is not valid JSON"
-                ? "Error de conexión o archivo demasiado grande. Por favor intenta de nuevo."
+                ? 'Error de conexión o archivo demasiado grande. Por favor intenta de nuevo.'
                 : err.message);
         }
     });
 
-    // Helper for client-side image compression
     const compressImage = (file: File, maxWidth = 1200, maxHeight = 1200, quality = 0.8): Promise<File> => {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -65,44 +140,20 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
                 img.onload = () => {
                     let width = img.width;
                     let height = img.height;
-
                     if (width > height) {
-                        if (width > maxWidth) {
-                            height = Math.round((height *= maxWidth / width));
-                            width = maxWidth;
-                        }
+                        if (width > maxWidth) { height = Math.round((height *= maxWidth / width)); width = maxWidth; }
                     } else {
-                        if (height > maxHeight) {
-                            width = Math.round((width *= maxHeight / height));
-                            height = maxHeight;
-                        }
+                        if (height > maxHeight) { width = Math.round((width *= maxHeight / height)); height = maxHeight; }
                     }
-
                     const canvas = document.createElement('canvas');
-                    canvas.width = width;
-                    canvas.height = height;
+                    canvas.width = width; canvas.height = height;
                     const ctx = canvas.getContext('2d');
-                    if (!ctx) {
-                        resolve(file); // Fallback to original
-                        return;
-                    }
+                    if (!ctx) { resolve(file); return; }
                     ctx.drawImage(img, 0, 0, width, height);
-
-                    canvas.toBlob(
-                        (blob) => {
-                            if (!blob) {
-                                resolve(file); // Fallback to original
-                                return;
-                            }
-                            const compressedFile = new File([blob], file.name, {
-                                type: 'image/jpeg',
-                                lastModified: Date.now(),
-                            });
-                            resolve(compressedFile);
-                        },
-                        'image/jpeg',
-                        quality
-                    );
+                    canvas.toBlob((blob) => {
+                        if (!blob) { resolve(file); return; }
+                        resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
+                    }, 'image/jpeg', quality);
                 };
                 img.onerror = (error) => reject(error);
             };
@@ -113,32 +164,18 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-
-            // Validar tamaño máximo (10MB)
-            const maxSize = 10 * 1024 * 1024;
-            if (file.size > maxSize) {
-                alert(`La imagen que intentas subir pesa ${(file.size / (1024 * 1024)).toFixed(2)}MB. El tamaño máximo permitido es 10MB. Por favor elige una imagen más ligera o comprímela.`);
-                if (fileInputRef.current) {
-                    fileInputRef.current.value = '';
-                }
+            if (file.size > 10 * 1024 * 1024) {
+                alert(`La imagen pesa ${(file.size / (1024 * 1024)).toFixed(2)}MB. Máximo 10MB.`);
+                if (fileInputRef.current) fileInputRef.current.value = '';
                 return;
             }
-
-            // Compress the image before setting it
             try {
-                // Show a temporary preview or loading state if needed, but this is usually fast enough
-                const compressedFile = await compressImage(file, 1200, 1200, 0.8);
-                setSelectedFile(compressedFile);
-
-                // Use the compressed file for the preview to accurately reflect what will be uploaded
-                const url = URL.createObjectURL(compressedFile);
-                setPreviewUrl(url);
-            } catch (error) {
-                console.error("Error compressing image:", error);
-                // Fallback to original file
+                const compressed = await compressImage(file, 1200, 1200, 0.8);
+                setSelectedFile(compressed);
+                setPreviewUrl(URL.createObjectURL(compressed));
+            } catch {
                 setSelectedFile(file);
-                const url = URL.createObjectURL(file);
-                setPreviewUrl(url);
+                setPreviewUrl(URL.createObjectURL(file));
             }
         }
     };
@@ -146,114 +183,210 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!activity || !duration) {
-            alert("Por favor completa la actividad y la duración.");
+            alert('Por favor completa la actividad y la duración.');
             return;
         }
-
         const formData = new FormData();
         formData.append('activity', activity);
         formData.append('duration', duration);
-        if (selectedFile) {
-            formData.append('evidence', selectedFile);
-        }
-
+        if (selectedFile) formData.append('evidence', selectedFile);
         logMutation.mutate(formData);
     };
+
+    const handleConfirmGoal = () => {
+        const val = parseInt(goalInput);
+        if (!val || val <= 0) { alert('Por favor ingresa un número válido en minutos.'); return; }
+        goalMutation.mutate(val);
+    };
+
+    const isParticipant = challengeData?.isParticipant;
+    const isWednesday = challengeData?.isWednesday;
+    const showCheckin = isParticipant && isWednesday && !challengeData?.hasCheckedInThisWeek;
 
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-fade-in-up">
-                {/* Header */}
-                <div className="flex justify-between items-center p-4 border-b border-slate-100">
-                    <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-                        <Activity className="text-emerald-500" size={20} />
-                        Registrar Actividad Fisica
-                    </h3>
-                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
-                        <X size={24} />
-                    </button>
-                </div>
-
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                    {/* Activity Input */}
-                    <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-2">Actividad Realizada</label>
-                        <input
-                            type="text"
-                            value={activity}
-                            onChange={(e) => setActivity(e.target.value)}
-                            placeholder="Ej: Correr, Yoga"
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
-                        />
-                    </div>
-
-                    {/* Duration Input */}
-                    <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
-                            <Clock size={16} className="text-slate-400" /> Tiempo / Duración (minutos)
-                        </label>
-                        <input
-                            type="number"
-                            min="1"
-                            value={duration}
-                            onChange={(e) => setDuration(e.target.value)}
-                            placeholder="Ej: 30"
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
-                        />
-                    </div>
-
-                    {/* Evidence Upload */}
-                    <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-2">Evidencia (Foto - Opcional)</label>
-                        <div
-                            onClick={() => fileInputRef.current?.click()}
-                            className="border-2 border-dashed border-slate-300 rounded-xl p-6 flex flex-col items-center justify-center text-slate-500 cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all"
-                        >
-                            {previewUrl ? (
-                                <div className="relative w-full h-48 rounded-lg overflow-hidden">
-                                    <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                                        <p className="text-white font-medium">Cambiar foto</p>
-                                    </div>
-                                </div>
-                            ) : (
-                                <>
-                                    <Upload size={32} className="mb-2 text-slate-400" />
-                                    <p className="text-sm font-medium">Click para subir foto (Opcional)</p>
-                                    <p className="text-xs text-slate-400 mt-1">JPG, PNG, WebP (Max 10MB)</p>
-                                </>
-                            )}
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                className="hidden"
-                                accept="image/*"
-                                onChange={handleFileChange}
-                            />
+        <>
+            {/* Goal popup overlay */}
+            {showGoalPopup && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+                        <div className="text-center">
+                            <div className="text-3xl mb-2">🎯</div>
+                            <h3 className="text-lg font-bold text-slate-800">Tu meta esta semana</h3>
+                            <p className="text-sm text-slate-500 mt-1">
+                                Semana {challengeData?.weekNumber} del reto · Revisa si quieres ajustarla
+                            </p>
                         </div>
-                    </div>
 
-                    {/* Submit Button */}
-                    <button
-                        type="submit"
-                        disabled={logMutation.isPending}
-                        className="w-full bg-emerald-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                    >
-                        {logMutation.isPending ? (
+                        {!modifyingGoal ? (
                             <>
-                                <Loader2 size={20} className="animate-spin" /> Subiendo...
+                                <div className="bg-emerald-50 rounded-xl px-6 py-4 text-center">
+                                    <span className="text-3xl font-bold text-emerald-700">
+                                        {challengeData?.goalMinutes}
+                                    </span>
+                                    <span className="text-emerald-600 font-medium ml-1">min</span>
+                                </div>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={handleConfirmGoal}
+                                        disabled={goalMutation.isPending}
+                                        className="flex-1 bg-emerald-600 text-white font-semibold py-2.5 rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-60"
+                                    >
+                                        Acepto esta meta
+                                    </button>
+                                    <button
+                                        onClick={() => setModifyingGoal(true)}
+                                        className="flex-1 border border-slate-300 text-slate-700 font-semibold py-2.5 rounded-xl hover:bg-slate-50 transition-colors"
+                                    >
+                                        Modificar
+                                    </button>
+                                </div>
                             </>
                         ) : (
                             <>
-                                <CheckCircle2 size={20} /> Guardar Registro
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                                        Nueva meta en minutos
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={goalInput}
+                                        onChange={e => setGoalInput(e.target.value)}
+                                        placeholder="Ej: 150 (min)"
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
+                                    />
+                                    <p className="text-xs text-slate-400 mt-1">Este valor aplica solo para esta semana</p>
+                                </div>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={handleConfirmGoal}
+                                        disabled={goalMutation.isPending}
+                                        className="flex-1 bg-emerald-600 text-white font-semibold py-2.5 rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-60"
+                                    >
+                                        {goalMutation.isPending ? 'Guardando...' : 'Guardar meta'}
+                                    </button>
+                                    <button
+                                        onClick={() => setModifyingGoal(false)}
+                                        className="flex-1 border border-slate-300 text-slate-700 font-semibold py-2.5 rounded-xl hover:bg-slate-50 transition-colors"
+                                    >
+                                        Cancelar
+                                    </button>
+                                </div>
                             </>
                         )}
-                    </button>
-                </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Main modal */}
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-fade-in-up">
+                    <div className="flex justify-between items-center p-4 border-b border-slate-100">
+                        <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+                            <Activity className="text-emerald-500" size={20} />
+                            Registrar Actividad Fisica
+                        </h3>
+                        <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+                            <X size={24} />
+                        </button>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                        {/* Check-in semanal — solo miércoles para participantes */}
+                        {showCheckin && (
+                            <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                                <p className="text-sm font-bold text-slate-700 mb-3">¿Cómo va tu semana?</p>
+                                <div className="space-y-2">
+                                    {CHECKIN_OPTIONS.map(opt => (
+                                        <button
+                                            key={opt.value}
+                                            type="button"
+                                            onClick={() => setCheckinResponse(opt.value)}
+                                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+                                                checkinResponse === opt.value
+                                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                                                    : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                                            }`}
+                                        >
+                                            <span>{opt.emoji}</span>
+                                            <span>{opt.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-2">Actividad Realizada</label>
+                            <input
+                                type="text"
+                                value={activity}
+                                onChange={(e) => setActivity(e.target.value)}
+                                placeholder="Ej: Correr, Yoga"
+                                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
+                                <Clock size={16} className="text-slate-400" /> Tiempo / Duración (minutos)
+                            </label>
+                            <input
+                                type="number"
+                                min="1"
+                                value={duration}
+                                onChange={(e) => setDuration(e.target.value)}
+                                placeholder="Ej: 30"
+                                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-2">Evidencia (Foto - Opcional)</label>
+                            <div
+                                onClick={() => fileInputRef.current?.click()}
+                                className="border-2 border-dashed border-slate-300 rounded-xl p-6 flex flex-col items-center justify-center text-slate-500 cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all"
+                            >
+                                {previewUrl ? (
+                                    <div className="relative w-full h-48 rounded-lg overflow-hidden">
+                                        <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                            <p className="text-white font-medium">Cambiar foto</p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <Upload size={32} className="mb-2 text-slate-400" />
+                                        <p className="text-sm font-medium">Click para subir foto (Opcional)</p>
+                                        <p className="text-xs text-slate-400 mt-1">JPG, PNG, WebP (Max 10MB)</p>
+                                    </>
+                                )}
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={handleFileChange}
+                                />
+                            </div>
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={logMutation.isPending}
+                            className="w-full bg-emerald-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                        >
+                            {logMutation.isPending ? (
+                                <><Loader2 size={20} className="animate-spin" /> Subiendo...</>
+                            ) : (
+                                <><CheckCircle2 size={20} /> Guardar Registro</>
+                            )}
+                        </button>
+                    </form>
+                </div>
             </div>
-        </div>
+        </>
     );
 }

@@ -27,7 +27,7 @@ export const MiradasSlider = ({ miradas }: { miradas: MiradaData[] }) => {
         setMobileIndex(Math.round(scrollLeft / clientWidth));
     };
 
-    if (miradas.length === 0) return null;
+    if (!miradas || miradas.length === 0) return null;
 
     if (miradas.length === 1) {
         return (
