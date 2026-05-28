@@ -53,7 +53,7 @@ export const ChallengeProgressCard = () => {
                         <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                     </svg>
 
-                    <p className="text-xs font-semibold text-amber-600 uppercase tracking-wide">Reto Desde Aquí</p>
+                    <p className="text-xs font-semibold text-amber-600 uppercase tracking-wide">Reto: Desde Aquí</p>
 
                     {!countdown.done && (
                         <div className="flex gap-3">
@@ -74,7 +74,7 @@ export const ChallengeProgressCard = () => {
                     )}
 
                     <p className="text-sm text-slate-500 leading-relaxed">
-                        ¡Ya completaste tu reto! El conteo de progreso arranca el <span className="font-semibold text-slate-700">lunes 1 de junio</span>.
+                        ¡Ya completaste el punto de partida de tu reto! El conteo de progreso comienza el lunes 1 de junio. <span className="font-bold text-amber-600">#YouOwnIt</span>
                     </p>
                 </div>
             </div>

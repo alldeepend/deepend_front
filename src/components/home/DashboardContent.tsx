@@ -17,6 +17,7 @@ export const DashboardContent = () => {
     const [isRecognitionOpen, setIsRecognitionOpen] = useState(false);
     const [goalInput, setGoalInput] = useState('');
     const [modifyingGoal, setModifyingGoal] = useState(false);
+    const [goalPopupVisible, setGoalPopupVisible] = useState(false);
     const queryClient = useQueryClient();
 
     const targetChallengeId = '6cae6006-7b14-42ba-ba21-b6f4aeb6fd7c';
@@ -59,8 +60,11 @@ export const DashboardContent = () => {
     });
 
     React.useEffect(() => {
-        if (challengePhysical?.showGoalPopup && challengePhysical?.goalMinutes) {
-            setGoalInput(String(challengePhysical.goalMinutes));
+        if (challengePhysical?.showGoalPopup) {
+            setGoalPopupVisible(true);
+            if (challengePhysical?.goalMinutes) {
+                setGoalInput(String(challengePhysical.goalMinutes));
+            }
         }
     }, [challengePhysical?.showGoalPopup, challengePhysical?.goalMinutes]);
 
@@ -79,6 +83,7 @@ export const DashboardContent = () => {
             queryClient.invalidateQueries({ queryKey: ['challenge-me'] });
             queryClient.invalidateQueries({ queryKey: ['challenge-progress'] });
             setModifyingGoal(false);
+            setGoalPopupVisible(false);
         }
     });
 
@@ -95,7 +100,7 @@ export const DashboardContent = () => {
     return (
         <>
             {/* Goal popup — recurrente cada lunes */}
-            {showGoalPopup && (
+            {goalPopupVisible && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
                         <div className="text-center">
