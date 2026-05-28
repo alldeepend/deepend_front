@@ -71,10 +71,10 @@ export default function PhysicalChallengeReminder() {
                     </div>
 
                     <h3 className="text-2xl font-bold text-slate-800 mb-2">
-                        ¡Tu reto físico te espera!
+                        ¡Marca tu punto de partida!
                     </h3>
                     <p className="text-slate-600 mb-8 leading-relaxed">
-                        Tienes pendiente completar el reto <span className="font-semibold text-emerald-600">Desde Aquí</span>. Da el primer paso para arrancar las 8 semanas de tu transformación física.
+                        Elige un movimiento posible hoy y empieza tus 8 semanas <span className="font-bold text-slate-800">desde aquí</span>.
                     </p>
 
                     <button
