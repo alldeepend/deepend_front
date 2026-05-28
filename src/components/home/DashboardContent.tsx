@@ -111,9 +111,17 @@ export const DashboardContent = () => {
                                     <circle cx="12" cy="12" r="2"/>
                                 </svg>
                             </div>
-                            <h3 className="text-lg font-bold text-slate-800">Tu meta esta semana</h3>
+                            <h3 className="text-lg font-bold text-slate-800">
+                                {modifyingGoal ? 'Ajusta tu meta' : 'Tu meta'}
+                            </h3>
                             <p className="text-sm text-slate-500 mt-1">
-                                Semana {challengePhysical?.weekNumber} del reto — ¿la mantienes o la ajustas?
+                                {modifyingGoal ? 'Ingresa los minutos que quieres lograr en este bloque' : (() => {
+                                    const w = challengePhysical?.weekNumber ?? 1;
+                                    const blockStart = Math.floor((w - 1) / 3) * 3 + 1;
+                                    if (blockStart === 7) return 'Semana 7 y 8 - ¿Quieres mantenerla o ajustarla? (¿Te animas a retarte estas últimas 2 semanas con un 10% más❓ 💪🏻)';
+                                    if (blockStart === 4) return 'Semana 4 a la 6 - ¿Quieres mantenerla o ajustarla? (Escucha y Observa tu cuerpo 👂👀 )';
+                                    return 'Semana 1 a la 3 - ¿Quieres mantenerla o ajustarla?';
+                                })()}
                             </p>
                         </div>
                         {!modifyingGoal ? (
@@ -128,13 +136,13 @@ export const DashboardContent = () => {
                                         disabled={goalMutation.isPending}
                                         className="flex-1 bg-emerald-600 text-white font-semibold py-2.5 rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-60"
                                     >
-                                        Acepto esta meta
+                                        ¡Voy con toda!
                                     </button>
                                     <button
                                         onClick={() => setModifyingGoal(true)}
                                         className="flex-1 border border-slate-300 text-slate-700 font-semibold py-2.5 rounded-xl hover:bg-slate-50 transition-colors"
                                     >
-                                        Quiero cambiarla
+                                        Quiero ajustarla
                                     </button>
                                 </div>
                             </>
@@ -150,7 +158,7 @@ export const DashboardContent = () => {
                                         placeholder="Ej: 150 (min)"
                                         className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
                                     />
-                                    <p className="text-xs text-slate-400 mt-1">Este valor aplica solo para esta semana</p>
+                                    <p className="text-xs text-slate-400 mt-1">Este valor aplica para las próximas 3 semanas</p>
                                 </div>
                                 <div className="flex gap-3">
                                     <button
