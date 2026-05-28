@@ -167,6 +167,14 @@ export default function ChallengeDetail() {
         enabled: challengeId === PHYSICAL_CHALLENGE_ID,
     });
 
+    // Show popup on load if backend says goal not confirmed this week
+    React.useEffect(() => {
+        if (challengePhysical?.showGoalPopup) {
+            setGoalInput(String(challengePhysical.goalMinutes ?? ''));
+            setShowGoalPopup(true);
+        }
+    }, [challengePhysical?.showGoalPopup]);
+
     const goalMutation = useMutation({
         mutationFn: async (goalMinutes: number) => {
             const token = localStorage.getItem('token');
@@ -235,11 +243,12 @@ export default function ChallengeDetail() {
     }, [isLoading, challenge, isTotallyCompletedSafe]);
 
     // 2. Trigger reload if we were tracking (started incomplete) and now it is complete
+    // Defer reload while goal popup is open so user can confirm their goal first
     React.useEffect(() => {
-        if (shouldReloadOnComplete && isTotallyCompletedSafe) {
+        if (shouldReloadOnComplete && isTotallyCompletedSafe && !showGoalPopup) {
             window.location.reload();
         }
-    }, [shouldReloadOnComplete, isTotallyCompletedSafe]);
+    }, [shouldReloadOnComplete, isTotallyCompletedSafe, showGoalPopup]);
 
     // 3. Security Check: Redirect if Finance Challenge and Disclaimer NOT accepted
     React.useEffect(() => {
