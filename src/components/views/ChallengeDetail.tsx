@@ -118,6 +118,9 @@ const VideoAccordionSection = ({ title, url }: { title: string, url: string }) =
     );
 };
 
+const PHYSICAL_CHALLENGE_ID = 'dcf4574f-8cd3-4925-b88f-c66df26ed8cc';
+const PHYSICAL_TRIGGER_TASK_ID = '37b4c944-261e-4467-b478-7b85ef570502';
+
 export default function ChallengeDetail() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -128,6 +131,11 @@ export default function ChallengeDetail() {
     const { user } = useAuth();
     const [hasFinancialDraft, setHasFinancialDraft] = useState(false);
     const [isRestartDialogOpen, setIsRestartDialogOpen] = useState(false);
+
+    // Goal popup state
+    const [showGoalPopup, setShowGoalPopup] = useState(false);
+    const [goalInput, setGoalInput] = useState('');
+    const [modifyingGoal, setModifyingGoal] = useState(false);
 
     // --- Auto Reload Logic (Moved to Top) ---
     const [shouldReloadOnComplete, setShouldReloadOnComplete] = useState(false);
@@ -144,6 +152,45 @@ export default function ChallengeDetail() {
             }
         }
     }, [user?.id]);
+
+    // Fetch physical challenge data (for goal popup)
+    const { data: challengePhysical } = useQuery({
+        queryKey: ['challenge-me'],
+        queryFn: async () => {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${host}/api/challenge/me`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) return null;
+            return await res.json();
+        },
+        enabled: challengeId === PHYSICAL_CHALLENGE_ID,
+    });
+
+    const goalMutation = useMutation({
+        mutationFn: async (goalMinutes: number) => {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${host}/api/challenge/goal`, {
+                method: 'PUT',
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ goalMinutes })
+            });
+            if (!res.ok) throw new Error('Error al guardar meta');
+            return await res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['challenge-me'] });
+            queryClient.invalidateQueries({ queryKey: ['challenge-progress'] });
+            setShowGoalPopup(false);
+            setModifyingGoal(false);
+        }
+    });
+
+    const handleConfirmGoal = () => {
+        const val = parseInt(goalInput);
+        if (!val || val <= 0) { alert('Por favor ingresa un número válido en minutos.'); return; }
+        goalMutation.mutate(val);
+    };
 
     // Fetch challenge details
     const { data: challenge, isLoading } = useQuery({
@@ -213,12 +260,16 @@ export default function ChallengeDetail() {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (!res.ok) throw new Error('Failed to toggle task');
-            return await res.json();
+            return { result: await res.json(), taskId };
         },
-        onSuccess: () => {
+        onSuccess: ({ taskId }) => {
             queryClient.invalidateQueries({ queryKey: ['challenge', challengeId] });
             queryClient.invalidateQueries({ queryKey: ['challenges'] });
             queryClient.invalidateQueries({ queryKey: ['passport-current', user?.id] });
+            if (taskId === PHYSICAL_TRIGGER_TASK_ID && challengePhysical?.isParticipant) {
+                setGoalInput(String(challengePhysical.goalMinutes ?? ''));
+                setShowGoalPopup(true);
+            }
         }
     });
 
@@ -255,12 +306,16 @@ export default function ChallengeDetail() {
             });
             if (!resToggle.ok) throw new Error('Failed to complete task');
 
-            return { success: true };
+            return { success: true, taskId };
         },
-        onSuccess: () => {
+        onSuccess: (_data, variables) => {
             queryClient.invalidateQueries({ queryKey: ['challenge', challengeId] });
             queryClient.invalidateQueries({ queryKey: ['passport-current', user?.id] });
             setActiveTaskForm(null);
+            if (variables.taskId === PHYSICAL_TRIGGER_TASK_ID && challengePhysical?.isParticipant) {
+                setGoalInput(String(challengePhysical.goalMinutes ?? ''));
+                setShowGoalPopup(true);
+            }
         }
     });
 
@@ -341,6 +396,80 @@ export default function ChallengeDetail() {
 
     return (
         <div className="flex flex-col md:flex-row h-screen bg-slate-50 font-sans overflow-hidden">
+            {/* Goal popup — physical challenge */}
+            {showGoalPopup && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+                        <div className="text-center">
+                            <div className="flex justify-center mb-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <circle cx="12" cy="12" r="6"/>
+                                    <circle cx="12" cy="12" r="2"/>
+                                </svg>
+                            </div>
+                            <h3 className="text-lg font-bold text-slate-800">Tu meta esta semana</h3>
+                            <p className="text-sm text-slate-500 mt-1">
+                                Semana {challengePhysical?.weekNumber} del reto — ¿la mantienes o la ajustas?
+                            </p>
+                        </div>
+                        {!modifyingGoal ? (
+                            <>
+                                <div className="bg-emerald-50 rounded-xl px-6 py-4 text-center">
+                                    <span className="text-3xl font-bold text-emerald-700">{challengePhysical?.goalMinutes}</span>
+                                    <span className="text-emerald-600 font-medium ml-1">min</span>
+                                </div>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={handleConfirmGoal}
+                                        disabled={goalMutation.isPending}
+                                        className="flex-1 bg-emerald-600 text-white font-semibold py-2.5 rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-60"
+                                    >
+                                        Acepto esta meta
+                                    </button>
+                                    <button
+                                        onClick={() => setModifyingGoal(true)}
+                                        className="flex-1 border border-slate-300 text-slate-700 font-semibold py-2.5 rounded-xl hover:bg-slate-50 transition-colors"
+                                    >
+                                        Quiero cambiarla
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Nueva meta en minutos</label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={goalInput}
+                                        onChange={e => setGoalInput(e.target.value)}
+                                        placeholder="Ej: 150 (min)"
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
+                                    />
+                                    <p className="text-xs text-slate-400 mt-1">Este valor aplica solo para esta semana</p>
+                                </div>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={handleConfirmGoal}
+                                        disabled={goalMutation.isPending}
+                                        className="flex-1 bg-emerald-600 text-white font-semibold py-2.5 rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-60"
+                                    >
+                                        {goalMutation.isPending ? 'Guardando...' : 'Guardar meta'}
+                                    </button>
+                                    <button
+                                        onClick={() => setModifyingGoal(false)}
+                                        className="flex-1 border border-slate-300 text-slate-700 font-semibold py-2.5 rounded-xl hover:bg-slate-50 transition-colors"
+                                    >
+                                        Cancelar
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
+
             <div className="md:hidden w-full">
                 <Header />
             </div>

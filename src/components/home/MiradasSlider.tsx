@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, CircleQuestionMark, X } from 'lucide-react';
 import { PentagonChart } from './PentagonChart';
 
@@ -175,8 +176,8 @@ export const MiradasSlider = ({ miradas }: { miradas: MiradaData[] }) => {
                     </button>
                 </div>
             )}
-            {isInfoOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsInfoOpen(false)}>
+            {isInfoOpen && createPortal(
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/85 backdrop-blur-md" onClick={() => setIsInfoOpen(false)}>
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative animate-fade-in-up" onClick={e => e.stopPropagation()}>
                         <button onClick={() => setIsInfoOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
                             <X size={20} />
@@ -201,7 +202,8 @@ export const MiradasSlider = ({ miradas }: { miradas: MiradaData[] }) => {
                             </ul>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

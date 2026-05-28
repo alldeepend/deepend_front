@@ -21,11 +21,6 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [checkinResponse, setCheckinResponse] = useState('');
 
-    // Goal popup state
-    const [showGoalPopup, setShowGoalPopup] = useState(false);
-    const [goalInput, setGoalInput] = useState('');
-    const [modifyingGoal, setModifyingGoal] = useState(false);
-
     const fileInputRef = useRef<HTMLInputElement>(null);
     const queryClient = useQueryClient();
     const host = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/api\/?$/, '');
@@ -50,28 +45,6 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
         setPreviewUrl(null);
         setCheckinResponse('');
     };
-
-    const goalMutation = useMutation({
-        mutationFn: async (goalMinutes: number) => {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${host}/api/challenge/goal`, {
-                method: 'PUT',
-                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ goalMinutes })
-            });
-            if (!res.ok) throw new Error('Error al guardar meta');
-            return await res.json();
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['challenge-me'] });
-            queryClient.invalidateQueries({ queryKey: ['challenge-progress'] });
-            setShowGoalPopup(false);
-            setModifyingGoal(false);
-            onClose();
-            resetForm();
-            alert('Actividad registrada con éxito!');
-        }
-    });
 
     const checkinMutation = useMutation({
         mutationFn: async (response: string) => {
@@ -113,15 +86,9 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
                 try { await checkinMutation.mutateAsync(checkinResponse); } catch {}
             }
 
-            // Show goal popup after saving if participant and Wednesday
-            if (challengeData?.isParticipant && challengeData?.isWednesday) {
-                setGoalInput(String(challengeData.goalMinutes ?? ''));
-                setShowGoalPopup(true);
-            } else {
-                onClose();
-                resetForm();
-                alert('Actividad registrada con éxito!');
-            }
+            onClose();
+            resetForm();
+            alert('Actividad registrada con éxito!');
         },
         onError: (err: any) => {
             alert(err.message === "Unexpected token '<', \"<html>...\" is not valid JSON"
@@ -193,93 +160,12 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
         logMutation.mutate(formData);
     };
 
-    const handleConfirmGoal = () => {
-        const val = parseInt(goalInput);
-        if (!val || val <= 0) { alert('Por favor ingresa un número válido en minutos.'); return; }
-        goalMutation.mutate(val);
-    };
-
-    const isParticipant = challengeData?.isParticipant;
-    const isWednesday = challengeData?.isWednesday;
-    const showCheckin = isParticipant && isWednesday && !challengeData?.hasCheckedInThisWeek;
+    const showCheckin = challengeData?.isParticipant && challengeData?.isInChallenge && !challengeData?.hasCheckedInThisWeek;
 
     if (!isOpen) return null;
 
     return (
         <>
-            {/* Goal popup overlay */}
-            {showGoalPopup && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
-                        <div className="text-center">
-                            <div className="text-3xl mb-2">🎯</div>
-                            <h3 className="text-lg font-bold text-slate-800">Tu meta esta semana</h3>
-                            <p className="text-sm text-slate-500 mt-1">
-                                Semana {challengeData?.weekNumber} del reto · Revisa si quieres ajustarla
-                            </p>
-                        </div>
-
-                        {!modifyingGoal ? (
-                            <>
-                                <div className="bg-emerald-50 rounded-xl px-6 py-4 text-center">
-                                    <span className="text-3xl font-bold text-emerald-700">
-                                        {challengeData?.goalMinutes}
-                                    </span>
-                                    <span className="text-emerald-600 font-medium ml-1">min</span>
-                                </div>
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={handleConfirmGoal}
-                                        disabled={goalMutation.isPending}
-                                        className="flex-1 bg-emerald-600 text-white font-semibold py-2.5 rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-60"
-                                    >
-                                        Acepto esta meta
-                                    </button>
-                                    <button
-                                        onClick={() => setModifyingGoal(true)}
-                                        className="flex-1 border border-slate-300 text-slate-700 font-semibold py-2.5 rounded-xl hover:bg-slate-50 transition-colors"
-                                    >
-                                        Modificar
-                                    </button>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                                        Nueva meta en minutos
-                                    </label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        value={goalInput}
-                                        onChange={e => setGoalInput(e.target.value)}
-                                        placeholder="Ej: 150 (min)"
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
-                                    />
-                                    <p className="text-xs text-slate-400 mt-1">Este valor aplica solo para esta semana</p>
-                                </div>
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={handleConfirmGoal}
-                                        disabled={goalMutation.isPending}
-                                        className="flex-1 bg-emerald-600 text-white font-semibold py-2.5 rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-60"
-                                    >
-                                        {goalMutation.isPending ? 'Guardando...' : 'Guardar meta'}
-                                    </button>
-                                    <button
-                                        onClick={() => setModifyingGoal(false)}
-                                        className="flex-1 border border-slate-300 text-slate-700 font-semibold py-2.5 rounded-xl hover:bg-slate-50 transition-colors"
-                                    >
-                                        Cancelar
-                                    </button>
-                                </div>
-                            </>
-                        )}
-                    </div>
-                </div>
-            )}
-
             {/* Main modal */}
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
                 <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-fade-in-up">
@@ -294,7 +180,7 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
                     </div>
 
                     <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                        {/* Check-in semanal — solo miércoles para participantes */}
+                        {/* Check-in semanal — participantes que aún no han respondido esta semana */}
                         {showCheckin && (
                             <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
                                 <p className="text-sm font-bold text-slate-700 mb-3">¿Cómo va tu semana?</p>

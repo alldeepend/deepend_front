@@ -1,6 +1,7 @@
 import { Navigate } from 'react-router';
 import { useAuth } from '../../store/useAuth';
 import PasaporteReminder from './PasaporteReminder';
+import PhysicalChallengeReminder from './PhysicalChallengeReminder';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -17,6 +18,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   return (
     <>
       <PasaporteReminder />
+      <PhysicalChallengeReminder />
       {children}
     </>
   );
