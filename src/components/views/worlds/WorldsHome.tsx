@@ -32,9 +32,17 @@ export default function WorldsHome() {
             .finally(() => setLoading(false))
     }, [])
 
-    const allJourneys: (Journey & { areaName: string })[] = areas.flatMap(a =>
-        a.journeys.map(j => ({ ...j, areaName: a.name }))
-    )
+    const allJourneys: (Journey & { areaName: string })[] = areas
+        .flatMap(a => a.journeys.map(j => ({ ...j, areaName: a.name })))
+        .sort((a, b) => {
+            const statusRank = (j: Journey) => {
+                const uj = (j as any).userJourneys?.[0] as UserJourneyProgress | undefined
+                if (uj && uj.status !== 'completado') return 0  // in-progress first
+                if (!uj) return 1                               // not started second
+                return 2                                        // completed last
+            }
+            return statusRank(a) - statusRank(b)
+        })
 
     const totalStations = (j: Journey) =>
         (j.worlds ?? []).reduce((s, w) => s + (w.stations?.length ?? 0), 0)

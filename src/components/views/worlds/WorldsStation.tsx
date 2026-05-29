@@ -782,9 +782,7 @@ function PuntoPartida({ content }: { content: any }) {
     return (
         <div className="space-y-4">
             {content.text && (
-                <p className="text-base leading-relaxed" style={{ color: C.text }}>
-                    {parseBold(content.text)}
-                </p>
+                <div className="space-y-3">{parseText(content.text, 'text-base leading-relaxed')}</div>
             )}
             {content.quote && (
                 <blockquote
@@ -813,15 +811,25 @@ function parseBold(text: string): React.ReactNode {
     })
 }
 
+function parseText(text: string, className = 'text-sm leading-relaxed', style: React.CSSProperties = { color: C.text }): React.ReactNode {
+    return text.split(/\n\n+/).map((para, pi) => (
+        <p key={pi} className={className} style={style}>
+            {para.split('\n').flatMap((line, li, arr) =>
+                li < arr.length - 1
+                    ? [...(parseBold(line) as any[]), <br key={`br-${li}`} />]
+                    : parseBold(line) as any[]
+            )}
+        </p>
+    ))
+}
+
 function Capsula({ content }: { content: any }) {
     const embedUrl = content.videoUrl ? getYouTubeEmbedUrl(content.videoUrl) : null
 
     return (
         <div className="space-y-5">
             {content.text && (
-                <p className="text-sm leading-relaxed" style={{ color: C.text }}>
-                    {parseBold(content.text)}
-                </p>
+                <div className="space-y-3">{parseText(content.text)}</div>
             )}
 
             {embedUrl && (
@@ -846,9 +854,7 @@ function Capsula({ content }: { content: any }) {
                         <p className="text-[10px] tracking-[0.16em] uppercase font-semibold" style={{ color: C.textMuted }}>
                             Concepto del libro
                         </p>
-                        <p className="text-sm leading-relaxed" style={{ color: C.text }}>
-                            {parseBold(content.concept)}
-                        </p>
+                        <div className="space-y-3">{parseText(content.concept)}</div>
                     </div>
                 )}
 
@@ -1919,21 +1925,14 @@ function Refuerzo({ content, station }: { content: any; station: Station }) {
                 <div className="space-y-5">
                     {msg1 && (
                         <div className="flex gap-3">
-                            <div className="flex-none w-0.5 rounded-full mt-1" style={{ background: C.green }} />
-                            <p
-                                className="text-base leading-relaxed"
-                                style={{ fontFamily: 'Montserrat, sans-serif', color: C.text }}
-                            >
-                                {parseBold(msg1)}
-                            </p>
+                            <div className="flex-none w-0.5 rounded-full" style={{ background: C.green }} />
+                            <div className="space-y-3">{parseText(msg1, 'text-base leading-relaxed', { fontFamily: 'Montserrat, sans-serif', color: C.text })}</div>
                         </div>
                     )}
                     {msg2 && (
                         <div className="flex gap-3">
-                            <div className="flex-none w-0.5 rounded-full mt-1" style={{ background: `${C.green}50` }} />
-                            <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>
-                                {parseBold(msg2)}
-                            </p>
+                            <div className="flex-none w-0.5 rounded-full" style={{ background: `${C.green}50` }} />
+                            <div className="space-y-3">{parseText(msg2, 'text-sm leading-relaxed', { color: C.textMuted })}</div>
                         </div>
                     )}
                 </div>
@@ -2000,9 +1999,7 @@ function Cierre({
     return (
         <div className="space-y-5">
             {content.text && (
-                <p className="text-sm leading-relaxed" style={{ color: C.text }}>
-                    {parseBold(content.text)}
-                </p>
+                <div className="space-y-3">{parseText(content.text)}</div>
             )}
 
             {embedUrl && (
