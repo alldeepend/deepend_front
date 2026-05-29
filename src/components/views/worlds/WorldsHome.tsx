@@ -24,6 +24,7 @@ export default function WorldsHome() {
     const [areas, setAreas]       = useState<Area[]>([])
     const [loading, setLoading]   = useState(true)
     const [currentIdx, setCurrentIdx] = useState(0)
+    const [descOpenId, setDescOpenId] = useState<string | null>(null)
 
     useEffect(() => {
         journeyApi.getAvailableJourneys()
@@ -57,16 +58,14 @@ export default function WorldsHome() {
         setCurrentIdx(Math.max(0, Math.min(idx, totalSections - 1)))
     }
 
-    // Restaura la sección guardada tras volver de un reto
+    // Restaura la sección guardada tras volver de un reto (por ID para sobrevivir el re-sort)
     useEffect(() => {
         if (allJourneys.length === 0) return
-        const saved = sessionStorage.getItem('worldsHomeIdx')
-        if (saved) {
-            const idx = parseInt(saved, 10)
-            if (!isNaN(idx) && idx > 0 && idx < totalSections) {
-                setCurrentIdx(idx)
-            }
-            sessionStorage.removeItem('worldsHomeIdx')
+        const savedId = sessionStorage.getItem('worldsHomeJourneyId')
+        if (savedId) {
+            const idx = allJourneys.findIndex(j => j.id === savedId)
+            if (idx >= 0) setCurrentIdx(idx + 1)
+            sessionStorage.removeItem('worldsHomeJourneyId')
         }
     }, [allJourneys.length])
 
@@ -198,24 +197,44 @@ export default function WorldsHome() {
 
                                     {/* ── Franja central: imagen + descripción + stats ── */}
                                     <div className="flex-1 flex flex-col justify-between px-6 py-5 relative">
-                                        {/* Imagen con mismos márgenes que los cajones */}
+                                        {/* Imagen de fondo */}
                                         <img
                                             src="/allison-saeng-hMPqCk0R1uk-unsplash-modified.jpg"
                                             className="absolute inset-x-6 inset-y-0 w-[calc(100%-3rem)] h-full object-cover object-center pointer-events-none rounded-xl"
-                                            style={{ opacity: 0.35 }}
+                                            style={{ opacity: 0.45 }}
                                             alt=""
                                         />
                                         <div
                                             className="absolute inset-x-6 inset-y-0 rounded-xl pointer-events-none"
-                                            style={{ background: 'linear-gradient(to bottom, rgba(35,31,32,0.45) 0%, transparent 30%, transparent 70%, rgba(35,31,32,0.45) 100%)' }}
+                                            style={{ background: 'linear-gradient(to bottom, rgba(35,31,32,0.3) 0%, transparent 25%, transparent 65%, rgba(35,31,32,0.6) 100%)' }}
                                         />
-                                        {/* Descripción sobre la imagen */}
+
+                                        {/* Descripción — truncada + botón */}
                                         {journey.description && (
-                                            <p className="relative z-10 text-base leading-relaxed text-center" style={{ color: C.textMuted }}>
-                                                {journey.description}
-                                            </p>
+                                            <div className="relative z-10 space-y-2">
+                                                <p
+                                                    className="text-sm leading-relaxed"
+                                                    style={{
+                                                        color: '#C4BDB6',
+                                                        display: '-webkit-box',
+                                                        WebkitLineClamp: 3,
+                                                        WebkitBoxOrient: 'vertical',
+                                                        overflow: 'hidden',
+                                                    }}
+                                                >
+                                                    {journey.description.replace(/\n+/g, ' ')}
+                                                </p>
+                                                <button
+                                                    onClick={() => setDescOpenId(journey.id)}
+                                                    className="text-xs font-semibold tracking-wide transition-opacity hover:opacity-70"
+                                                    style={{ color: C.red }}
+                                                >
+                                                    + Leer descripción completa
+                                                </button>
+                                            </div>
                                         )}
-                                        {/* Stats sobre la imagen */}
+
+                                        {/* Stats */}
                                         <div
                                             className="relative z-10 w-full rounded-xl grid grid-cols-3 divide-x divide-[#6B6560]"
                                             style={{ border: '1px solid #6B6560' }}
@@ -250,7 +269,7 @@ export default function WorldsHome() {
                                         {/* CTA */}
                                         <button
                                             onClick={() => {
-                                                sessionStorage.setItem('worldsHomeIdx', String(idx + 1))
+                                                sessionStorage.setItem('worldsHomeJourneyId', journey.id)
                                                 navigate(`/worlds/${journey.id}`)
                                             }}
                                             className="w-full py-4 rounded-full font-semibold text-sm tracking-wide transition-opacity hover:opacity-90 active:opacity-80"
@@ -269,6 +288,45 @@ export default function WorldsHome() {
                     </div>
                 </div>
             </div>
+
+            {/* Sheet: descripción completa */}
+            {descOpenId && (() => {
+                const j = allJourneys.find(j => j.id === descOpenId)
+                if (!j?.description) return null
+                return (
+                    <div
+                        className="fixed inset-0 z-[60] flex items-end justify-center"
+                        style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+                        onClick={() => setDescOpenId(null)}
+                    >
+                        <div
+                            className="w-full max-w-lg rounded-t-2xl p-6 overflow-y-auto"
+                            style={{ maxHeight: '72vh', background: C.surface1, border: `1px solid ${C.border}` }}
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: C.border }} />
+                            <p className="text-[10px] tracking-[0.25em] uppercase font-semibold mb-1" style={{ color: C.textMuted }}>{j.areaName}</p>
+                            <h3 className="text-xl font-bold mb-4" style={{ fontFamily: "'American Typewriter', Georgia, serif", color: C.text }}>{j.title}</h3>
+                            <div className="space-y-4">
+                                {j.description.split(/\n\n+/).map((para, pi) => (
+                                    <p key={pi} className="text-sm leading-relaxed" style={{ color: '#C4BDB6' }}>
+                                        {para.split('\n').flatMap((line, li, arr) =>
+                                            li < arr.length - 1 ? [line, <br key={`${pi}-${li}`} />] : [line]
+                                        )}
+                                    </p>
+                                ))}
+                            </div>
+                            <button
+                                onClick={() => setDescOpenId(null)}
+                                className="mt-6 w-full py-3 rounded-full text-sm font-semibold transition-opacity hover:opacity-80"
+                                style={{ background: C.border, color: C.textMuted }}
+                            >
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+                )
+            })()}
 
             {/* Botones de navegación */}
             <div className="fixed bottom-16 left-1/2 md:left-[calc(50%+8rem)] -translate-x-1/2 z-50 flex flex-row gap-3">
