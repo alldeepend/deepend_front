@@ -211,8 +211,8 @@ export default function WorldsHome() {
 
                                         {/* Descripción — truncada + botón */}
                                         {journey.description && (
-                                            <div className="relative z-10 space-y-2">
-                                                <p
+                                            <div className="relative z-10 space-y-2 px-3">
+                                                <div
                                                     className="text-sm leading-relaxed"
                                                     style={{
                                                         color: '#C4BDB6',
@@ -220,10 +220,11 @@ export default function WorldsHome() {
                                                         WebkitLineClamp: 3,
                                                         WebkitBoxOrient: 'vertical',
                                                         overflow: 'hidden',
+                                                        whiteSpace: 'pre-line',
                                                     }}
                                                 >
-                                                    {journey.description.replace(/\n+/g, ' ')}
-                                                </p>
+                                                    {journey.description}
+                                                </div>
                                                 <button
                                                     onClick={() => setDescOpenId(journey.id)}
                                                     className="text-xs font-semibold tracking-wide transition-opacity hover:opacity-70"
