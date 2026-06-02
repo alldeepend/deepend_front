@@ -20,6 +20,7 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [checkinResponse, setCheckinResponse] = useState('');
+    const [formError, setFormError] = useState('');
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const queryClient = useQueryClient();
@@ -44,6 +45,7 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
         setSelectedFile(null);
         setPreviewUrl(null);
         setCheckinResponse('');
+        setFormError('');
     };
 
     const checkinMutation = useMutation({
@@ -82,7 +84,7 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
             queryClient.invalidateQueries({ queryKey: ['challenge-progress'] });
 
             // Save check-in if provided
-            if (checkinResponse && challengeData?.isParticipant && !challengeData?.hasCheckedInThisWeek) {
+            if (checkinResponse && challengeData?.isParticipant && (!challengeData?.hasCheckedInThisWeek || !challengeData?.checkinResponse)) {
                 try { await checkinMutation.mutateAsync(checkinResponse); } catch {}
             }
 
@@ -149,8 +151,13 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        setFormError('');
         if (!activity || !duration) {
-            alert('Por favor completa la actividad y la duración.');
+            setFormError('Por favor completa la actividad y la duración.');
+            return;
+        }
+        if (showCheckin && !checkinResponse) {
+            setFormError('Por favor indica cómo va tu semana.');
             return;
         }
         const formData = new FormData();
@@ -160,7 +167,8 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
         logMutation.mutate(formData);
     };
 
-    const showCheckin = challengeData?.isParticipant && challengeData?.isInChallenge && !challengeData?.hasCheckedInThisWeek;
+    const showCheckin = challengeData?.isParticipant && challengeData?.isInChallenge &&
+        (!challengeData?.hasCheckedInThisWeek || !challengeData?.checkinResponse);
 
     if (!isOpen) return null;
 
@@ -168,8 +176,8 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
         <>
             {/* Main modal */}
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-                <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-fade-in-up">
-                    <div className="flex justify-between items-center p-4 border-b border-slate-100">
+                <div className="bg-white rounded-2xl shadow-xl w-full max-w-md flex flex-col max-h-[80vh] [max-height:85svh] animate-fade-in-up">
+                    <div className="flex justify-between items-center p-4 border-b border-slate-100 shrink-0">
                         <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
                             <Activity className="text-emerald-500" size={20} />
                             Registrar Actividad Fisica
@@ -179,10 +187,10 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
                         </button>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                    <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto">
                         {/* Check-in semanal — participantes que aún no han respondido esta semana */}
                         {showCheckin && (
-                            <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                            <div className={`bg-slate-50 rounded-xl p-4 border ${formError && !checkinResponse ? 'border-red-400' : 'border-slate-200'}`}>
                                 <p className="text-sm font-bold text-slate-700 mb-3">¿Cómo va tu semana?</p>
                                 <div className="space-y-2">
                                     {CHECKIN_OPTIONS.map(opt => (
@@ -202,6 +210,10 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
                                     ))}
                                 </div>
                             </div>
+                        )}
+
+                        {formError && !checkinResponse && (
+                            <p className="text-red-500 text-sm -mt-4 mb-2">Por favor indica cómo va tu semana.</p>
                         )}
 
                         <div>
