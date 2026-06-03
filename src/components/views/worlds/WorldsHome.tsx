@@ -18,6 +18,33 @@ const C = {
     forest: '#1B4332',
 }
 
+function parseInline(text: string): React.ReactNode[] {
+    const parts = text.split(/(\*\*_[^_*]+_\*\*|_\*\*[^_*]+\*\*_|\*\*[^*]+\*\*|_[^_]+_)/g)
+    return parts.map((part, i) => {
+        if ((part.startsWith('**_') && part.endsWith('_**')) ||
+            (part.startsWith('_**') && part.endsWith('**_')))
+            return <strong key={i}><em>{part.slice(3, -3)}</em></strong>
+        if (part.startsWith('**') && part.endsWith('**'))
+            return <strong key={i}>{part.slice(2, -2)}</strong>
+        if (part.startsWith('_') && part.endsWith('_'))
+            return <em key={i}>{part.slice(1, -1)}</em>
+        return part
+    })
+}
+
+function RichText({ text }: { text: string }) {
+    return (
+        <>
+            {text.split('\n').map((line, i, arr) => (
+                <span key={i}>
+                    {parseInline(line)}
+                    {i < arr.length - 1 && <br />}
+                </span>
+            ))}
+        </>
+    )
+}
+
 export default function WorldsHome() {
     const navigate  = useNavigate()
     const { user }  = useAuth()
@@ -223,7 +250,7 @@ export default function WorldsHome() {
                                                         whiteSpace: 'pre-line',
                                                     }}
                                                 >
-                                                    {journey.description}
+                                                    <RichText text={journey.description} />
                                                 </div>
                                                 <button
                                                     onClick={() => setDescOpenId(journey.id)}
@@ -311,9 +338,7 @@ export default function WorldsHome() {
                             <div className="space-y-4">
                                 {j.description.split(/\n\n+/).map((para, pi) => (
                                     <p key={pi} className="text-sm leading-relaxed" style={{ color: '#C4BDB6' }}>
-                                        {para.split('\n').flatMap((line, li, arr) =>
-                                            li < arr.length - 1 ? [line, <br key={`${pi}-${li}`} />] : [line]
-                                        )}
+                                        <RichText text={para} />
                                     </p>
                                 ))}
                             </div>

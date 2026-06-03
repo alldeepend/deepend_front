@@ -803,8 +803,11 @@ function PuntoPartida({ content }: { content: any }) {
 }
 
 function parseBold(text: string): React.ReactNode {
-    const parts = text.split(/(\*\*.+?\*\*|_.+?_)/g)
+    const parts = text.split(/(\*\*_[^_*]+_\*\*|_\*\*[^_*]+\*\*_|\*\*[^*]+\*\*|_[^_]+_)/g)
     return parts.map((part, i) => {
+        if ((part.startsWith('**_') && part.endsWith('_**')) ||
+            (part.startsWith('_**') && part.endsWith('**_')))
+            return <strong key={i}><em>{part.slice(3, -3)}</em></strong>
         if (part.startsWith('**') && part.endsWith('**')) return <strong key={i}>{part.slice(2, -2)}</strong>
         if (part.startsWith('_') && part.endsWith('_')) return <em key={i}>{part.slice(1, -1)}</em>
         return part
