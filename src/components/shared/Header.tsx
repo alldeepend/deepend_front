@@ -231,7 +231,7 @@ export default function Header() {
                       <span className="font-medium">Mis Retos</span>
                     </Link>
                   </li>
-                  {user?.membership === 'test' && (
+                  {['test', 'worldtest1', 'worldtest2'].includes(user?.membership ?? '') && (
                     <li>
                       <Link
                         to="/worlds"

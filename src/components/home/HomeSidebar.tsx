@@ -51,7 +51,7 @@ export const HomeSidebar = ({ activeTab, dark = false }: HomeSidebarProps) => {
                         dark={dark}
                     />
                     {/* ///////Ocualtat/////// */}
-                    {user?.membership === 'test' && (
+                    {['test', 'worldtest1', 'worldtest2'].includes(user?.membership ?? '') && (
                         <SidebarItem
                             icon={Globe}
                             label="Mundos & Retos"
