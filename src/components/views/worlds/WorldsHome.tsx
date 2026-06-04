@@ -192,7 +192,7 @@ export default function WorldsHome() {
                             const xpMax       = totalXpMax(journey)
                             const progress    = xpMax > 0 ? Math.round((xpEarned / xpMax) * 100) : 0
                             const worldTitle  = journey.worlds?.[0]?.title ?? 'Mundo 1'
-                            const numDays     = (journey.worlds?.length ?? 0) * 2 || 7
+                            const numDays     = 7
                             const ctaLabel    = isCompleted ? 'Ver mi historia' : isStarted ? 'Continuar mi viaje' : 'Comenzar mi viaje'
                             const stations    = totalStations(journey)
 
