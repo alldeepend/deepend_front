@@ -1109,10 +1109,12 @@ function Activacion({
                             <span style={{ color: C.red, fontWeight: 700 }}>{i + 1}. </span>{q.text}
                         </p>
                         <textarea
-                            rows={3}
+                            rows={4}
+                            maxLength={500}
                             placeholder="Tu respuesta..."
                             value={pAnswers[i] ?? ''}
                             onChange={e => setPAnswer(i, e.target.value)}
+                            onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px`; }}
                             disabled={disabled}
                             className="w-full rounded-xl p-3 text-sm resize-none outline-none placeholder:opacity-30"
                             style={{
@@ -1122,6 +1124,9 @@ function Activacion({
                                 opacity: disabled ? 0.6 : 1,
                             }}
                         />
+                        <p className="text-xs text-right mt-1" style={{ color: (pAnswers[i] ?? '').length > 450 ? C.red : C.textMuted }}>
+                            {(pAnswers[i] ?? '').length}/500
+                        </p>
                     </div>
                 ))}
             </div>
@@ -1206,10 +1211,12 @@ function Activacion({
                             <div key={i} className="space-y-1.5">
                                 <p className="text-sm font-medium" style={{ color: C.text }}>{q}</p>
                                 <textarea
-                                    rows={2}
+                                    rows={3}
+                                    maxLength={400}
                                     placeholder="Escribe tu respuesta..."
                                     value={routeAnswers[i] ?? ''}
                                     onChange={e => setRouteAnswer(i, e.target.value)}
+                                    onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px`; }}
                                     disabled={disabled}
                                     className="w-full rounded-xl p-3 text-sm resize-none outline-none"
                                     style={{
@@ -1219,6 +1226,9 @@ function Activacion({
                                         opacity: disabled ? 0.6 : 1,
                                     }}
                                 />
+                                <p className="text-xs text-right mt-1" style={{ color: (routeAnswers[i] ?? '').length > 360 ? C.red : C.textMuted }}>
+                                    {(routeAnswers[i] ?? '').length}/400
+                                </p>
                             </div>
                         ))}
                         {!disabled && !hasChangedRoute && (
@@ -1358,11 +1368,14 @@ function Activacion({
 
             {/* Escribir */}
             {mode === 'text' && (
+                <>
                 <textarea
-                    rows={5}
+                    rows={6}
+                    maxLength={800}
                     placeholder="Escribe tu respuesta aquí..."
                     value={v.text ?? ''}
                     onChange={e => onChange({ ...v, text: e.target.value })}
+                    onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px`; }}
                     disabled={disabled}
                     className="w-full rounded-xl p-4 text-sm resize-none outline-none transition placeholder:opacity-30"
                     style={{
@@ -1372,6 +1385,10 @@ function Activacion({
                         opacity: disabled ? 0.6 : 1,
                     }}
                 />
+                <p className="text-xs text-right mt-1" style={{ color: (v.text ?? '').length > 720 ? C.red : C.textMuted }}>
+                    {(v.text ?? '').length}/800
+                </p>
+                </>
             )}
 
             {/* Elegir */}
@@ -1781,10 +1798,12 @@ function AccionReal({
                     )}
                     <div className="px-4 pb-4 pt-2" style={{ background: C.surface1 }}>
                         <textarea
-                            rows={3}
+                            rows={4}
+                            maxLength={500}
                             placeholder="completa aquí..."
                             value={freeText}
                             onChange={e => onChange({ text: e.target.value, activeTab })}
+                            onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px`; }}
                             disabled={disabled}
                             className="w-full rounded-lg p-3 text-sm resize-none outline-none"
                             style={{
@@ -1794,6 +1813,9 @@ function AccionReal({
                                 opacity: disabled ? 0.6 : 1,
                             }}
                         />
+                        <p className="text-xs text-right mt-1" style={{ color: freeText.length > 450 ? C.red : C.textMuted }}>
+                            {freeText.length}/500
+                        </p>
                     </div>
                 </div>
             )}
@@ -1854,10 +1876,12 @@ function Evidencia({
         <div className="space-y-4">
             {prompt && <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>{parseBold(prompt)}</p>}
             <textarea
-                rows={4}
+                rows={5}
+                maxLength={600}
                 placeholder="Describe tu evidencia, aprendizajes o reflexiones..."
                 value={value ?? ''}
                 onChange={e => onChange(e.target.value)}
+                onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px`; }}
                 disabled={disabled}
                 className="w-full rounded-xl p-4 text-sm resize-none outline-none"
                 style={{
@@ -1867,6 +1891,9 @@ function Evidencia({
                     opacity: disabled ? 0.6 : 1,
                 }}
             />
+            <p className="text-xs text-right mt-1" style={{ color: (value ?? '').length > 540 ? C.red : C.textMuted }}>
+                {(value ?? '').length}/600
+            </p>
         </div>
     )
 }
