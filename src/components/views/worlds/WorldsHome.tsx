@@ -52,6 +52,8 @@ export default function WorldsHome() {
     const [loading, setLoading]   = useState(true)
     const [currentIdx, setCurrentIdx] = useState(0)
     const [descOpenId, setDescOpenId] = useState<string | null>(null)
+    const [showEntryModal, setShowEntryModal] = useState(false)
+    const [pendingJourneyId, setPendingJourneyId] = useState<string | null>(null)
 
     useEffect(() => {
         journeyApi.getAvailableJourneys()
@@ -298,7 +300,12 @@ export default function WorldsHome() {
                                         <button
                                             onClick={() => {
                                                 sessionStorage.setItem('worldsHomeJourneyId', journey.id)
-                                                navigate(`/worlds/${journey.id}`)
+                                                if (!isCompleted && !localStorage.getItem('deepend_journey_entry_warned')) {
+                                                    setPendingJourneyId(journey.id)
+                                                    setShowEntryModal(true)
+                                                } else {
+                                                    navigate(`/worlds/${journey.id}`)
+                                                }
                                             }}
                                             className="w-full py-4 rounded-full font-semibold text-sm tracking-wide transition-opacity hover:opacity-90 active:opacity-80"
                                             style={{ background: C.red, color: '#fff' }}
@@ -316,6 +323,47 @@ export default function WorldsHome() {
                     </div>
                 </div>
             </div>
+
+            {/* Entry warning modal — shown once before starting or continuing a journey */}
+            {showEntryModal && (
+                <div
+                    className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center px-4 pb-6 sm:pb-0"
+                    style={{ background: 'rgba(35,31,32,0.88)', backdropFilter: 'blur(4px)' }}
+                >
+                    <div
+                        className="w-full max-w-sm rounded-2xl p-6 space-y-5"
+                        style={{ background: C.surface1, border: `1px solid ${C.border}` }}
+                    >
+                        <div className="space-y-3">
+                            <h3
+                                className="text-base font-bold leading-snug text-center"
+                                style={{ fontFamily: "'American Typewriter', Georgia, serif", color: C.text }}
+                            >
+                                Antes de empezar
+                            </h3>
+                            <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>
+                                Tómate el tiempo que necesites en cada estación. Puedes avanzar a tu ritmo, sin afán.
+                            </p>
+                            <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>
+                                Eso sí — una vez que termines una estación,{' '}
+                                <span style={{ color: C.text, fontWeight: 600 }}>tus respuestas quedan guardadas tal como las enviaste</span>.
+                                No hay forma de editarlas después, así que lee bien y responde desde lo que realmente piensas.
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => {
+                                localStorage.setItem('deepend_journey_entry_warned', '1')
+                                setShowEntryModal(false)
+                                if (pendingJourneyId) navigate(`/worlds/${pendingJourneyId}`)
+                            }}
+                            className="w-full py-3 rounded-xl font-semibold text-sm"
+                            style={{ background: C.red, color: '#fff' }}
+                        >
+                            Entendido, vamos
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Sheet: descripción completa */}
             {descOpenId && (() => {

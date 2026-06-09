@@ -990,8 +990,8 @@ function Activacion({
                                 disabled={disabled}
                                 className="py-3 px-3 rounded-xl text-xs font-semibold text-center transition-all"
                                 style={{
-                                    border: `1px solid ${responseMode === opt.id ? C.green : C.amber}`,
-                                    color: responseMode === opt.id ? C.green : C.amber,
+                                    border: `1px solid ${responseMode === opt.id ? C.green : C.border}`,
+                                    color: responseMode === opt.id ? C.green : C.textMuted,
                                     background: C.surface2,
                                     cursor: disabled ? 'default' : 'pointer',
                                 }}
@@ -1354,8 +1354,8 @@ function Activacion({
                         disabled={!tab.enabled || disabled}
                         className="flex-1 py-2.5 px-2 rounded-xl text-xs font-semibold text-center transition-all"
                         style={{
-                            border: `1px solid ${mode === tab.id && tab.enabled ? C.green : tab.enabled ? C.amber : C.border}`,
-                            color: mode === tab.id && tab.enabled ? C.green : tab.enabled ? C.amber : C.border,
+                            border: `1px solid ${mode === tab.id && tab.enabled ? C.green : C.border}`,
+                            color: mode === tab.id && tab.enabled ? C.green : C.textMuted,
                             background: C.surface2,
                             cursor: tab.enabled && !disabled ? 'pointer' : 'default',
                             opacity: !tab.enabled ? 0.35 : 1,
@@ -1513,15 +1513,15 @@ function OpcionesRespuesta({
                         className="w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-200"
                         style={{
                             background: isSelected(opt) ? `${C.green}20` : C.surface2,
-                            border: `1px solid ${isSelected(opt) ? C.green : C.amber}`,
-                            color: isSelected(opt) ? C.text : C.amber,
+                            border: `1px solid ${isSelected(opt) ? C.green : C.border}`,
+                            color: isSelected(opt) ? C.text : C.textMuted,
                             opacity: disabled && !isSelected(opt) ? 0.5 : 1,
                         }}
                     >
                         <span
                             className="inline-flex w-5 h-5 rounded-full border items-center justify-center text-xs mr-3"
                             style={{
-                                borderColor: isSelected(opt) ? C.green : C.amber,
+                                borderColor: isSelected(opt) ? C.green : C.border,
                                 background: isSelected(opt) ? C.green : 'transparent',
                                 color: '#fff',
                             }}
@@ -1614,8 +1614,8 @@ function AccionReal({
                             disabled={disabled}
                             className="w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-200"
                             style={{
-                                background: isGuided ? `${C.amber}18` : C.surface2,
-                                border: `1px solid ${isGuided ? C.amber : C.border}`,
+                                background: isGuided ? `${C.green}20` : C.surface2,
+                                border: `1px solid ${isGuided ? C.green : C.border}`,
                                 color: isGuided ? C.text : C.textMuted,
                                 opacity: disabled && !isGuided ? 0.5 : 1,
                             }}
@@ -1623,8 +1623,8 @@ function AccionReal({
                             <span
                                 className="inline-flex w-5 h-5 rounded-full border items-center justify-center text-xs mr-3 shrink-0"
                                 style={{
-                                    borderColor: isGuided ? C.amber : C.border,
-                                    background: isGuided ? C.amber : 'transparent',
+                                    borderColor: isGuided ? C.green : C.border,
+                                    background: isGuided ? C.green : 'transparent',
                                     color: '#fff',
                                 }}
                             >
@@ -2223,7 +2223,7 @@ function CelebrationScreen({
                 </p>
 
                 <img
-                    src="/Fin Estación El Observador.png"
+                    src={station.completionImageUrl ?? '/Fin Estación El Observador.png'}
                     alt=""
                     className="w-full rounded-2xl object-cover object-[center_70%]"
                     style={{ height: '280px' }}
