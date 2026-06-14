@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, ChevronDown, Check } from 'lucide-react';
+import ConfirmModal from './ConfirmModal';
 
 interface Field {
     id: string;
@@ -41,6 +42,8 @@ interface DynamicFormProps {
 export default function DynamicForm({ schema, onSubmit, onCancel, initialData = {}, isSubmitting = false }: DynamicFormProps) {
     const [formData, setFormData] = useState<any>(initialData);
     const [errors, setErrors] = useState<any>({});
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [pendingResponses, setPendingResponses] = useState<{ question: string; answer: any }[] | null>(null);
 
     const shouldShowField = (field: Field) => {
         const { condition } = field;
@@ -172,49 +175,40 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
         return isValid;
     };
 
+    const buildResponses = () =>
+        schema.fields
+            .filter(field => shouldShowField(field) && field.type !== 'header')
+            .map(field => {
+                let answer = formData[field.id];
+                if (Array.isArray(answer)) answer = answer.join(', ');
+                if (field.type === 'select' && field.options) {
+                    const selectedOpt = field.options.find((o: any) =>
+                        (typeof o === 'object' ? o.value : o) === answer
+                    );
+                    if (selectedOpt && typeof selectedOpt === 'object') answer = (selectedOpt as any).label;
+                }
+                return { question: field.label, answer };
+            })
+            .filter(item => item.answer !== undefined && item.answer !== null && item.answer !== '');
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (validate()) {
-            if (window.confirm("¿Estás seguro de que deseas enviar tus respuestas?")) {
-                // Transform to ordered array format
-                const orderedResponses = schema.fields
-                    .filter(field => shouldShowField(field) && field.type !== 'header')
-                    .map(field => {
-                        let answer = formData[field.id];
-
-                        // Format answer if array (multiselect)
-                        if (Array.isArray(answer)) {
-                            answer = answer.join(', ');
-                        }
-
-                        // Map select values to labels if option provides object
-                        if (field.type === 'select' && field.options) {
-                            // Check if options are objects
-                            const selectedOpt = field.options.find((o: any) =>
-                                (typeof o === 'object' ? o.value : o) === answer
-                            );
-                            if (selectedOpt && typeof selectedOpt === 'object') {
-                                answer = selectedOpt.label;
-                            }
-                        }
-
-                        return {
-                            question: field.label,
-                            answer: answer
-                        };
-                    })
-                    // Filter out undefined/null answers if desired, or keep them as empty
-                    .filter(item => item.answer !== undefined && item.answer !== null && item.answer !== '');
-
-                onSubmit(orderedResponses, formData);
-            }
+            setPendingResponses(buildResponses());
+            setShowConfirm(true);
         } else {
-            // Optional: Alert or stick validation
             alert("Por favor completa todos los campos requeridos");
         }
     };
 
+    const handleConfirmSubmit = () => {
+        setShowConfirm(false);
+        if (pendingResponses) onSubmit(pendingResponses, formData);
+        setPendingResponses(null);
+    };
+
     return (
+        <>
         <form
             onSubmit={handleSubmit}
             className="space-y-6"
@@ -366,5 +360,15 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
                 </button>
             </div>
         </form>
+
+        <ConfirmModal
+            isOpen={showConfirm}
+            title="Enviar respuestas"
+            message="¿Estás seguro de que deseas enviar tus respuestas? No podrás editarlas después."
+            confirmLabel="Enviar"
+            onConfirm={handleConfirmSubmit}
+            onCancel={() => setShowConfirm(false)}
+        />
+        </>
     );
 }
