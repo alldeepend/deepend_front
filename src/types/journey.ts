@@ -16,7 +16,6 @@ export interface Station {
     orderIndex: number;
     xp: number;
     badgeName: string | null;
-    completionImageUrl: string | null;
     blocks: Block[];
 }
 
@@ -26,6 +25,8 @@ export interface World {
     title: string;
     description: string | null;
     orderIndex: number;
+    imageUrl: string | null;
+    completionVideoUrl: string | null;
     stations: Station[];
 }
 

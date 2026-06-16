@@ -51,7 +51,7 @@ export default function WorldsStation() {
     const [showCelebration, setShowCelebration] = useState(false)
     const [showWorldCompletion, setShowWorldCompletion] = useState(false)
     const [worldCompletionData, setWorldCompletionData] = useState<{
-        world: any; nextWorld: any; xpEarned: number; badges: string[]; currentBadge: string | null; streak: number
+        world: any; nextWorld: any; xpEarned: number; badges: string[]; currentBadge: string | null; streak: number; completionImageUrl: string | null; completionVideoUrl: string | null
     } | null>(null)
     const [xpFlash, setXpFlash] = useState<number | null>(null)
     const [xpFlashGreen, setXpFlashGreen] = useState(false)
@@ -189,6 +189,8 @@ export default function WorldsStation() {
                         badges: worldBadges,
                         currentBadge: result.badgeEarned ?? null,
                         streak: result.newStreak ?? 0,
+                        completionImageUrl: currentWorld.imageUrl ?? null,
+                        completionVideoUrl: currentWorld.completionVideoUrl ?? null,
                     })
                     setShowWorldCompletion(true)
                 } else {
@@ -2083,10 +2085,12 @@ function WorldCompletionScreen({
     data,
     onContinue,
 }: {
-    data: { world: any; nextWorld: any; xpEarned: number; badges: string[]; currentBadge: string | null; streak: number }
+    data: { world: any; nextWorld: any; xpEarned: number; badges: string[]; currentBadge: string | null; streak: number; completionImageUrl: string | null; completionVideoUrl: string | null }
     onContinue: () => void
 }) {
-    const { world, nextWorld, xpEarned, badges, streak } = data
+    const { world, nextWorld, xpEarned, badges, streak, completionImageUrl, completionVideoUrl } = data
+    const _baseEmbed = completionVideoUrl ? getYouTubeEmbedUrl(completionVideoUrl) : null
+    const videoEmbedUrl = _baseEmbed ? `${_baseEmbed}?autoplay=1&mute=1&rel=0` : null
     const worldNum = world.orderIndex ?? 1
 
     return (
@@ -2156,11 +2160,22 @@ function WorldCompletionScreen({
                     </div>
                 )}
 
-                <img
-                    src="/Final Mundo El Despertar.jpg"
-                    alt="Portada"
-                    className="w-full rounded-xl object-cover"
-                />
+                {videoEmbedUrl ? (
+                    <div className="w-full rounded-xl overflow-hidden" style={{ aspectRatio: '16/9' }}>
+                        <iframe
+                            src={videoEmbedUrl}
+                            className="w-full h-full"
+                            allow="autoplay; encrypted-media"
+                            allowFullScreen
+                        />
+                    </div>
+                ) : (
+                    <img
+                        src={completionImageUrl ?? '/Final Mundo El Despertar.jpg'}
+                        alt="Portada"
+                        className="w-full rounded-xl object-cover"
+                    />
+                )}
 
                 {/* CTA */}
                 <div className="space-y-3 pt-2">
@@ -2223,7 +2238,7 @@ function CelebrationScreen({
                 </p>
 
                 <img
-                    src={station.completionImageUrl ?? '/Fin Estación El Observador.png'}
+                    src='/Fin Estación El Observador.png'
                     alt=""
                     className="w-full rounded-2xl object-cover object-[center_70%]"
                     style={{ height: '280px' }}
