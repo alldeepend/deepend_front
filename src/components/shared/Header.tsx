@@ -5,10 +5,16 @@ import { Link, useLocation, useNavigate } from 'react-router';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-export default function Header() {
+export default function Header({ dark = false }: { dark?: boolean }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout, setUser } = useAuth();
+
+  const bg     = dark ? '#231F20' : '#ffffff'
+  const surface= dark ? '#1E1A1B' : '#ffffff'
+  const text   = dark ? '#F5F0E8' : '#292524'
+  const muted  = dark ? '#A8A29E' : '#78716c'
+  const border = dark ? '#333330' : '#f5f5f4'
 
   const isDiary = location.pathname.includes('/diary');
 
@@ -187,32 +193,34 @@ export default function Header() {
 
         {/* Mobile Menu */}
         <div className="flex md:hidden items-center justify-between">
-          <Link to="/dashboard" className="text-stone-800 hover:text-accent-green transition-colors font-handwriting text-2xl">
-            <img className="w-20" src="https://media.1000momentos.com/memories/69e82978-65ec-4ca5-9397-468483861205-DeepEnd_FondoBlanco.webp" alt="" />
+          <Link to="/dashboard" className="transition-colors font-handwriting text-2xl" style={{ color: text }}>
+            <img className="w-20" src="https://media.1000momentos.com/memories/69e82978-65ec-4ca5-9397-468483861205-DeepEnd_FondoBlanco.webp" alt="" style={dark ? { filter: 'invert(1) brightness(2)' } : undefined} />
           </Link>
           <div className="relative" ref={mobileMenuRef}>
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="text-stone-800 hover:text-accent-green transition-colors"
+              className="transition-colors"
+              style={{ color: text }}
               aria-label="Menú"
             >
               <Menu size={24} />
               {notifications.length > 0 && (
-                <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2" style={{ borderColor: bg }}></span>
               )}
             </button>
 
             {showMobileMenu && (
-              <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-stone-100 py-2 z-50">
-                <div className="px-4 py-3 border-b border-stone-100">
-                  <h3 className="font-bold text-stone-800">Menú</h3>
+              <div className="absolute right-0 mt-2 w-64 rounded-xl shadow-xl border py-2 z-50" style={{ background: surface, borderColor: border }}>
+                <div className="px-4 py-3 border-b" style={{ borderColor: border }}>
+                  <h3 className="font-bold" style={{ color: text }}>Menú</h3>
                 </div>
                 <ul className="py-2">
                   <li>
                     <Link
                       to="/dashboard"
                       onClick={() => setShowMobileMenu(false)}
-                      className="flex items-center gap-3 w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-50 transition-colors"
+                      className="flex items-center gap-3 w-full text-left px-4 py-3 transition-colors"
+                      style={{ color: dark ? muted : '#44403c' }}
                     >
                       <LayoutDashboard size={20} />
                       <span className="font-medium">Dashboard</span>
@@ -225,7 +233,8 @@ export default function Header() {
                     <Link
                       to="/challenges"
                       onClick={() => setShowMobileMenu(false)}
-                      className="flex items-center gap-3 w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-50 transition-colors"
+                      className="flex items-center gap-3 w-full text-left px-4 py-3 transition-colors"
+                      style={{ color: dark ? muted : '#44403c' }}
                     >
                       <Flag size={20} />
                       <span className="font-medium">Mis Retos</span>
@@ -236,7 +245,8 @@ export default function Header() {
                       <Link
                         to="/worlds"
                         onClick={() => setShowMobileMenu(false)}
-                        className="flex items-center gap-3 w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-50 transition-colors"
+                        className="flex items-center gap-3 w-full text-left px-4 py-3 transition-colors"
+                        style={{ color: dark ? muted : '#44403c' }}
                       >
                         <Globe size={20} />
                         <span className="font-medium">Mundos & Retos</span>
@@ -249,7 +259,8 @@ export default function Header() {
                       <Link
                         to="/resources"
                         onClick={() => setShowMobileMenu(false)}
-                        className="flex items-center gap-3 w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-50 transition-colors"
+                        className="flex items-center gap-3 w-full text-left px-4 py-3 transition-colors"
+                        style={{ color: dark ? muted : '#44403c' }}
                       >
                         <BookOpen size={20} />
                         <span className="font-medium">Mis Recursos</span>
@@ -264,7 +275,8 @@ export default function Header() {
                     <Link
                       to="/profile"
                       onClick={() => setShowMobileMenu(false)}
-                      className="flex items-center gap-3 w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-50 transition-colors"
+                      className="flex items-center gap-3 w-full text-left px-4 py-3 transition-colors"
+                      style={{ color: dark ? muted : '#44403c' }}
                     >
                       <User size={20} />
                       <span className="font-medium">Perfil</span>
@@ -276,12 +288,13 @@ export default function Header() {
                         onClick={() => {
                           setShowNotifications(!showNotifications);
                         }}
-                        className="flex items-center gap-3 w-full text-left text-stone-700 hover:bg-stone-50 transition-colors rounded-lg"
+                        className="flex items-center gap-3 w-full text-left transition-colors rounded-lg"
+                        style={{ color: dark ? muted : '#44403c' }}
                       >
                         <div className="relative">
                           <Bell size={20} />
                           {notifications.length > 0 && (
-                            <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                            <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border" style={{ borderColor: bg }}></span>
                           )}
                         </div>
                         <span className="font-medium">Notificaciones</span>
@@ -293,18 +306,18 @@ export default function Header() {
                       </button>
 
                       {showNotifications && (
-                        <div className="mt-2 bg-white rounded-lg shadow-lg border border-stone-100 py-2 max-h-96 overflow-y-auto">
-                          <div className="px-4 py-2 border-b border-stone-100">
-                            <h4 className="font-bold text-stone-800 text-sm">Notificaciones</h4>
+                        <div className="mt-2 rounded-lg shadow-lg border py-2 max-h-96 overflow-y-auto" style={{ background: surface, borderColor: border }}>
+                          <div className="px-4 py-2 border-b" style={{ borderColor: border }}>
+                            <h4 className="font-bold text-sm" style={{ color: text }}>Notificaciones</h4>
                           </div>
                           {notifications.length === 0 ? (
-                            <div className="px-4 py-6 text-center text-stone-500 text-xs">
+                            <div className="px-4 py-6 text-center text-xs" style={{ color: muted }}>
                               No tienes notificaciones
                             </div>
                           ) : (
                             <ul>
                               {notifications.map(notif => (
-                                <li key={notif.id} className="p-3 border-b border-stone-50 hover:bg-stone-50 transition-colors">
+                                <li key={notif.id} className="p-3 border-b transition-colors" style={{ borderColor: border }}>
                                   <div className="flex gap-2">
                                     {notif.sender?.avatar ? (
                                       <img src={notif.sender.avatar} alt="" className="w-8 h-8 rounded-full object-cover" />
@@ -314,8 +327,8 @@ export default function Header() {
                                       </div>
                                     )}
                                     <div className="flex-1 min-w-0">
-                                      <p className="text-xs text-stone-700">
-                                        <span className="font-bold">{notif.sender?.preferredName || notif.sender?.name}</span> te invitó a ver una memoria de la actividad <span className="font-medium">"{notif.memory?.activity?.title}"</span>
+                                      <p className="text-xs" style={{ color: dark ? muted : '#57534e' }}>
+                                        <span className="font-bold" style={{ color: text }}>{notif.sender?.preferredName || notif.sender?.name}</span> te invitó a ver una memoria de la actividad <span className="font-medium">"{notif.memory?.activity?.title}"</span>
                                       </p>
                                       <div className="flex gap-2 mt-2">
                                         <button
@@ -335,7 +348,8 @@ export default function Header() {
                                         </button>
                                         <button
                                           onClick={() => handleRespond(notif.id, 'REJECTED')}
-                                          className="px-2 py-1 border border-stone-200 text-stone-600 text-xs rounded-lg font-medium hover:bg-stone-100 flex items-center justify-center"
+                                          className="px-2 py-1 border text-xs rounded-lg font-medium flex items-center justify-center"
+                                          style={{ borderColor: border, color: muted }}
                                         >
                                           <X size={12} />
                                         </button>
@@ -357,7 +371,8 @@ export default function Header() {
                         navigate('/');
                         setShowMobileMenu(false);
                       }}
-                      className="flex items-center gap-3 w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-50 transition-colors"
+                      className="flex items-center gap-3 w-full text-left px-4 py-3 transition-colors"
+                      style={{ color: dark ? muted : '#44403c' }}
                     >
                       <LogOut size={20} />
                       <span className="font-medium">Cerrar sesión</span>

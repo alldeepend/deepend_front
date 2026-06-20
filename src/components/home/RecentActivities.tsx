@@ -52,15 +52,16 @@ export const RecentActivities = ({ onAddActivity }: RecentActivitiesProps) => {
         if (activities) setCurrentIndex((prev) => (prev - 1 + activities.length) % activities.length);
     };
 
-    if (isLoading) return <div className="p-4 bg-white rounded-2xl shadow-sm border border-slate-100 h-64 animate-pulse"></div>;
+    if (isLoading) return <div className="p-4 rounded-2xl shadow-sm border h-64 animate-pulse" style={{ background: '#1E1A1B', borderColor: '#333330' }}></div>;
 
     if (!activities || activities.length === 0) return (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 mb-8 text-center">
-            <h3 className="text-lg font-bold text-slate-800 mb-2">Comienza tu registro</h3>
-            <p className="text-slate-500 mb-6">Aún no tienes actividades físicas registradas.</p>
+        <div className="rounded-2xl shadow-sm border p-8 mb-8 text-center" style={{ background: '#1E1A1B', borderColor: '#333330' }}>
+            <h3 className="text-lg font-bold mb-2" style={{ color: '#F5F0E8', fontFamily: "'American Typewriter', Georgia, serif" }}>Comienza tu registro</h3>
+            <p className="mb-6" style={{ color: '#A8A29E' }}>Aún no tienes actividades físicas registradas.</p>
             <button
                 onClick={onAddActivity}
-                className="inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all"
+                className="inline-flex items-center gap-2 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-opacity hover:opacity-90"
+                style={{ background: '#52B788' }}
             >
                 <PlusCircle size={20} />
                 Registrar primera actividad
@@ -71,13 +72,14 @@ export const RecentActivities = ({ onAddActivity }: RecentActivitiesProps) => {
     const currentActivity = activities[currentIndex];
 
     return (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-8 relative overflow-hidden group/widget">
+        <div className="rounded-2xl shadow-sm border p-6 mb-8 relative overflow-hidden group/widget" style={{ background: '#1E1A1B', borderColor: '#333330' }}>
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div className="flex flex-col items-center gap-4 w-full md:w-auto justify-between md:justify-start">
-                    <h3 className="text-lg font-bold text-slate-800">Registro Actividad - Retos Físicos</h3>
+                    <h3 className="text-lg font-bold" style={{ color: '#F5F0E8', fontFamily: "'American Typewriter', Georgia, serif" }}>Registro Actividad - Retos Físicos</h3>
                     <button
                         onClick={onAddActivity}
-                        className="flex items-center gap-1.5 bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-200 transition-colors whitespace-nowrap"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap"
+                        style={{ background: '#52B78822', color: '#52B788' }}
                     >
                         <PlusCircle size={14} />
                         Registrar Actividad
@@ -86,7 +88,7 @@ export const RecentActivities = ({ onAddActivity }: RecentActivitiesProps) => {
 
             </div>
 
-            <div className="relative rounded-2xl overflow-hidden bg-slate-100 h-64 md:h-72">
+            <div className="relative rounded-2xl overflow-hidden h-64 md:h-72" style={{ background: '#252020' }}>
                 {/* Navigation Buttons (visible on hover) */}
                 {activities.length > 1 && (
                     <>
@@ -115,9 +117,9 @@ export const RecentActivities = ({ onAddActivity }: RecentActivitiesProps) => {
                             className="w-full h-full object-cover transition-transform duration-700 ease-in-out"
                         />
                     ) : (
-                        <div key={currentActivity.id} className="w-full h-full bg-slate-200 flex flex-col items-center justify-center text-slate-400">
+                        <div key={currentActivity.id} className="w-full h-full flex flex-col items-center justify-center" style={{ background: '#252020', color: '#A8A29E' }}>
                             <Clock size={48} className="mb-2" />
-                            <span className="text-3xl font-bold text-slate-500">{currentActivity.duration} min</span>
+                            <span className="text-3xl font-bold" style={{ color: '#A8A29E' }}>{currentActivity.duration} min</span>
                         </div>
                     )}
 
@@ -153,7 +155,7 @@ export const RecentActivities = ({ onAddActivity }: RecentActivitiesProps) => {
                 )}
             </div>
             <div className="flex justify-end pt-4">
-                <Link to="/activities" className="text-sm text-emerald-600 font-bold hover:text-emerald-700 flex items-center gap-1 group">
+                <Link to="/activities" className="text-sm font-bold flex items-center gap-1 group transition-opacity hover:opacity-80" style={{ color: '#52B788' }}>
                     Ver todas <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                 </Link>
             </div>

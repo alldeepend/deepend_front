@@ -101,20 +101,20 @@ export const DashboardContent = () => {
         <>
             {/* Goal popup — recurrente cada lunes */}
             {goalPopupVisible && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: '#000000b3', backdropFilter: 'blur(4px)' }}>
+                    <div className="rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4 border" style={{ background: '#1E1A1B', borderColor: '#333330' }}>
                         <div className="text-center">
                             <div className="flex justify-center mb-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#52B788' }}>
                                     <circle cx="12" cy="12" r="10"/>
                                     <circle cx="12" cy="12" r="6"/>
                                     <circle cx="12" cy="12" r="2"/>
                                 </svg>
                             </div>
-                            <h3 className="text-lg font-bold text-slate-800">
+                            <h3 className="text-lg font-bold" style={{ color: '#F5F0E8', fontFamily: "'American Typewriter', Georgia, serif" }}>
                                 {modifyingGoal ? 'Ajusta tu meta' : 'Tu meta'}
                             </h3>
-                            <p className="text-sm text-slate-500 mt-1">
+                            <p className="text-sm mt-1" style={{ color: '#A8A29E' }}>
                                 {modifyingGoal ? 'Ingresa los minutos que quieres lograr en este bloque' : (() => {
                                     const w = challengePhysical?.weekNumber ?? 1;
                                     const blockStart = Math.floor((w - 1) / 3) * 3 + 1;
@@ -126,21 +126,23 @@ export const DashboardContent = () => {
                         </div>
                         {!modifyingGoal ? (
                             <>
-                                <div className="bg-emerald-50 rounded-xl px-6 py-4 text-center">
-                                    <span className="text-3xl font-bold text-emerald-700">{challengePhysical?.goalMinutes}</span>
-                                    <span className="text-emerald-600 font-medium ml-1">min</span>
+                                <div className="rounded-xl px-6 py-4 text-center" style={{ background: '#52B78822' }}>
+                                    <span className="text-3xl font-bold" style={{ color: '#52B788' }}>{challengePhysical?.goalMinutes}</span>
+                                    <span className="font-medium ml-1" style={{ color: '#52B788' }}>min</span>
                                 </div>
                                 <div className="flex gap-3">
                                     <button
                                         onClick={handleConfirmGoal}
                                         disabled={goalMutation.isPending}
-                                        className="flex-1 bg-emerald-600 text-white font-semibold py-2.5 rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-60"
+                                        className="flex-1 text-white font-semibold py-2.5 rounded-xl transition-opacity hover:opacity-90 disabled:opacity-60"
+                                        style={{ background: '#52B788' }}
                                     >
                                         ¡Voy con toda!
                                     </button>
                                     <button
                                         onClick={() => setModifyingGoal(true)}
-                                        className="flex-1 border border-slate-300 text-slate-700 font-semibold py-2.5 rounded-xl hover:bg-slate-50 transition-colors"
+                                        className="flex-1 border font-semibold py-2.5 rounded-xl transition-colors"
+                                        style={{ borderColor: '#333330', color: '#F5F0E8' }}
                                     >
                                         Quiero ajustarla
                                     </button>
@@ -149,28 +151,31 @@ export const DashboardContent = () => {
                         ) : (
                             <>
                                 <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Nueva meta en minutos</label>
+                                    <label className="block text-sm font-semibold mb-1.5" style={{ color: '#F5F0E8' }}>Nueva meta en minutos</label>
                                     <input
                                         type="number"
                                         min="1"
                                         value={goalInput}
                                         onChange={e => setGoalInput(e.target.value)}
                                         placeholder="Ej: 150 (min)"
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
+                                        className="w-full px-4 py-3 rounded-xl border outline-none focus:ring-2"
+                                        style={{ background: '#252020', borderColor: '#333330', color: '#F5F0E8', ['--tw-ring-color' as any]: '#52B788' }}
                                     />
-                                    <p className="text-xs text-slate-400 mt-1">Este valor aplica para las próximas 3 semanas</p>
+                                    <p className="text-xs mt-1" style={{ color: '#A8A29E' }}>Este valor aplica para las próximas 3 semanas</p>
                                 </div>
                                 <div className="flex gap-3">
                                     <button
                                         onClick={handleConfirmGoal}
                                         disabled={goalMutation.isPending}
-                                        className="flex-1 bg-emerald-600 text-white font-semibold py-2.5 rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-60"
+                                        className="flex-1 text-white font-semibold py-2.5 rounded-xl transition-opacity hover:opacity-90 disabled:opacity-60"
+                                        style={{ background: '#52B788' }}
                                     >
                                         {goalMutation.isPending ? 'Guardando...' : 'Guardar meta'}
                                     </button>
                                     <button
                                         onClick={() => setModifyingGoal(false)}
-                                        className="flex-1 border border-slate-300 text-slate-700 font-semibold py-2.5 rounded-xl hover:bg-slate-50 transition-colors"
+                                        className="flex-1 border font-semibold py-2.5 rounded-xl transition-colors"
+                                        style={{ borderColor: '#333330', color: '#F5F0E8' }}
                                     >
                                         Cancelar
                                     </button>
@@ -193,7 +198,8 @@ export const DashboardContent = () => {
                 <div className="mb-8">
                     <button
                         onClick={() => setIsRecognitionOpen(true)}
-                        className="w-full bg-gradient-to-r from-emerald-500 to-emerald-700 text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-emerald-100 hover:shadow-xl hover:scale-[1.01] transition-all flex items-center justify-center gap-3 group"
+                        className="w-full text-white font-bold py-4 px-6 rounded-2xl shadow-lg hover:scale-[1.01] transition-all flex items-center justify-center gap-3 group"
+                        style={{ background: 'linear-gradient(to right, #52B788, #1B4332)' }}
                     >
                         <div className="bg-white/20 p-2 rounded-xl group-hover:rotate-12 transition-transform">
                             <Star size={24} className="fill-white" />

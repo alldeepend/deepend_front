@@ -19,23 +19,23 @@ export const StatsCard = () => {
     const isEmpty = !isLoading && !isError && Array.isArray(miradas) && miradas.length === 0;
 
     return (
-        <div className="lg:col-span-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-full -mr-8 -mt-8 opacity-50"></div>
+        <div className="lg:col-span-4 p-6 rounded-2xl shadow-sm border flex flex-col justify-between relative overflow-hidden" style={{ background: '#1E1A1B', borderColor: '#333330' }}>
+            <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full -mr-8 -mt-8 opacity-20" style={{ background: '#52B788' }}></div>
 
             <div>
-                <h3 className="text-xl font-bold text-slate-800 text-center">Tu Gráfica de la Vida</h3>
+                <h3 className="text-xl font-bold text-center" style={{ color: '#F5F0E8', fontFamily: "'American Typewriter', Georgia, serif" }}>Tu Gráfica de la Vida</h3>
             </div>
 
             {isLoading ? (
                 <div className="flex justify-center items-center h-48">
-                    <div className="animate-spin h-6 w-6 border-2 border-emerald-500 rounded-full border-t-transparent"></div>
+                    <div className="animate-spin h-6 w-6 rounded-full border-2 border-t-transparent" style={{ borderColor: '#52B788', borderTopColor: 'transparent' }}></div>
                 </div>
             ) : isError || isEmpty ? (
                 <div className="flex flex-col items-center justify-center h-48 gap-3 text-center px-4">
-                    <p className="text-sm font-semibold text-slate-700 leading-snug">
+                    <p className="text-sm font-semibold leading-snug" style={{ color: '#F5F0E8' }}>
                         Completa tu pasaporte para ver tu gráfica
                     </p>
-                    <p className="text-xs text-slate-400 leading-relaxed">
+                    <p className="text-xs leading-relaxed" style={{ color: '#A8A29E' }}>
                         Responde las áreas de tu vida y tu mapa tomará forma aquí.
                     </p>
                 </div>

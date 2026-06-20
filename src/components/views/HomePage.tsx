@@ -7,12 +7,12 @@ import Header from '../../components/shared/Header';
 
 export default function HomePage() {
     return (
-        <div className="flex flex-col md:flex-row h-screen bg-slate-50 font-sans overflow-hidden">
+        <div className="flex flex-col md:flex-row h-screen font-montserrat overflow-hidden" style={{ background: '#231F20' }}>
             <div className="md:hidden w-full">
-                <Header />
+                <Header dark />
             </div>
 
-            <HomeSidebar activeTab="Dashboard" />
+            <HomeSidebar activeTab="Dashboard" dark />
 
             <main className="flex-1 overflow-y-auto">
                 <div className="max-w-6xl mx-auto p-6 md:p-12">

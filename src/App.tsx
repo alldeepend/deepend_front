@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router'
+import Landing from './components/views/Landing'
 import Login from './components/views/Login'
 import Register from './components/views/Register'
 import ProtectedRoute from './components/shared/ProtectedRoute'
@@ -34,7 +35,7 @@ function App() {
             <Routes>
                 <Route path="/" element={
                     <PublicRoute>
-                        <Login />
+                        <Landing />
                     </PublicRoute>
                 } />
                 <Route path="/dashboard" element={

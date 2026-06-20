@@ -57,48 +57,50 @@ export default function RecognitionChestModal({ isOpen, onClose }: RecognitionCh
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-fade-in-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: '#000000b3', backdropFilter: 'blur(4px)' }}>
+            <div className="rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-fade-in-up border" style={{ background: '#1E1A1B', borderColor: '#333330' }}>
                 {/* Header */}
-                <div className="flex justify-between items-center p-5 border-b border-slate-100 bg-gradient-to-r from-emerald-50 to-transparent">
-                    <h3 className="font-bold text-slate-800 text-xl flex items-center gap-2">
-                        <Star className="text-emerald-500 fill-emerald-500" size={24} />
+                <div className="flex justify-between items-center p-5 border-b" style={{ borderColor: '#333330', background: 'linear-gradient(to right, #52B78822, transparent)' }}>
+                    <h3 className="font-bold text-xl flex items-center gap-2" style={{ color: '#F5F0E8', fontFamily: "'American Typewriter', Georgia, serif" }}>
+                        <Star style={{ color: '#52B788', fill: '#52B788' }} size={24} />
                         Mi Cofre de Reconocimiento
                     </h3>
-                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+                    <button onClick={onClose} className="transition-colors" style={{ color: '#A8A29E' }}>
                         <X size={24} />
                     </button>
                 </div>
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="p-6 space-y-8">
-                    <p className="text-slate-500 text-sm italic">
+                    <p className="text-sm italic" style={{ color: '#A8A29E' }}>
                         Tómate un momento para reflexionar y reconocer lo valioso de tu día.
                     </p>
 
                     {/* Question 1 */}
                     <div className="space-y-3">
-                        <label className="block text-slate-700 font-bold text-lg leading-tight">
+                        <label className="block font-bold text-lg leading-tight" style={{ color: '#F5F0E8' }}>
                             ¿Qué de tu vida hoy merece ser reconocido?
                         </label>
                         <textarea
                             value={question1}
                             onChange={(e) => setQuestion1(e.target.value)}
                             placeholder="Escribe aquí tu respuesta..."
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all min-h-[100px] resize-none"
+                            className="w-full px-4 py-3 rounded-xl border outline-none transition-all min-h-[100px] resize-none focus:ring-2"
+                            style={{ background: '#252020', borderColor: '#333330', color: '#F5F0E8', ['--tw-ring-color' as any]: '#52B788' }}
                         />
                     </div>
 
                     {/* Question 2 */}
                     <div className="space-y-3">
-                        <label className="block text-slate-700 font-bold text-lg leading-tight">
+                        <label className="block font-bold text-lg leading-tight" style={{ color: '#F5F0E8' }}>
                             ¿Qué sucedió, te dijeron o solo te recordó hoy que tu vida tiene valor?
                         </label>
                         <textarea
                             value={question2}
                             onChange={(e) => setQuestion2(e.target.value)}
                             placeholder="Escribe aquí tu respuesta..."
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all min-h-[100px] resize-none"
+                            className="w-full px-4 py-3 rounded-xl border outline-none transition-all min-h-[100px] resize-none focus:ring-2"
+                            style={{ background: '#252020', borderColor: '#333330', color: '#F5F0E8', ['--tw-ring-color' as any]: '#52B788' }}
                         />
                     </div>
 
@@ -106,7 +108,8 @@ export default function RecognitionChestModal({ isOpen, onClose }: RecognitionCh
                     <button
                         type="submit"
                         disabled={recognitionMutation.isPending}
-                        className="w-full bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed text-lg"
+                        className="w-full text-white font-bold py-4 rounded-xl shadow-lg transition-opacity hover:opacity-90 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed text-lg"
+                        style={{ background: '#52B788' }}
                     >
                         {recognitionMutation.isPending ? (
                             <>
