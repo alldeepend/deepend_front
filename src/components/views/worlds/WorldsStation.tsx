@@ -16,6 +16,8 @@ const C = {
     border:   '#333330',
 }
 
+const BADGE_COLORS = ['#52B788', '#5B9BF7', '#E8C547', '#B57BEE', '#818CF8', '#3FC6D8', '#F4669B']
+
 
 const BLOCK_LABELS: Record<string, string> = {
     punto_partida:      'Punto de Partida',
@@ -694,7 +696,7 @@ function BlockPlayer({
             {block.type === 'evidencia' && (
                 <Evidencia content={c} value={response} onChange={onResponse} disabled={alreadyDone} />
             )}
-            {block.type === 'refuerzo' && <Refuerzo content={c} station={station} />}
+            {block.type === 'refuerzo' && <Refuerzo content={c} />}
             {block.type === 'recompensa' && <Recompensa content={c} />}
             {isCierre && (
                 <Cierre
@@ -804,20 +806,34 @@ function PuntoPartida({ content }: { content: any }) {
     )
 }
 
+const SIZE_PATTERN = /(?<plus>\+{1,4})(?<plusBody>[^+]+)\k<plus>|(?<minus>-{1,4})(?<minusBody>[^-]+)\k<minus>|\*\*_(?<bi1>[^_*]+)_\*\*|_\*\*(?<bi2>[^_*]+)\*\*_|\*\*(?<bold>[^*]+)\*\*|_(?<italic>[^_]+)_/g
+
 function parseBold(text: string): React.ReactNode {
-    const parts = text.split(/(\+\+[^+]+\+\+|--[^-]+--|\*\*_[^_*]+_\*\*|_\*\*[^_*]+\*\*_|\*\*[^*]+\*\*|_[^_]+_)/g)
-    return parts.map((part, i) => {
-        if (part.startsWith('++') && part.endsWith('++') && part.length > 4)
-            return <span key={i} style={{ fontSize: '1.25em' }}>{parseBold(part.slice(2, -2))}</span>
-        if (part.startsWith('--') && part.endsWith('--') && part.length > 4)
-            return <span key={i} style={{ fontSize: '0.8em' }}>{parseBold(part.slice(2, -2))}</span>
-        if ((part.startsWith('**_') && part.endsWith('_**')) ||
-            (part.startsWith('_**') && part.endsWith('**_')))
-            return <strong key={i}><em>{parseBold(part.slice(3, -3))}</em></strong>
-        if (part.startsWith('**') && part.endsWith('**')) return <strong key={i}>{parseBold(part.slice(2, -2))}</strong>
-        if (part.startsWith('_') && part.endsWith('_')) return <em key={i}>{parseBold(part.slice(1, -1))}</em>
-        return part
-    })
+    const nodes: React.ReactNode[] = []
+    let lastIndex = 0
+    let key = 0
+    for (const m of text.matchAll(SIZE_PATTERN)) {
+        if (m.index > lastIndex) nodes.push(text.slice(lastIndex, m.index))
+        const g = m.groups!
+        if (g.plus !== undefined) {
+            const scale = 1 + g.plus.length * 0.15
+            nodes.push(<span key={key++} style={{ fontSize: `${scale}em` }}>{parseBold(g.plusBody)}</span>)
+        } else if (g.minus !== undefined) {
+            const scale = Math.max(0.5, 1 - g.minus.length * 0.12)
+            nodes.push(<span key={key++} style={{ fontSize: `${scale}em` }}>{parseBold(g.minusBody)}</span>)
+        } else if (g.bi1 !== undefined) {
+            nodes.push(<strong key={key++}><em>{parseBold(g.bi1)}</em></strong>)
+        } else if (g.bi2 !== undefined) {
+            nodes.push(<strong key={key++}><em>{parseBold(g.bi2)}</em></strong>)
+        } else if (g.bold !== undefined) {
+            nodes.push(<strong key={key++}>{parseBold(g.bold)}</strong>)
+        } else if (g.italic !== undefined) {
+            nodes.push(<em key={key++}>{parseBold(g.italic)}</em>)
+        }
+        lastIndex = m.index + m[0].length
+    }
+    if (lastIndex < text.length) nodes.push(text.slice(lastIndex))
+    return nodes
 }
 
 function parseText(text: string, className = 'text-sm leading-relaxed', style: React.CSSProperties = { color: C.text }): React.ReactNode {
@@ -1904,50 +1920,13 @@ function Evidencia({
     )
 }
 
-function Refuerzo({ content, station }: { content: any; station: Station }) {
+function Refuerzo({ content }: { content: any }) {
     const msg1 = content.message1 ?? content.message ?? ''
     const msg2 = content.message2 ?? ''
     const embedUrl = content.videoUrl ? getYouTubeEmbedUrl(content.videoUrl) : null
 
     return (
         <div className="space-y-8">
-            {/* Header */}
-            <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                    {/* XP circle */}
-                    <div
-                        className="flex-none w-16 h-16 rounded-full flex flex-col items-center justify-center"
-                        style={{
-                            background: `radial-gradient(circle at 40% 35%, ${C.amber}22, ${C.surface1})`,
-                            border: `1.5px solid ${C.amber}55`,
-                            boxShadow: `0 0 18px ${C.amber}30, inset 0 0 12px ${C.amber}10`,
-                        }}
-                    >
-                        <span className="text-lg font-bold leading-none" style={{ color: C.amber, fontFamily: "'DM Mono', monospace" }}>
-                            +{station.xp}
-                        </span>
-                        <span className="text-[9px] tracking-widest uppercase font-semibold" style={{ color: `${C.amber}90` }}>
-                            XP
-                        </span>
-                    </div>
-                    {/* Title + label */}
-                    <div className="space-y-0.5">
-                        <p className="text-[10px] tracking-[0.2em] uppercase font-semibold" style={{ color: C.green }}>
-                            Insignia
-                        </p>
-                        {station.badgeName && (
-                            <h2
-                                className="text-2xl font-bold leading-tight"
-                                style={{ fontFamily: "'American Typewriter', Georgia, serif", color: C.text }}
-                            >
-                                {station.badgeName}
-                            </h2>
-                        )}
-                    </div>
-                </div>
-                <div style={{ height: '1px', background: `linear-gradient(to right, ${C.green}60, transparent)` }} />
-            </div>
-
             {/* Image */}
             <img
                 src={content.imageUrl ?? '/a-c-lj0BHb9llUY-unsplash.jpg'}
@@ -2145,14 +2124,15 @@ function WorldCompletionScreen({
                         </p>
                         <div className="flex flex-wrap justify-center gap-2">
                             {badges.map((b, i) => {
+                                const badgeColor = BADGE_COLORS[i % BADGE_COLORS.length]
                                 return (
                                 <span
                                     key={i}
                                     className="text-xs px-3 py-2 rounded-full font-semibold flex items-center gap-1.5"
                                     style={{
-                                        border: `1px solid ${C.green}`,
-                                        color: C.green,
-                                        background: `${C.green}20`,
+                                        border: `1px solid ${badgeColor}`,
+                                        color: badgeColor,
+                                        background: `${badgeColor}20`,
                                     }}
                                 >
                                     <Award size={14} />
@@ -2253,11 +2233,36 @@ function CelebrationScreen({
                     className="rounded-2xl p-6 space-y-4"
                     style={{ background: C.surface1, border: `1px solid ${C.border}` }}
                 >
-                    <div className="flex items-center justify-center gap-2">
-                        <span className="text-4xl font-bold" style={{ color: C.amber, fontFamily: "'DM Mono', monospace" }}>
-                            +{result.xpEarned ?? 0}
-                        </span>
-                        <span className="text-lg" style={{ color: C.amber, fontFamily: "'DM Mono', monospace" }}>XP</span>
+                    <div className="flex items-center justify-center gap-4">
+                        {/* XP circle */}
+                        <div
+                            className="flex-none w-16 h-16 rounded-full flex flex-col items-center justify-center"
+                            style={{
+                                background: `radial-gradient(circle at 40% 35%, ${C.amber}22, ${C.surface1})`,
+                                border: `1.5px solid ${C.amber}55`,
+                                boxShadow: `0 0 18px ${C.amber}30, inset 0 0 12px ${C.amber}10`,
+                            }}
+                        >
+                            <span className="text-lg font-bold leading-none" style={{ color: C.amber, fontFamily: "'DM Mono', monospace" }}>
+                                +{result.xpEarned ?? 0}
+                            </span>
+                            <span className="text-[9px] tracking-widest uppercase font-semibold" style={{ color: `${C.amber}90` }}>
+                                XP
+                            </span>
+                        </div>
+                        {result.badgeEarned && (
+                            <div className="space-y-0.5 text-left">
+                                <p className="text-[10px] tracking-[0.2em] uppercase font-semibold" style={{ color: C.green }}>
+                                    ¡Obtuviste tu insignia!
+                                </p>
+                                <h2
+                                    className="text-2xl font-bold leading-tight"
+                                    style={{ fontFamily: "'American Typewriter', Georgia, serif", color: C.text }}
+                                >
+                                    {result.badgeEarned}
+                                </h2>
+                            </div>
+                        )}
                     </div>
 
                     {(result.streakBonus ?? 0) > 0 && (
@@ -2275,14 +2280,6 @@ function CelebrationScreen({
                         </p>
                     )}
 
-                    {result.badgeEarned && (
-                        <div
-                            className="rounded-lg px-4 py-2 text-sm"
-                            style={{ background: C.green + '15', color: C.green }}
-                        >
-                            <Award size={14} className="inline mr-1" /> ¡Obtuviste tu insignia "{result.badgeEarned}"!
-                        </div>
-                    )}
                 </div>
 
                 <div className="space-y-3">
