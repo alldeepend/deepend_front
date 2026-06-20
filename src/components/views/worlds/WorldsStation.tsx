@@ -805,13 +805,17 @@ function PuntoPartida({ content }: { content: any }) {
 }
 
 function parseBold(text: string): React.ReactNode {
-    const parts = text.split(/(\*\*_[^_*]+_\*\*|_\*\*[^_*]+\*\*_|\*\*[^*]+\*\*|_[^_]+_)/g)
+    const parts = text.split(/(\+\+[^+]+\+\+|--[^-]+--|\*\*_[^_*]+_\*\*|_\*\*[^_*]+\*\*_|\*\*[^*]+\*\*|_[^_]+_)/g)
     return parts.map((part, i) => {
+        if (part.startsWith('++') && part.endsWith('++') && part.length > 4)
+            return <span key={i} style={{ fontSize: '1.25em' }}>{parseBold(part.slice(2, -2))}</span>
+        if (part.startsWith('--') && part.endsWith('--') && part.length > 4)
+            return <span key={i} style={{ fontSize: '0.8em' }}>{parseBold(part.slice(2, -2))}</span>
         if ((part.startsWith('**_') && part.endsWith('_**')) ||
             (part.startsWith('_**') && part.endsWith('**_')))
-            return <strong key={i}><em>{part.slice(3, -3)}</em></strong>
-        if (part.startsWith('**') && part.endsWith('**')) return <strong key={i}>{part.slice(2, -2)}</strong>
-        if (part.startsWith('_') && part.endsWith('_')) return <em key={i}>{part.slice(1, -1)}</em>
+            return <strong key={i}><em>{parseBold(part.slice(3, -3))}</em></strong>
+        if (part.startsWith('**') && part.endsWith('**')) return <strong key={i}>{parseBold(part.slice(2, -2))}</strong>
+        if (part.startsWith('_') && part.endsWith('_')) return <em key={i}>{parseBold(part.slice(1, -1))}</em>
         return part
     })
 }
@@ -962,7 +966,7 @@ function Activacion({
         return (
             <div className="space-y-5">
                 {question && (
-                    <p className="text-base leading-relaxed" style={{ color: C.text }}>{question}</p>
+                    <p className="text-base leading-relaxed" style={{ color: C.text }}>{parseBold(question)}</p>
                 )}
 
                 {/* Question list */}
@@ -973,7 +977,7 @@ function Activacion({
                     {pQuestions.map((q, i) => (
                         <div key={i} className="flex items-start gap-3">
                             <span className="text-sm font-bold shrink-0 mt-0.5" style={{ color: C.red }}>{i + 1}.</span>
-                            <p className="text-sm leading-relaxed" style={{ color: C.text }}>{q.text}</p>
+                            <p className="text-sm leading-relaxed" style={{ color: C.text }}>{parseBold(q.text)}</p>
                         </div>
                     ))}
                 </div>
@@ -992,8 +996,8 @@ function Activacion({
                                 disabled={disabled}
                                 className="py-3 px-3 rounded-xl text-xs font-semibold text-center transition-all"
                                 style={{
-                                    border: `1px solid ${responseMode === opt.id ? C.green : C.border}`,
-                                    color: responseMode === opt.id ? C.green : C.textMuted,
+                                    border: `1px solid ${responseMode === opt.id ? C.green : C.amber}`,
+                                    color: responseMode === opt.id ? C.green : C.amber,
                                     background: C.surface2,
                                     cursor: disabled ? 'default' : 'pointer',
                                 }}
@@ -1016,7 +1020,7 @@ function Activacion({
                                 className="text-[10px] tracking-[0.14em] uppercase font-semibold"
                                 style={{ color: isUnlocked ? C.textMuted : C.border }}
                             >
-                                {q.text}
+                                {parseBold(q.text)}
                             </p>
                             {isUnlocked ? (
                                 <div className="space-y-2">
@@ -1029,7 +1033,7 @@ function Activacion({
                                                 <div
                                                     key={pi}
                                                     className="rounded-xl overflow-hidden"
-                                                    style={{ border: `1px solid ${isActive ? C.amber : C.border}` }}
+                                                    style={{ border: `1px solid ${isActive ? C.green : C.border}` }}
                                                 >
                                                     <div className="px-4 pt-3 pb-1" style={{ background: C.surface1 }}>
                                                         <p
@@ -1052,7 +1056,7 @@ function Activacion({
                                                             className="w-full rounded-lg px-3 py-2.5 text-sm outline-none placeholder:opacity-30"
                                                             style={{
                                                                 background: C.surface2,
-                                                                border: `1px solid ${guidedText.trim() ? `${C.amber}60` : C.border}`,
+                                                                border: `1px solid ${guidedText.trim() ? `${C.green}60` : C.border}`,
                                                                 color: C.text,
                                                                 opacity: disabled ? 0.6 : 1,
                                                             }}
@@ -1070,15 +1074,15 @@ function Activacion({
                                                 className="w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-200"
                                                 style={{
                                                     background: isChosen ? `${C.green}20` : C.surface2,
-                                                    border: `1px solid ${isChosen ? C.green : C.amber}`,
-                                                    color: isChosen ? C.text : C.amber,
+                                                    border: `1px solid ${isChosen ? C.green : C.border}`,
+                                                    color: isChosen ? C.text : C.textMuted,
                                                     opacity: disabled && !isChosen ? 0.5 : 1,
                                                 }}
                                             >
                                                 <span
                                                     className="inline-flex w-5 h-5 rounded-full border items-center justify-center text-xs mr-3 shrink-0"
                                                     style={{
-                                                        borderColor: isChosen ? C.green : C.amber,
+                                                        borderColor: isChosen ? C.green : C.border,
                                                         background: isChosen ? C.green : 'transparent',
                                                         color: '#fff',
                                                     }}
@@ -1108,7 +1112,7 @@ function Activacion({
                 {responseMode === 'texto' && pQuestions.map((q, i) => (
                     <div key={i} className="space-y-2">
                         <p className="text-xs leading-relaxed" style={{ color: C.textMuted }}>
-                            <span style={{ color: C.red, fontWeight: 700 }}>{i + 1}. </span>{q.text}
+                            <span style={{ color: C.red, fontWeight: 700 }}>{i + 1}. </span>{parseBold(q.text)}
                         </p>
                         <textarea
                             rows={4}
@@ -1159,7 +1163,7 @@ function Activacion({
         return (
             <div className="space-y-4">
                 {question && (
-                    <p className="text-base leading-relaxed" style={{ color: C.text }}>{question}</p>
+                    <p className="text-base leading-relaxed" style={{ color: C.text }}>{parseBold(question)}</p>
                 )}
 
                 {/* Route selector */}
@@ -1192,11 +1196,11 @@ function Activacion({
                                 </span>
                                 <div>
                                     <p className="text-sm font-semibold" style={{ color: isSelected ? C.text : C.amber }}>
-                                        {route.label}
+                                        {parseBold(route.label)}
                                     </p>
                                     {route.description && (
                                         <p className="text-xs mt-0.5 leading-relaxed" style={{ color: C.textMuted }}>
-                                            {route.description}
+                                            {parseBold(route.description)}
                                         </p>
                                     )}
                                 </div>
@@ -1211,7 +1215,7 @@ function Activacion({
                         <div className="h-px" style={{ background: C.border }} />
                         {activeRoute.questions.map((q, i) => (
                             <div key={i} className="space-y-1.5">
-                                <p className="text-sm font-medium" style={{ color: C.text }}>{q}</p>
+                                <p className="text-sm font-medium" style={{ color: C.text }}>{parseBold(q)}</p>
                                 <textarea
                                     rows={3}
                                     maxLength={400}
@@ -1298,7 +1302,7 @@ function Activacion({
             <div className="space-y-4">
                 {question && (
                     <p className="text-base leading-relaxed" style={{ color: C.text }}>
-                        {question}
+                        {parseBold(question)}
                     </p>
                 )}
                 <div className="space-y-3">
@@ -1313,7 +1317,7 @@ function Activacion({
                                     className="text-sm leading-relaxed italic"
                                     style={{ color: C.textMuted, fontFamily: "'American Typewriter', Georgia, serif" }}
                                 >
-                                    {prefix}
+                                    {parseBold(prefix)}
                                 </p>
                             </div>
                             <div className="px-4 pb-3" style={{ background: C.surface1 }}>
@@ -1343,7 +1347,7 @@ function Activacion({
         <div className="space-y-4">
             {question && (
                 <p className="text-base leading-relaxed" style={{ color: C.text }}>
-                    {question}
+                    {parseBold(question)}
                 </p>
             )}
 
@@ -1356,8 +1360,8 @@ function Activacion({
                         disabled={!tab.enabled || disabled}
                         className="flex-1 py-2.5 px-2 rounded-xl text-xs font-semibold text-center transition-all"
                         style={{
-                            border: `1px solid ${mode === tab.id && tab.enabled ? C.green : C.border}`,
-                            color: mode === tab.id && tab.enabled ? C.green : C.textMuted,
+                            border: `1px solid ${mode === tab.id && tab.enabled ? C.green : C.amber}`,
+                            color: mode === tab.id && tab.enabled ? C.green : C.amber,
                             background: C.surface2,
                             cursor: tab.enabled && !disabled ? 'pointer' : 'default',
                             opacity: !tab.enabled ? 0.35 : 1,
@@ -1505,7 +1509,7 @@ function OpcionesRespuesta({
 
     return (
         <div className="space-y-4">
-            {prompt && <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>{prompt}</p>}
+            {prompt && <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>{parseBold(prompt)}</p>}
             <div className="space-y-2">
                 {options.map((opt, i) => (
                     <button
@@ -1644,7 +1648,7 @@ function AccionReal({
                                         className="text-sm italic leading-relaxed"
                                         style={{ color: C.textMuted, fontFamily: "'American Typewriter', Georgia, serif" }}
                                     >
-                                        {guidedPrefix}
+                                        {parseBold(guidedPrefix)}
                                     </p>
                                 </div>
                                 <div className="px-4 pb-3" style={{ background: C.surface1 }}>
