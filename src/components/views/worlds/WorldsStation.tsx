@@ -36,6 +36,70 @@ function getYouTubeEmbedUrl(url: string): string | null {
     return match ? `https://www.youtube.com/embed/${match[1]}` : null
 }
 
+// ─── Recordatorio de respuesta anterior ────────────────────────────────────────
+
+function findBlockById(data: JourneyDetailsResponse, blockId: string): Block | null {
+    for (const w of data.journey.worlds) {
+        for (const s of w.stations) {
+            const b = s.blocks.find(bl => bl.id === blockId)
+            if (b) return b
+        }
+    }
+    return null
+}
+
+// Convierte la respuesta guardada (forma distinta según el tipo/modo del bloque) en texto legible
+function extractRecallText(blockType: string, content: any, value: any): string {
+    if (value == null) return ''
+    if (typeof value === 'string') return value === '__foto__' ? '(Foto subida)' : value
+    if (Array.isArray(value)) return value.filter(Boolean).join(', ')
+
+    if (blockType === 'activacion') {
+        const isPreguntas = content?.selectionType === 'preguntas'
+        const isArbol = content?.selectionType === 'arbol_decision'
+        const isReescritura = content?.selectionType === 'reescritura_guiada'
+        if (isPreguntas) {
+            const answers: any[] = value.answers ?? []
+            return answers
+                .map(a => typeof a === 'string' ? a : (a?.guided ? `${a.prefix ?? ''} ${a.text ?? ''}`.trim() : ''))
+                .filter(Boolean).join(' · ')
+        }
+        if (isArbol) {
+            const route = value.selectedRoute
+            const answers: string[] = (value.allRouteAnswers ?? {})[route] ?? []
+            return answers.filter(Boolean).join(' · ')
+        }
+        if (isReescritura) {
+            const completions: string[] = value.completions ?? []
+            return completions.filter(Boolean).join(' · ')
+        }
+        if (value.mode === 'select') {
+            const sel: string[] = value.selected ?? []
+            return [...sel.filter((s: string) => s !== 'Otra — escribo yo'), value.otherText].filter(Boolean).join(', ')
+        }
+        return value.text ?? ''
+    }
+
+    if (blockType === 'accion_real') {
+        if (content?.actionType === 'seleccion') {
+            return value.selected === 'guided' ? (value.guidedText ?? '') : (value.selected ?? '')
+        }
+        return value.text ?? ''
+    }
+
+    return value.text ?? ''
+}
+
+function getRecalledAnswer(data: JourneyDetailsResponse | null, recallBlockId: string | undefined): string | null {
+    if (!data || !recallBlockId) return null
+    const block = findBlockById(data, recallBlockId)
+    if (!block) return null
+    const interaction = data.progress.blockInteractions.find(bi => bi.blockId === recallBlockId)
+    if (!interaction || interaction.responses == null) return null
+    const text = extractRecallText(block.type, block.content, interaction.responses)
+    return text.trim() || null
+}
+
 export default function WorldsStation() {
     const { journeyId, stationId } = useParams<{ journeyId: string; stationId: string }>()
     const navigate = useNavigate()
@@ -108,6 +172,7 @@ export default function WorldsStation() {
     const station: Station | undefined = data ? findStation(data, stationId!) : undefined
     const blocks = station?.blocks.slice().sort((a, b) => a.orderIndex - b.orderIndex) ?? []
     const currentBlock = blocks[blockIndex]
+    const recalledAnswer = getRecalledAnswer(data, currentBlock?.content?.recallBlockId)
 
     const XP_EXCLUDED = ['punto_partida', 'cierre']
     const eligibleBlocks = blocks.filter(b => !XP_EXCLUDED.includes(b.type))
@@ -468,6 +533,7 @@ export default function WorldsStation() {
                         key={currentBlock.id}
                         block={currentBlock}
                         station={station}
+                        recalledAnswer={recalledAnswer}
                         response={responses[currentBlock.id]}
                         onResponse={val =>
                             setResponses(prev => ({ ...prev, [currentBlock.id]: val }))
@@ -582,6 +648,7 @@ function isResponseValid(blockType: string, response: any): boolean {
 function BlockPlayer({
     block,
     station,
+    recalledAnswer,
     response,
     onResponse,
     alreadyDone,
@@ -601,6 +668,7 @@ function BlockPlayer({
 }: {
     block: Block
     station: Station
+    recalledAnswer: string | null
     response: any
     onResponse: (val: any) => void
     alreadyDone: boolean
@@ -620,6 +688,7 @@ function BlockPlayer({
 }) {
     const label = BLOCK_LABELS[block.type] ?? block.type
     const c = block.content ?? {}
+    const [showRecall, setShowRecall] = useState(false)
 
     const isCierre = block.type === 'cierre'
     const isFotoOnly = block.type === 'accion_real' && c.actionType === 'foto'
@@ -679,6 +748,34 @@ function BlockPlayer({
                 >
                     {block.title}
                 </h2>
+            )}
+
+            {/* Recordatorio de respuesta anterior */}
+            {recalledAnswer && (
+                <div>
+                    {!showRecall ? (
+                        <button
+                            type="button"
+                            onClick={() => setShowRecall(true)}
+                            className="text-xs px-3 py-2 rounded-lg font-medium transition-colors"
+                            style={{ background: C.surface1, border: `1px solid ${C.border}`, color: C.textMuted }}
+                        >
+                            {c.recallLabel || '¿No recuerdas tu respuesta anterior? Verla aquí'}
+                        </button>
+                    ) : (
+                        <div
+                            className="rounded-xl px-4 py-3"
+                            style={{ background: C.surface1, border: `1px solid ${C.green}40` }}
+                        >
+                            <p className="text-[10px] tracking-[0.14em] uppercase font-semibold mb-1" style={{ color: C.green }}>
+                                Tu respuesta anterior
+                            </p>
+                            <p className="text-sm leading-relaxed italic" style={{ color: C.text }}>
+                                "{recalledAnswer}"
+                            </p>
+                        </div>
+                    )}
+                </div>
             )}
 
             {/* Type-specific content */}
