@@ -345,9 +345,9 @@ export default function WorldsHome() {
                                 Tómate el tiempo que necesites en cada estación. Puedes avanzar a tu ritmo, sin afán.
                             </p>
                             <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>
-                                Eso sí — una vez que termines una estación,{' '}
-                                <span style={{ color: C.text, fontWeight: 600 }}>tus respuestas quedan guardadas tal como las enviaste</span>.
-                                No hay forma de editarlas después, así que lee bien y responde desde lo que realmente piensas.
+                                Ten en cuenta que una vez que termines una estación,{' '}
+                                <span style={{ color: C.text, fontWeight: 600 }}>tus respuestas quedan guardadas tal como las enviaste. No podrás editarlas después</span>,
+                                así que confía en que lo que respondes de forma espontánea es lo que realmente sale de ti y es lo que más resuena contigo en este momento presente.
                             </p>
                         </div>
                         <button
