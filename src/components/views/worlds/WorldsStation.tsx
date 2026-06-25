@@ -16,6 +16,8 @@ const C = {
     border:   '#333330',
 }
 
+const BADGE_COLORS = ['#52B788', '#5B9BF7', '#E8C547', '#B57BEE', '#818CF8', '#3FC6D8', '#F4669B']
+
 
 const BLOCK_LABELS: Record<string, string> = {
     punto_partida:      'Punto de Partida',
@@ -32,6 +34,70 @@ const BLOCK_LABELS: Record<string, string> = {
 function getYouTubeEmbedUrl(url: string): string | null {
     const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/)
     return match ? `https://www.youtube.com/embed/${match[1]}` : null
+}
+
+// ─── Recordatorio de respuesta anterior ────────────────────────────────────────
+
+function findBlockById(data: JourneyDetailsResponse, blockId: string): Block | null {
+    for (const w of data.journey.worlds) {
+        for (const s of w.stations) {
+            const b = s.blocks.find(bl => bl.id === blockId)
+            if (b) return b
+        }
+    }
+    return null
+}
+
+// Convierte la respuesta guardada (forma distinta según el tipo/modo del bloque) en texto legible
+function extractRecallText(blockType: string, content: any, value: any): string {
+    if (value == null) return ''
+    if (typeof value === 'string') return value === '__foto__' ? '(Foto subida)' : value
+    if (Array.isArray(value)) return value.filter(Boolean).join(', ')
+
+    if (blockType === 'activacion') {
+        const isPreguntas = content?.selectionType === 'preguntas'
+        const isArbol = content?.selectionType === 'arbol_decision'
+        const isReescritura = content?.selectionType === 'reescritura_guiada'
+        if (isPreguntas) {
+            const answers: any[] = value.answers ?? []
+            return answers
+                .map(a => typeof a === 'string' ? a : (a?.guided ? `${a.prefix ?? ''} ${a.text ?? ''}`.trim() : ''))
+                .filter(Boolean).join(' · ')
+        }
+        if (isArbol) {
+            const route = value.selectedRoute
+            const answers: string[] = (value.allRouteAnswers ?? {})[route] ?? []
+            return answers.filter(Boolean).join(' · ')
+        }
+        if (isReescritura) {
+            const completions: string[] = value.completions ?? []
+            return completions.filter(Boolean).join(' · ')
+        }
+        if (value.mode === 'select') {
+            const sel: string[] = value.selected ?? []
+            return [...sel.filter((s: string) => s !== 'Otra — escribo yo'), value.otherText].filter(Boolean).join(', ')
+        }
+        return value.text ?? ''
+    }
+
+    if (blockType === 'accion_real') {
+        if (content?.actionType === 'seleccion') {
+            return value.selected === 'guided' ? (value.guidedText ?? '') : (value.selected ?? '')
+        }
+        return value.text ?? ''
+    }
+
+    return value.text ?? ''
+}
+
+function getRecalledAnswer(data: JourneyDetailsResponse | null, recallBlockId: string | undefined): string | null {
+    if (!data || !recallBlockId) return null
+    const block = findBlockById(data, recallBlockId)
+    if (!block) return null
+    const interaction = data.progress.blockInteractions.find(bi => bi.blockId === recallBlockId)
+    if (!interaction || interaction.responses == null) return null
+    const text = extractRecallText(block.type, block.content, interaction.responses)
+    return text.trim() || null
 }
 
 export default function WorldsStation() {
@@ -106,6 +172,7 @@ export default function WorldsStation() {
     const station: Station | undefined = data ? findStation(data, stationId!) : undefined
     const blocks = station?.blocks.slice().sort((a, b) => a.orderIndex - b.orderIndex) ?? []
     const currentBlock = blocks[blockIndex]
+    const recalledAnswer = getRecalledAnswer(data, currentBlock?.content?.recallBlockId)
 
     const XP_EXCLUDED = ['punto_partida', 'cierre']
     const eligibleBlocks = blocks.filter(b => !XP_EXCLUDED.includes(b.type))
@@ -466,6 +533,7 @@ export default function WorldsStation() {
                         key={currentBlock.id}
                         block={currentBlock}
                         station={station}
+                        recalledAnswer={recalledAnswer}
                         response={responses[currentBlock.id]}
                         onResponse={val =>
                             setResponses(prev => ({ ...prev, [currentBlock.id]: val }))
@@ -580,6 +648,7 @@ function isResponseValid(blockType: string, response: any): boolean {
 function BlockPlayer({
     block,
     station,
+    recalledAnswer,
     response,
     onResponse,
     alreadyDone,
@@ -599,6 +668,7 @@ function BlockPlayer({
 }: {
     block: Block
     station: Station
+    recalledAnswer: string | null
     response: any
     onResponse: (val: any) => void
     alreadyDone: boolean
@@ -618,6 +688,7 @@ function BlockPlayer({
 }) {
     const label = BLOCK_LABELS[block.type] ?? block.type
     const c = block.content ?? {}
+    const [showRecall, setShowRecall] = useState(false)
 
     const isCierre = block.type === 'cierre'
     const isFotoOnly = block.type === 'accion_real' && c.actionType === 'foto'
@@ -679,6 +750,34 @@ function BlockPlayer({
                 </h2>
             )}
 
+            {/* Recordatorio de respuesta anterior */}
+            {recalledAnswer && (
+                <div>
+                    {!showRecall ? (
+                        <button
+                            type="button"
+                            onClick={() => setShowRecall(true)}
+                            className="text-xs px-3 py-2 rounded-lg font-medium transition-colors"
+                            style={{ background: C.surface1, border: `1px solid ${C.border}`, color: C.textMuted }}
+                        >
+                            {c.recallLabel || '¿No recuerdas tu respuesta anterior? Verla aquí'}
+                        </button>
+                    ) : (
+                        <div
+                            className="rounded-xl px-4 py-3"
+                            style={{ background: C.surface1, border: `1px solid ${C.green}40` }}
+                        >
+                            <p className="text-[10px] tracking-[0.14em] uppercase font-semibold mb-1" style={{ color: C.green }}>
+                                Tu respuesta anterior
+                            </p>
+                            <p className="text-sm leading-relaxed italic" style={{ color: C.text }}>
+                                "{recalledAnswer}"
+                            </p>
+                        </div>
+                    )}
+                </div>
+            )}
+
             {/* Type-specific content */}
             {block.type === 'punto_partida' && <PuntoPartida content={c} />}
             {block.type === 'capsula' && <Capsula content={c} />}
@@ -694,7 +793,7 @@ function BlockPlayer({
             {block.type === 'evidencia' && (
                 <Evidencia content={c} value={response} onChange={onResponse} disabled={alreadyDone} />
             )}
-            {block.type === 'refuerzo' && <Refuerzo content={c} station={station} />}
+            {block.type === 'refuerzo' && <Refuerzo content={c} />}
             {block.type === 'recompensa' && <Recompensa content={c} />}
             {isCierre && (
                 <Cierre
@@ -804,16 +903,34 @@ function PuntoPartida({ content }: { content: any }) {
     )
 }
 
+const SIZE_PATTERN = /(?<plus>\+{1,4})(?<plusBody>[^+]+)\k<plus>|(?<minus>-{1,4})(?<minusBody>[^-]+)\k<minus>|\*\*_(?<bi1>[^_*]+)_\*\*|_\*\*(?<bi2>[^_*]+)\*\*_|\*\*(?<bold>[^*]+)\*\*|_(?<italic>[^_]+)_/g
+
 function parseBold(text: string): React.ReactNode {
-    const parts = text.split(/(\*\*_[^_*]+_\*\*|_\*\*[^_*]+\*\*_|\*\*[^*]+\*\*|_[^_]+_)/g)
-    return parts.map((part, i) => {
-        if ((part.startsWith('**_') && part.endsWith('_**')) ||
-            (part.startsWith('_**') && part.endsWith('**_')))
-            return <strong key={i}><em>{part.slice(3, -3)}</em></strong>
-        if (part.startsWith('**') && part.endsWith('**')) return <strong key={i}>{part.slice(2, -2)}</strong>
-        if (part.startsWith('_') && part.endsWith('_')) return <em key={i}>{part.slice(1, -1)}</em>
-        return part
-    })
+    const nodes: React.ReactNode[] = []
+    let lastIndex = 0
+    let key = 0
+    for (const m of text.matchAll(SIZE_PATTERN)) {
+        if (m.index > lastIndex) nodes.push(text.slice(lastIndex, m.index))
+        const g = m.groups!
+        if (g.plus !== undefined) {
+            const scale = 1 + g.plus.length * 0.15
+            nodes.push(<span key={key++} style={{ fontSize: `${scale}em` }}>{parseBold(g.plusBody)}</span>)
+        } else if (g.minus !== undefined) {
+            const scale = Math.max(0.5, 1 - g.minus.length * 0.12)
+            nodes.push(<span key={key++} style={{ fontSize: `${scale}em` }}>{parseBold(g.minusBody)}</span>)
+        } else if (g.bi1 !== undefined) {
+            nodes.push(<strong key={key++}><em>{parseBold(g.bi1)}</em></strong>)
+        } else if (g.bi2 !== undefined) {
+            nodes.push(<strong key={key++}><em>{parseBold(g.bi2)}</em></strong>)
+        } else if (g.bold !== undefined) {
+            nodes.push(<strong key={key++}>{parseBold(g.bold)}</strong>)
+        } else if (g.italic !== undefined) {
+            nodes.push(<em key={key++}>{parseBold(g.italic)}</em>)
+        }
+        lastIndex = m.index + m[0].length
+    }
+    if (lastIndex < text.length) nodes.push(text.slice(lastIndex))
+    return nodes
 }
 
 function parseText(text: string, className = 'text-sm leading-relaxed', style: React.CSSProperties = { color: C.text }): React.ReactNode {
@@ -962,7 +1079,7 @@ function Activacion({
         return (
             <div className="space-y-5">
                 {question && (
-                    <p className="text-base leading-relaxed" style={{ color: C.text }}>{question}</p>
+                    <p className="text-base leading-relaxed" style={{ color: C.text }}>{parseBold(question)}</p>
                 )}
 
                 {/* Question list */}
@@ -973,7 +1090,7 @@ function Activacion({
                     {pQuestions.map((q, i) => (
                         <div key={i} className="flex items-start gap-3">
                             <span className="text-sm font-bold shrink-0 mt-0.5" style={{ color: C.red }}>{i + 1}.</span>
-                            <p className="text-sm leading-relaxed" style={{ color: C.text }}>{q.text}</p>
+                            <p className="text-sm leading-relaxed" style={{ color: C.text }}>{parseBold(q.text)}</p>
                         </div>
                     ))}
                 </div>
@@ -992,8 +1109,8 @@ function Activacion({
                                 disabled={disabled}
                                 className="py-3 px-3 rounded-xl text-xs font-semibold text-center transition-all"
                                 style={{
-                                    border: `1px solid ${responseMode === opt.id ? C.green : C.border}`,
-                                    color: responseMode === opt.id ? C.green : C.textMuted,
+                                    border: `1px solid ${responseMode === opt.id ? C.green : C.amber}`,
+                                    color: responseMode === opt.id ? C.green : C.amber,
                                     background: C.surface2,
                                     cursor: disabled ? 'default' : 'pointer',
                                 }}
@@ -1016,7 +1133,7 @@ function Activacion({
                                 className="text-[10px] tracking-[0.14em] uppercase font-semibold"
                                 style={{ color: isUnlocked ? C.textMuted : C.border }}
                             >
-                                {q.text}
+                                {parseBold(q.text)}
                             </p>
                             {isUnlocked ? (
                                 <div className="space-y-2">
@@ -1029,7 +1146,7 @@ function Activacion({
                                                 <div
                                                     key={pi}
                                                     className="rounded-xl overflow-hidden"
-                                                    style={{ border: `1px solid ${isActive ? C.amber : C.border}` }}
+                                                    style={{ border: `1px solid ${isActive ? C.green : C.border}` }}
                                                 >
                                                     <div className="px-4 pt-3 pb-1" style={{ background: C.surface1 }}>
                                                         <p
@@ -1052,7 +1169,7 @@ function Activacion({
                                                             className="w-full rounded-lg px-3 py-2.5 text-sm outline-none placeholder:opacity-30"
                                                             style={{
                                                                 background: C.surface2,
-                                                                border: `1px solid ${guidedText.trim() ? `${C.amber}60` : C.border}`,
+                                                                border: `1px solid ${guidedText.trim() ? `${C.green}60` : C.border}`,
                                                                 color: C.text,
                                                                 opacity: disabled ? 0.6 : 1,
                                                             }}
@@ -1070,15 +1187,15 @@ function Activacion({
                                                 className="w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-200"
                                                 style={{
                                                     background: isChosen ? `${C.green}20` : C.surface2,
-                                                    border: `1px solid ${isChosen ? C.green : C.amber}`,
-                                                    color: isChosen ? C.text : C.amber,
+                                                    border: `1px solid ${isChosen ? C.green : C.border}`,
+                                                    color: isChosen ? C.text : C.textMuted,
                                                     opacity: disabled && !isChosen ? 0.5 : 1,
                                                 }}
                                             >
                                                 <span
                                                     className="inline-flex w-5 h-5 rounded-full border items-center justify-center text-xs mr-3 shrink-0"
                                                     style={{
-                                                        borderColor: isChosen ? C.green : C.amber,
+                                                        borderColor: isChosen ? C.green : C.border,
                                                         background: isChosen ? C.green : 'transparent',
                                                         color: '#fff',
                                                     }}
@@ -1108,7 +1225,7 @@ function Activacion({
                 {responseMode === 'texto' && pQuestions.map((q, i) => (
                     <div key={i} className="space-y-2">
                         <p className="text-xs leading-relaxed" style={{ color: C.textMuted }}>
-                            <span style={{ color: C.red, fontWeight: 700 }}>{i + 1}. </span>{q.text}
+                            <span style={{ color: C.red, fontWeight: 700 }}>{i + 1}. </span>{parseBold(q.text)}
                         </p>
                         <textarea
                             rows={4}
@@ -1159,7 +1276,7 @@ function Activacion({
         return (
             <div className="space-y-4">
                 {question && (
-                    <p className="text-base leading-relaxed" style={{ color: C.text }}>{question}</p>
+                    <p className="text-base leading-relaxed" style={{ color: C.text }}>{parseBold(question)}</p>
                 )}
 
                 {/* Route selector */}
@@ -1192,11 +1309,11 @@ function Activacion({
                                 </span>
                                 <div>
                                     <p className="text-sm font-semibold" style={{ color: isSelected ? C.text : C.amber }}>
-                                        {route.label}
+                                        {parseBold(route.label)}
                                     </p>
                                     {route.description && (
                                         <p className="text-xs mt-0.5 leading-relaxed" style={{ color: C.textMuted }}>
-                                            {route.description}
+                                            {parseBold(route.description)}
                                         </p>
                                     )}
                                 </div>
@@ -1211,7 +1328,7 @@ function Activacion({
                         <div className="h-px" style={{ background: C.border }} />
                         {activeRoute.questions.map((q, i) => (
                             <div key={i} className="space-y-1.5">
-                                <p className="text-sm font-medium" style={{ color: C.text }}>{q}</p>
+                                <p className="text-sm font-medium" style={{ color: C.text }}>{parseBold(q)}</p>
                                 <textarea
                                     rows={3}
                                     maxLength={400}
@@ -1298,7 +1415,7 @@ function Activacion({
             <div className="space-y-4">
                 {question && (
                     <p className="text-base leading-relaxed" style={{ color: C.text }}>
-                        {question}
+                        {parseBold(question)}
                     </p>
                 )}
                 <div className="space-y-3">
@@ -1313,7 +1430,7 @@ function Activacion({
                                     className="text-sm leading-relaxed italic"
                                     style={{ color: C.textMuted, fontFamily: "'American Typewriter', Georgia, serif" }}
                                 >
-                                    {prefix}
+                                    {parseBold(prefix)}
                                 </p>
                             </div>
                             <div className="px-4 pb-3" style={{ background: C.surface1 }}>
@@ -1343,7 +1460,7 @@ function Activacion({
         <div className="space-y-4">
             {question && (
                 <p className="text-base leading-relaxed" style={{ color: C.text }}>
-                    {question}
+                    {parseBold(question)}
                 </p>
             )}
 
@@ -1356,8 +1473,8 @@ function Activacion({
                         disabled={!tab.enabled || disabled}
                         className="flex-1 py-2.5 px-2 rounded-xl text-xs font-semibold text-center transition-all"
                         style={{
-                            border: `1px solid ${mode === tab.id && tab.enabled ? C.green : C.border}`,
-                            color: mode === tab.id && tab.enabled ? C.green : C.textMuted,
+                            border: `1px solid ${mode === tab.id && tab.enabled ? C.green : C.amber}`,
+                            color: mode === tab.id && tab.enabled ? C.green : C.amber,
                             background: C.surface2,
                             cursor: tab.enabled && !disabled ? 'pointer' : 'default',
                             opacity: !tab.enabled ? 0.35 : 1,
@@ -1505,7 +1622,7 @@ function OpcionesRespuesta({
 
     return (
         <div className="space-y-4">
-            {prompt && <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>{prompt}</p>}
+            {prompt && <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>{parseBold(prompt)}</p>}
             <div className="space-y-2">
                 {options.map((opt, i) => (
                     <button
@@ -1644,7 +1761,7 @@ function AccionReal({
                                         className="text-sm italic leading-relaxed"
                                         style={{ color: C.textMuted, fontFamily: "'American Typewriter', Georgia, serif" }}
                                     >
-                                        {guidedPrefix}
+                                        {parseBold(guidedPrefix)}
                                     </p>
                                 </div>
                                 <div className="px-4 pb-3" style={{ background: C.surface1 }}>
@@ -1900,50 +2017,13 @@ function Evidencia({
     )
 }
 
-function Refuerzo({ content, station }: { content: any; station: Station }) {
+function Refuerzo({ content }: { content: any }) {
     const msg1 = content.message1 ?? content.message ?? ''
     const msg2 = content.message2 ?? ''
     const embedUrl = content.videoUrl ? getYouTubeEmbedUrl(content.videoUrl) : null
 
     return (
         <div className="space-y-8">
-            {/* Header */}
-            <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                    {/* XP circle */}
-                    <div
-                        className="flex-none w-16 h-16 rounded-full flex flex-col items-center justify-center"
-                        style={{
-                            background: `radial-gradient(circle at 40% 35%, ${C.amber}22, ${C.surface1})`,
-                            border: `1.5px solid ${C.amber}55`,
-                            boxShadow: `0 0 18px ${C.amber}30, inset 0 0 12px ${C.amber}10`,
-                        }}
-                    >
-                        <span className="text-lg font-bold leading-none" style={{ color: C.amber, fontFamily: "'DM Mono', monospace" }}>
-                            +{station.xp}
-                        </span>
-                        <span className="text-[9px] tracking-widest uppercase font-semibold" style={{ color: `${C.amber}90` }}>
-                            XP
-                        </span>
-                    </div>
-                    {/* Title + label */}
-                    <div className="space-y-0.5">
-                        <p className="text-[10px] tracking-[0.2em] uppercase font-semibold" style={{ color: C.green }}>
-                            Insignia
-                        </p>
-                        {station.badgeName && (
-                            <h2
-                                className="text-2xl font-bold leading-tight"
-                                style={{ fontFamily: "'American Typewriter', Georgia, serif", color: C.text }}
-                            >
-                                {station.badgeName}
-                            </h2>
-                        )}
-                    </div>
-                </div>
-                <div style={{ height: '1px', background: `linear-gradient(to right, ${C.green}60, transparent)` }} />
-            </div>
-
             {/* Image */}
             <img
                 src={content.imageUrl ?? '/a-c-lj0BHb9llUY-unsplash.jpg'}
@@ -2141,14 +2221,15 @@ function WorldCompletionScreen({
                         </p>
                         <div className="flex flex-wrap justify-center gap-2">
                             {badges.map((b, i) => {
+                                const badgeColor = BADGE_COLORS[i % BADGE_COLORS.length]
                                 return (
                                 <span
                                     key={i}
                                     className="text-xs px-3 py-2 rounded-full font-semibold flex items-center gap-1.5"
                                     style={{
-                                        border: `1px solid ${C.green}`,
-                                        color: C.green,
-                                        background: `${C.green}20`,
+                                        border: `1px solid ${badgeColor}`,
+                                        color: badgeColor,
+                                        background: `${badgeColor}20`,
                                     }}
                                 >
                                     <Award size={14} />
@@ -2249,11 +2330,36 @@ function CelebrationScreen({
                     className="rounded-2xl p-6 space-y-4"
                     style={{ background: C.surface1, border: `1px solid ${C.border}` }}
                 >
-                    <div className="flex items-center justify-center gap-2">
-                        <span className="text-4xl font-bold" style={{ color: C.amber, fontFamily: "'DM Mono', monospace" }}>
-                            +{result.xpEarned ?? 0}
-                        </span>
-                        <span className="text-lg" style={{ color: C.amber, fontFamily: "'DM Mono', monospace" }}>XP</span>
+                    <div className="flex items-center justify-center gap-4">
+                        {/* XP circle */}
+                        <div
+                            className="flex-none w-16 h-16 rounded-full flex flex-col items-center justify-center"
+                            style={{
+                                background: `radial-gradient(circle at 40% 35%, ${C.amber}22, ${C.surface1})`,
+                                border: `1.5px solid ${C.amber}55`,
+                                boxShadow: `0 0 18px ${C.amber}30, inset 0 0 12px ${C.amber}10`,
+                            }}
+                        >
+                            <span className="text-lg font-bold leading-none" style={{ color: C.amber, fontFamily: "'DM Mono', monospace" }}>
+                                +{result.xpEarned ?? 0}
+                            </span>
+                            <span className="text-[9px] tracking-widest uppercase font-semibold" style={{ color: `${C.amber}90` }}>
+                                XP
+                            </span>
+                        </div>
+                        {result.badgeEarned && (
+                            <div className="space-y-0.5 text-left">
+                                <p className="text-[10px] tracking-[0.2em] uppercase font-semibold" style={{ color: C.green }}>
+                                    ¡Obtuviste tu insignia!
+                                </p>
+                                <h2
+                                    className="text-2xl font-bold leading-tight"
+                                    style={{ fontFamily: "'American Typewriter', Georgia, serif", color: C.text }}
+                                >
+                                    {result.badgeEarned}
+                                </h2>
+                            </div>
+                        )}
                     </div>
 
                     {(result.streakBonus ?? 0) > 0 && (
@@ -2271,14 +2377,6 @@ function CelebrationScreen({
                         </p>
                     )}
 
-                    {result.badgeEarned && (
-                        <div
-                            className="rounded-lg px-4 py-2 text-sm"
-                            style={{ background: C.green + '15', color: C.green }}
-                        >
-                            <Award size={14} className="inline mr-1" /> ¡Obtuviste tu insignia "{result.badgeEarned}"!
-                        </div>
-                    )}
                 </div>
 
                 <div className="space-y-3">
