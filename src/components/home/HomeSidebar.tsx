@@ -51,7 +51,14 @@ export const HomeSidebar = ({ activeTab, dark = false }: HomeSidebarProps) => {
                         dark={dark}
                     />
                     {/* ///////Ocualtat/////// */}
-                    {['test', 'worldtest1', 'worldtest2'].includes(user?.membership ?? '') && (
+                    {/* <SidebarItem
+                        icon={Compass}
+                        label="Mi Viaje"
+                        active={activeTab === 'Mi Viaje'}
+                        // disabled={true}
+                        onClick={() => navigate('/journey')}
+                    /> */}
+                    {user?.membership === 'test' && (
                         <SidebarItem
                             icon={Globe}
                             label="Mundos & Retos"
