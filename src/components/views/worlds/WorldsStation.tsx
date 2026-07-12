@@ -4,19 +4,9 @@ import { Sparkles, Award, Flame } from 'lucide-react'
 import { journeyApi } from '../../../services/journey'
 import type { Block, BlockInteractResult, JourneyDetailsResponse, Station } from '../../../types/journey'
 
-const C = {
-    bg:       '#231F20',
-    surface1: '#1E1A1B',
-    surface2: '#252020',
-    text:     '#F5F0E8',
-    textMuted:'#A8A29E',
-    red:      '#EE2A28',
-    amber:    '#EF9F27',
-    green:    '#52B788',
-    border:   '#333330',
-}
-
-const BADGE_COLORS = ['#52B788', '#5B9BF7', '#E8C547', '#B57BEE', '#818CF8', '#3FC6D8', '#F4669B']
+import { C } from '../../../styles/colors'
+import WorldsRightSidebar from './WorldsRightSidebar'
+import { HomeSidebar } from '../../home/HomeSidebar'
 
 
 const BLOCK_LABELS: Record<string, string> = {
@@ -410,10 +400,11 @@ export default function WorldsStation() {
         : earnedEligibleCount * xpPerBlock
 
     return (
+        <div className="flex" style={{ background: C.bg, color: C.text, fontFamily: 'Montserrat, sans-serif' }}>
+        <HomeSidebar activeTab="Mundos" dark />
         <div
             ref={topRef}
-            className="min-h-screen flex flex-col"
-            style={{ background: C.bg, color: C.text, fontFamily: 'Montserrat, sans-serif' }}
+            className="flex-1 flex flex-col min-h-screen"
         >
             {/* Exit warning popup */}
             {showExitWarning && (
@@ -576,6 +567,8 @@ export default function WorldsStation() {
                     />
                 ) : null}
             </div>
+        </div>
+        <WorldsRightSidebar mode="journey" journeyTitle={data?.journey.title} />
         </div>
     )
 }
@@ -2220,23 +2213,20 @@ function WorldCompletionScreen({
                             Insignias ganadas
                         </p>
                         <div className="flex flex-wrap justify-center gap-2">
-                            {badges.map((b, i) => {
-                                const badgeColor = BADGE_COLORS[i % BADGE_COLORS.length]
-                                return (
+                            {badges.map((b, i) => (
                                 <span
                                     key={i}
                                     className="text-xs px-3 py-2 rounded-full font-semibold flex items-center gap-1.5"
                                     style={{
-                                        border: `1px solid ${badgeColor}`,
-                                        color: badgeColor,
-                                        background: `${badgeColor}20`,
+                                        border: `1px solid ${C.green}`,
+                                        color: C.green,
+                                        background: `${C.green}20`,
                                     }}
                                 >
                                     <Award size={14} />
                                     {b}
                                 </span>
-                                )
-                            })}
+                            ))}
                         </div>
                     </div>
                 )}

@@ -4,19 +4,8 @@ import { journeyApi } from '../../../services/journey'
 import type { Area, Journey, UserJourneyProgress } from '../../../types/journey'
 import { useAuth } from '../../../store/useAuth'
 import { HomeSidebar } from '../../home/HomeSidebar'
-
-const C = {
-    bg:       '#231F20',
-    surface1: '#1E1A1B',
-    surface2: '#252020',
-    text:     '#F5F0E8',
-    textMuted:'#A8A29E',
-    red:      '#EE2A28',
-    amber:    '#EF9F27',
-    green:    '#52B788',
-    border:   '#333330',
-    forest: '#1B4332',
-}
+import { C } from '../../../styles/colors'
+import WorldsRightSidebar from './WorldsRightSidebar'
 
 function parseInline(text: string): React.ReactNode[] {
     const parts = text.split(/(\*\*_[^_*]+_\*\*|_\*\*[^_*]+\*\*_|\*\*[^*]+\*\*|_[^_]+_)/g)
@@ -193,10 +182,12 @@ export default function WorldsHome() {
                             const xpEarned    = userJourney?.totalXpEarned ?? 0
                             const xpMax       = totalXpMax(journey)
                             const progress    = xpMax > 0 ? Math.round((xpEarned / xpMax) * 100) : 0
-                            const worldTitle  = journey.worlds?.[0]?.title ?? 'Mundo 1'
-                            const numDays     = 7
-                            const ctaLabel    = isCompleted ? 'Ver mi historia' : isStarted ? 'Continuar mi viaje' : 'Comenzar mi viaje'
-                            const stations    = totalStations(journey)
+                            const worldTitle    = journey.worlds?.[0]?.title ?? 'Mundo 1'
+                            const ctaLabel      = isCompleted ? 'Ver mi historia' : isStarted ? 'Continuar mi viaje' : 'Comenzar mi viaje'
+                            const stations      = totalStations(journey)
+                            const totalBadges   = (journey.worlds ?? []).reduce((s, w) =>
+                                s + (w.stations ?? []).filter((st: any) => st.badgeName).length, 0)
+                            const earnedBadges  = userJourney?.earnedBadges?.length ?? 0
 
                             return (
                                 <div
@@ -270,8 +261,8 @@ export default function WorldsHome() {
                                             style={{ border: '1px solid #6B6560' }}
                                         >
                                             <StatCell value={String(stations)} label="estaciones" />
-                                            <StatCell value={String(numDays)} label="días" />
-                                            <StatCell value={String(xpMax)} label="XP máx" amber />
+                                            <StatCell value={`${earnedBadges}/${totalBadges}`} label="insignias" />
+                                            <StatCell value={String(xpMax)} label="XP máx" color={C.green} />
                                         </div>
                                     </div>
 
@@ -403,7 +394,7 @@ export default function WorldsHome() {
             })()}
 
             {/* Botones de navegación */}
-            <div className="fixed bottom-16 left-1/2 md:left-[calc(50%+8rem)] -translate-x-1/2 z-50 flex flex-row gap-3">
+            <div className="fixed bottom-16 left-1/2 md:left-[calc(50%-2rem)] -translate-x-1/2 z-50 flex flex-row gap-3">
                 {currentIdx > 0 && (
                     <button
                         onClick={() => goTo(currentIdx - 1)}
@@ -429,16 +420,20 @@ export default function WorldsHome() {
                     </button>
                 )}
             </div>
+
+            {/* Right sidebar (desktop only) */}
+            <WorldsRightSidebar mode="home" />
+
         </div>
     )
 }
 
-function StatCell({ value, label, amber }: { value: string; label: string; amber?: boolean }) {
+function StatCell({ value, label, color }: { value: string; label: string; color?: string }) {
     return (
         <div className="py-4 flex flex-col items-center gap-1">
             <span
                 className="text-xl font-bold"
-                style={{ fontFamily: "'DM Mono', monospace", color: amber ? C.amber : C.text }}
+                style={{ fontFamily: "'DM Mono', monospace", color: color || C.text }}
             >
                 {value}
             </span>

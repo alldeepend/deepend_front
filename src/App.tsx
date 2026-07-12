@@ -23,6 +23,7 @@ import WorldsRoute from './components/shared/WorldsRoute';
 import WorldsHome from './components/views/worlds/WorldsHome';
 import WorldsJourney from './components/views/worlds/WorldsJourney';
 import WorldsStation from './components/views/worlds/WorldsStation';
+import ArchetypeTest from './components/views/ArchetypeTest';
 
 function App() {
     const host = window.location.hostname;
@@ -135,6 +136,8 @@ function App() {
                     </WorldsRoute>
                 } />
 
+
+<Route path="/test" element={<ArchetypeTest />} />
 
 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

@@ -3,6 +3,9 @@ import { useNavigate, useParams } from 'react-router'
 import { Lock, Award } from 'lucide-react'
 import { journeyApi } from '../../../services/journey'
 import type { JourneyDetailsResponse, StationProgress } from '../../../types/journey'
+import { C } from '../../../styles/colors'
+import WorldsRightSidebar from './WorldsRightSidebar'
+import { HomeSidebar } from '../../home/HomeSidebar'
 
 function PinIcon({ color, size = 32 }: { color: string; size?: number }) {
     return (
@@ -11,18 +14,6 @@ function PinIcon({ color, size = 32 }: { color: string; size?: number }) {
             <circle cx="12" cy="11" r="3.5" fill="white" />
         </svg>
     )
-}
-
-const C = {
-    bg:       '#231F20',
-    surface1: '#1E1A1B',
-    surface2: '#252020',
-    text:     '#F5F0E8',
-    textMuted:'#A8A29E',
-    red:      '#EE2A28',
-    amber:    '#EF9F27',
-    green:    '#52B788',
-    border:   '#333330',
 }
 
 export default function WorldsJourney() {
@@ -97,9 +88,11 @@ export default function WorldsJourney() {
 
     return (
         <div
-            className="min-h-screen flex flex-col"
+            className="flex min-h-screen"
             style={{ background: C.bg, color: C.text, fontFamily: 'Montserrat, sans-serif' }}
         >
+        <HomeSidebar activeTab="Mundos" dark />
+        <div className="flex-1 flex flex-col">
             {/* Top bar con banner */}
             <div
                 className="px-6 pt-8 pb-4 relative overflow-hidden bg-center md:bg-[center_40%]"
@@ -299,6 +292,8 @@ export default function WorldsJourney() {
                     </p>
                 </div>
             </div>
+        </div>
+        <WorldsRightSidebar mode="journey" journeyTitle={journey.title} />
         </div>
     )
 }
