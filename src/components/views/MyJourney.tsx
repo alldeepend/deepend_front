@@ -5,6 +5,7 @@ import { HomeSidebar } from '../home/HomeSidebar';
 import Header from '../../components/shared/Header';
 import { journeyApi } from '../../services/journey';
 import type { JourneyDetailsResponse, Area } from '../../types/journey';
+import { C } from '../../styles/colors';
 
 export default function MyJourney() {
     const navigate = useNavigate();
@@ -57,7 +58,7 @@ export default function MyJourney() {
     };
 
     return (
-        <div className="flex flex-col md:flex-row h-screen bg-slate-50 font-sans overflow-hidden">
+        <div className="flex flex-col md:flex-row h-screen font-sans overflow-hidden" style={{ background: C.bg }}>
             <div className="md:hidden w-full">
                 <Header />
             </div>
@@ -71,50 +72,51 @@ export default function MyJourney() {
                         {viewMode === 'areas' && (
                             <>
                                 <div className="mb-8">
-                                    <h2 className="text-3xl font-light text-slate-800">Mis Viajes</h2>
-                                    <p className="text-slate-500 mt-2">Selecciona un área para comenzar o continuar tu recorrido.</p>
+                                    <h2 className="text-3xl font-light" style={{ color: C.text }}>Mis Viajes</h2>
+                                    <p className="mt-2" style={{ color: C.textMuted }}>Selecciona un área para comenzar o continuar tu recorrido.</p>
                                 </div>
 
                                 {loading ? (
                                     <div className="flex justify-center items-center h-64">
-                                        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+                                        <Loader2 className="w-8 h-8 animate-spin" style={{ color: C.green }} />
                                     </div>
                                 ) : areasData.length === 0 ? (
-                                    <div className="text-center py-12 bg-white rounded-2xl border border-slate-200">
-                                        <p className="text-slate-500">Aún no tienes áreas disponibles.</p>
+                                    <div className="text-center py-12 rounded-2xl border" style={{ background: C.surface1, borderColor: C.border }}>
+                                        <p style={{ color: C.textMuted }}>Aún no tienes áreas disponibles.</p>
                                     </div>
                                 ) : (
                                     <div className="space-y-12">
                                         {areasData.map(area => (
                                             <div key={area.id} className="space-y-6">
-                                                <div className="flex items-center gap-3 border-b border-slate-200 pb-2">
-                                                    <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600">
+                                                <div className="flex items-center gap-3 border-b pb-2" style={{ borderColor: C.border }}>
+                                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: C.forest, color: C.green }}>
                                                         <MapIcon size={18} />
                                                     </div>
-                                                    <h3 className="text-2xl font-bold text-slate-800 capitalize">{area.name}</h3>
+                                                    <h3 className="text-2xl font-bold capitalize" style={{ color: C.text }}>{area.name}</h3>
                                                 </div>
                                                 
                                                 {area.journeys.length === 0 ? (
-                                                    <p className="text-slate-400 italic text-sm">No hay viajes en esta área.</p>
+                                                    <p className="italic text-sm" style={{ color: C.label }}>No hay viajes en esta área.</p>
                                                 ) : (
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                                         {area.journeys.map(journey => (
-                                                            <div 
+                                                            <div
                                                                 key={journey.id}
                                                                 onClick={() => handleSelectJourney(journey.id)}
-                                                                className="bg-white group cursor-pointer hover:-translate-y-1 hover:shadow-xl transition-all duration-300 rounded-2xl border border-slate-200 overflow-hidden flex flex-col"
+                                                                className="group cursor-pointer hover:-translate-y-1 hover:shadow-xl transition-all duration-300 rounded-2xl border overflow-hidden flex flex-col"
+                                                                style={{ background: C.surface1, borderColor: C.border }}
                                                             >
-                                                                <div className="h-2 bg-emerald-500 w-full relative overflow-hidden">
+                                                                <div className="h-2 w-full relative overflow-hidden" style={{ background: C.green }}>
                                                                     <div className="absolute inset-0 bg-white/20 w-1/3 group-hover:translate-x-[300%] transition-transform duration-1000 ease-in-out"></div>
                                                                 </div>
                                                                 <div className="p-6 flex-1 flex flex-col">
-                                                                    <h4 className="text-xl font-bold text-slate-800 mb-2">{journey.title}</h4>
-                                                                    <p className="text-slate-500 text-sm mb-6 flex-1">{journey.description || 'Comienza esta increíble trayectoria.'}</p>
-                                                                    <div className="flex justify-between items-center mt-auto pt-4 border-t border-slate-50">
-                                                                        <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">
+                                                                    <h4 className="text-xl font-bold mb-2" style={{ color: C.text }}>{journey.title}</h4>
+                                                                    <p className="text-sm mb-6 flex-1" style={{ color: C.textMuted }}>{journey.description || 'Comienza esta increíble trayectoria.'}</p>
+                                                                    <div className="flex justify-between items-center mt-auto pt-4 border-t" style={{ borderColor: C.border }}>
+                                                                        <span className="text-xs font-semibold px-3 py-1 rounded-full" style={{ color: C.green, background: C.forest }}>
                                                                             {journey.isActive ? 'Disponible' : 'Próximamente'}
                                                                         </span>
-                                                                        <div className="text-slate-300 group-hover:text-emerald-500 transition-colors">
+                                                                        <div style={{ color: C.border }} className="group-hover:opacity-80 transition-opacity">
                                                                             <ChevronRight size={20} />
                                                                         </div>
                                                                     </div>
@@ -136,7 +138,7 @@ export default function MyJourney() {
                                 <div className="mb-8">
                                     <button
                                         onClick={handleBackToAreas}
-                                        className="flex items-center text-slate-400 text-sm mb-2 hover:text-slate-600 transition-colors group"
+                                        className="flex items-center text-sm mb-2 transition-colors group" style={{ color: C.label }}
                                     >
                                         <ArrowLeft size={16} className="mr-1 group-hover:-translate-x-1 transition-transform" />
                                         Volver a Mis Viajes
@@ -144,43 +146,43 @@ export default function MyJourney() {
                                     
                                     {journeyData && (
                                         <>
-                                            <h2 className="text-3xl font-light text-slate-800">{journeyData.journey.title}</h2>
-                                            <p className="text-slate-500 mt-2">{journeyData.journey.description}</p>
+                                            <h2 className="text-3xl font-light" style={{ color: C.text }}>{journeyData.journey.title}</h2>
+                                            <p className="mt-2" style={{ color: C.textMuted }}>{journeyData.journey.description}</p>
                                         </>
                                     )}
                                 </div>
 
                                 {loadingMap ? (
                                     <div className="flex justify-center items-center h-64">
-                                        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+                                        <Loader2 className="w-8 h-8 animate-spin" style={{ color: C.green }} />
                                     </div>
                                 ) : !journeyData ? (
-                                    <div className="text-center py-12 bg-white rounded-2xl border border-slate-200">
-                                        <p className="text-slate-500">Error al cargar el mapa.</p>
+                                    <div className="text-center py-12 rounded-2xl border" style={{ background: C.surface1, borderColor: C.border }}>
+                                        <p style={{ color: C.textMuted }}>Error al cargar el mapa.</p>
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                                         {/* Left Column - Passport Card */}
                                         <div className="lg:col-span-4">
-                                            <div className="bg-slate-900 rounded-2xl p-8 text-white shadow-xl shadow-slate-200 lg:sticky lg:top-8">
+                                            <div className="rounded-2xl p-8 text-white shadow-xl lg:sticky lg:top-8" style={{ background: C.bgDeep }}>
                                                 <div className="mb-8">
-                                                    <h3 className="text-xl font-bold mb-1">Pasaporte DeepEnd</h3>
-                                                    <p className="text-slate-400 text-sm">Progreso Global</p>
+                                                    <h3 className="text-xl font-bold mb-1" style={{ color: C.text }}>Pasaporte DeepEnd</h3>
+                                                    <p className="text-sm" style={{ color: C.label }}>Progreso Global</p>
                                                 </div>
-                                                <div className="w-full bg-slate-800 rounded-full h-3 mb-2">
-                                                    <div className="bg-emerald-500 h-3 rounded-full w-[10%] shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
+                                                <div className="w-full rounded-full h-3 mb-2" style={{ background: C.surface3 }}>
+                                                    <div className="h-3 rounded-full w-[10%]" style={{ background: C.green, boxShadow: `0 0 10px ${C.green}80` }}></div>
                                                 </div>
-                                                <p className="text-[10px] text-slate-500 text-right">Mundo 1 en progreso</p>
+                                                <p className="text-[10px] text-right" style={{ color: C.label }}>Mundo 1 en progreso</p>
                                             </div>
                                         </div>
 
                                         {/* Right Column - Map */}
                                         <div className="lg:col-span-8">
-                                            <h3 className="text-lg font-bold text-slate-800 mb-8 px-4">Mapa de Mundos</h3>
+                                            <h3 className="text-lg font-bold mb-8 px-4" style={{ color: C.text }}>Mapa de Mundos</h3>
 
                                             <div className="relative pl-4">
                                                 {/* Vertical Line */}
-                                                <div className="absolute left-[27px] top-4 bottom-0 w-0.5 bg-slate-100"></div>
+                                                <div className="absolute left-[27px] top-4 bottom-0 w-0.5" style={{ background: C.border }}></div>
 
                                                 {journeyData.journey.worlds.map((world, idx) => {
                                                     const status = getWorldStatus(idx);
@@ -188,15 +190,15 @@ export default function MyJourney() {
                                                     if (status === 'locked') {
                                                         return (
                                                             <div key={world.id} className="relative flex gap-8 mb-12">
-                                                                <div className="relative z-10 flex-shrink-0 w-6 h-6 rounded-full bg-white border-2 border-slate-200 mt-1 flex items-center justify-center">
-                                                                    <div className="w-1.5 h-1.5 bg-slate-300 rounded-full"></div>
+                                                                <div className="relative z-10 flex-shrink-0 w-6 h-6 rounded-full border-2 mt-1 flex items-center justify-center" style={{ background: C.surface2, borderColor: C.border }}>
+                                                                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: C.label }}></div>
                                                                 </div>
                                                                 <div className="flex-1 pt-0.5">
                                                                     <div className="flex items-center gap-2 mb-1">
-                                                                        <h4 className="text-lg font-bold text-slate-400">{world.title}</h4>
-                                                                        <Lock size={14} className="text-slate-400" />
+                                                                        <h4 className="text-lg font-bold" style={{ color: C.label }}>{world.title}</h4>
+                                                                        <Lock size={14} style={{ color: C.label }} />
                                                                     </div>
-                                                                    <p className="text-sm text-slate-400">Desbloquea al completar mundo anterior</p>
+                                                                    <p className="text-sm" style={{ color: C.label }}>Desbloquea al completar mundo anterior</p>
                                                                 </div>
                                                             </div>
                                                         );
@@ -205,9 +207,9 @@ export default function MyJourney() {
                                                     if (status === 'completed') {
                                                         return (
                                                             <div key={world.id} className="relative flex gap-8 mb-12 opacity-60 hover:opacity-100 transition-opacity">
-                                                                <div className="relative z-10 flex-shrink-0 w-6 h-6 rounded-full bg-slate-200 border-4 border-white shadow-sm mt-1"></div>
+                                                                <div className="relative z-10 flex-shrink-0 w-6 h-6 rounded-full border-4 shadow-sm mt-1" style={{ background: C.surface3, borderColor: C.surface1 }}></div>
                                                                 <div className="flex-1 pt-0.5">
-                                                                    <h4 className="text-lg font-bold text-slate-700">{world.title}</h4>
+                                                                    <h4 className="text-lg font-bold" style={{ color: C.textSec }}>{world.title}</h4>
                                                                 </div>
                                                             </div>
                                                         );
@@ -216,34 +218,35 @@ export default function MyJourney() {
                                                     // ACTIVE
                                                     return (
                                                         <div key={world.id} className="relative flex gap-8 mb-12">
-                                                            <div className="relative z-10 flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500 border-4 border-emerald-100 shadow-lg shadow-emerald-100 mt-1 animate-pulse"></div>
+                                                            <div className="relative z-10 flex-shrink-0 w-6 h-6 rounded-full border-4 shadow-lg mt-1 animate-pulse" style={{ background: C.green, borderColor: C.forest }}></div>
                                                             <div className="flex-1">
-                                                                <div className="bg-white border border-emerald-100 rounded-2xl p-6 shadow-sm relative overflow-hidden">
-                                                                    <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-50 rounded-bl-full opacity-50 -mr-4 -mt-4"></div>
-                                                                    
+                                                                <div className="border rounded-2xl p-6 shadow-sm relative overflow-hidden" style={{ background: C.surface1, borderColor: C.topo }}>
+                                                                    <div className="absolute top-0 right-0 w-20 h-20 rounded-bl-full opacity-20 -mr-4 -mt-4" style={{ background: C.forest }}></div>
+
                                                                     <div className="flex justify-between items-start mb-2 relative z-10">
-                                                                        <h4 className="text-xl font-bold text-slate-800">{world.title}</h4>
-                                                                        <span className="bg-emerald-50 text-emerald-600 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide">Actual</span>
+                                                                        <h4 className="text-xl font-bold" style={{ color: C.text }}>{world.title}</h4>
+                                                                        <span className="text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide" style={{ background: C.forest, color: C.green }}>Actual</span>
                                                                     </div>
 
-                                                                    <p className="text-slate-500 text-sm mb-6">{world.description || 'Enfocado en avanzar tu viaje personal.'}</p>
+                                                                    <p className="text-sm mb-6" style={{ color: C.textMuted }}>{world.description || 'Enfocado en avanzar tu viaje personal.'}</p>
 
                                                                     <div className="grid grid-cols-2 gap-4 mb-6">
-                                                                        <div className="bg-slate-50 rounded-xl p-4 text-center">
-                                                                            <Target className="w-5 h-5 text-slate-400 mx-auto mb-2" />
-                                                                            <span className="block text-2xl font-bold text-slate-800">{world.stations.length}</span>
-                                                                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Estaciones</span>
+                                                                        <div className="rounded-xl p-4 text-center" style={{ background: C.surface2 }}>
+                                                                            <Target className="w-5 h-5 mx-auto mb-2" style={{ color: C.label }} />
+                                                                            <span className="block text-2xl font-bold" style={{ color: C.text }}>{world.stations.length}</span>
+                                                                            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: C.label }}>Estaciones</span>
                                                                         </div>
-                                                                        <div className="bg-slate-50 rounded-xl p-4 text-center">
-                                                                            <Trophy className="w-5 h-5 text-slate-400 mx-auto mb-2" />
-                                                                            <span className="block text-2xl font-bold text-slate-800">-</span>
-                                                                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Insignias</span>
+                                                                        <div className="rounded-xl p-4 text-center" style={{ background: C.surface2 }}>
+                                                                            <Trophy className="w-5 h-5 mx-auto mb-2" style={{ color: C.label }} />
+                                                                            <span className="block text-2xl font-bold" style={{ color: C.text }}>-</span>
+                                                                            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: C.label }}>Insignias</span>
                                                                         </div>
                                                                     </div>
 
-                                                                    <button 
+                                                                    <button
                                                                         onClick={() => navigate(`/journey/${journeyData.journey.id}/world/${world.id}`)}
-                                                                        className="w-full bg-slate-900 text-white font-medium py-3 rounded-xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200">
+                                                                        className="w-full text-white font-medium py-3 rounded-xl transition-colors shadow-lg"
+                                                                        style={{ background: C.bgDeep }}>
                                                                         Continuar Exploración
                                                                     </button>
                                                                 </div>
@@ -253,7 +256,7 @@ export default function MyJourney() {
                                                 })}
 
                                                 {journeyData.journey.worlds.length === 0 && (
-                                                    <p className="text-slate-500 pl-8">Este viaje aún no tiene mundos configurados.</p>
+                                                    <p className="pl-8" style={{ color: C.textMuted }}>Este viaje aún no tiene mundos configurados.</p>
                                                 )}
                                             </div>
                                         </div>

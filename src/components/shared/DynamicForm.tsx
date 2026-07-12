@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, ChevronDown, Check } from 'lucide-react';
 import ConfirmModal from './ConfirmModal';
+import { C } from '../../styles/colors';
 
 interface Field {
     id: string;
@@ -219,8 +220,8 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
             }}
         >
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-slate-800">Completa el formulario</h2>
-                <button type="button" onClick={onCancel} className="text-slate-400 hover:text-slate-600">
+                <h2 className="text-xl font-bold" style={{ color: C.text }}>Completa el formulario</h2>
+                <button type="button" onClick={onCancel} style={{ color: C.label }}>
                     <X size={24} />
                 </button>
             </div>
@@ -233,12 +234,14 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
                         return (
                             <div key={field.id} className="mt-6 mb-2">
                                 <h3
-                                    className="text-md text-slate-800 whitespace-pre-wrap rich-text-content"
+                                    className="text-md whitespace-pre-wrap rich-text-content"
+                                    style={{ color: C.text }}
                                     dangerouslySetInnerHTML={{ __html: field.label }}
                                 />
                                 {field.help_text && (
                                     <div
-                                        className="text-sm text-slate-500 mt-1 rich-text-content"
+                                        className="text-sm mt-1 rich-text-content"
+                                        style={{ color: C.textMuted }}
                                         dangerouslySetInnerHTML={{ __html: field.help_text.replaceAll('&nbsp;', ' ') }}
                                     />
                                 )}
@@ -248,7 +251,7 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
 
                     return (
                         <div key={field.id} className="flex flex-col">
-                            <label className="text-sm font-bold text-slate-700 mb-1 flex items-center whitespace-pre-wrap">
+                            <label className="text-sm font-bold mb-1 flex items-center whitespace-pre-wrap" style={{ color: C.textSec }}>
                                 {field.label}
                                 {field.required && <span className="text-red-500 ml-1">*</span>}
                             </label>
@@ -264,7 +267,8 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
                                     type={field.type}
                                     value={formData[field.id] || ''}
                                     onChange={(e) => handleChange(field.id, e.target.value)}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                                    className="w-full px-4 py-3 rounded-xl border focus:ring-2 outline-none transition-all"
+                                    style={{ background: C.surface2, borderColor: C.border, color: C.text }}
                                     placeholder="Escribe tu respuesta aquí..."
                                 />
                             )}
@@ -274,7 +278,8 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
                                     <select
                                         value={formData[field.id] || ''}
                                         onChange={(e) => handleChange(field.id, e.target.value)}
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all appearance-none bg-white"
+                                        className="w-full px-4 py-3 rounded-xl border outline-none transition-all appearance-none"
+                                        style={{ background: C.surface2, borderColor: C.border, color: C.text }}
                                     >
                                         <option value="" disabled>Selecciona una opción</option>
                                         {field.options?.map((opt: any) => {
@@ -283,7 +288,7 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
                                             return <option key={value} value={value}>{label}</option>;
                                         })}
                                     </select>
-                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={20} />
+                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: C.label }} size={20} />
                                 </div>
                             )}
 
@@ -297,13 +302,14 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
                                             <div
                                                 key={value}
                                                 onClick={() => handleMultiSelect(field.id, value, field.validation?.max_selection)}
-                                                className={`flex items-center p-3 rounded-xl border cursor-pointer transition-all ${isSelected
-                                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                                                    : 'bg-white border-slate-200 hover:border-emerald-200'
-                                                    }`}
+                                                className="flex items-center p-3 rounded-xl border cursor-pointer transition-all"
+                                            style={isSelected
+                                                ? { background: C.forest, borderColor: C.green, color: C.green }
+                                                : { background: C.surface1, borderColor: C.border, color: C.text }}
                                             >
-                                                <div className={`w-5 h-5 rounded border flex items-center justify-center mr-3 transition-colors ${isSelected ? 'bg-emerald-500 border-emerald-500' : 'bg-white border-slate-300'
-                                                    }`}>
+                                                <div className="w-5 h-5 rounded border flex items-center justify-center mr-3 transition-colors"
+                                                    style={isSelected ? { background: C.green, borderColor: C.green } : { background: C.surface2, borderColor: C.border }}
+                                                >
                                                     {isSelected && <Check size={14} className="text-white" />}
                                                 </div>
                                                 <span className="text-sm font-medium">{label}</span>
@@ -315,7 +321,7 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
 
                             {field.type === 'range' && (
                                 <div className="px-2">
-                                    <div className="flex justify-between text-xs text-slate-400 font-bold uppercase tracking-wider mb-2">
+                                    <div className="flex justify-between text-xs font-bold uppercase tracking-wider mb-2" style={{ color: C.label }}>
                                         <span>{field.labels?.min || field.min}</span>
                                         <span>{field.labels?.max || field.max}</span>
                                     </div>
@@ -326,9 +332,10 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
                                         step={field.step || 1}
                                         value={formData[field.id] || Math.ceil((field.max || 10) / 2)}
                                         onChange={(e) => handleChange(field.id, parseInt(e.target.value))}
-                                        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                                        className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                                        style={{ background: C.surface3 }}
                                     />
-                                    <div className="text-center font-bold text-emerald-600 mt-2 text-lg">
+                                    <div className="text-center font-bold mt-2 text-lg" style={{ color: C.green }}>
                                         {formData[field.id] || Math.ceil((field.max || 10) / 2)}
                                     </div>
                                 </div>
@@ -342,18 +349,20 @@ export default function DynamicForm({ schema, onSubmit, onCancel, initialData = 
                 })}
             </div>
 
-            <div className="flex justify-end gap-4 pt-4 border-t border-slate-100">
+            <div className="flex justify-end gap-4 pt-4 border-t" style={{ borderColor: C.border }}>
                 <button
                     type="button"
                     onClick={onCancel}
-                    className="px-6 py-2 rounded-lg text-slate-500 font-medium hover:bg-slate-100 transition-colors"
+                    className="px-6 py-2 rounded-lg font-medium transition-colors"
+                    style={{ color: C.textMuted }}
                     disabled={isSubmitting}
                 >
                     Cancelar
                 </button>
                 <button
                     type="submit"
-                    className="px-6 py-2 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-200 disabled:opacity-50"
+                    className="px-6 py-2 rounded-lg text-white font-bold transition-colors disabled:opacity-50"
+                    style={{ background: C.green }}
                     disabled={isSubmitting}
                 >
                     {isSubmitting ? 'Guardando...' : 'Enviar Respuestas'}

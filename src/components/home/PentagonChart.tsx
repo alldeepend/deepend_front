@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { C } from '../../styles/colors';
 import { ChevronDown, ChevronUp, CircleQuestionMark, X } from 'lucide-react';
 
 
@@ -34,12 +35,12 @@ export const PentagonChart = ({ data = [
         return (
             <div className="flex flex-col items-center">
                 <svg viewBox={`0 0 ${size} ${size}`} className="w-28 h-28 drop-shadow-sm">
-                    <polygon points={outerPoints} fill="none" stroke="#52B788" strokeWidth="0.5" className="opacity-30" />
+                    <polygon points={outerPoints} fill="none" stroke={C.green} strokeWidth="0.5" className="opacity-30" />
                     {[...Array(sides)].map((_, i) => {
                         const [px, py] = getPoint(10, i).split(',');
-                        return <line key={i} x1={center} y1={center} x2={px} y2={py} stroke="#52B788" strokeWidth="0.2" className="opacity-20" />;
+                        return <line key={i} x1={center} y1={center} x2={px} y2={py} stroke={C.green} strokeWidth="0.2" className="opacity-20" />;
                     })}
-                    <polygon points={dataPoints} fill="#52B788" fillOpacity="0.25" stroke="#52B788" strokeWidth="2" strokeLinejoin="round" className="transition-all duration-500 ease-in-out" />
+                    <polygon points={dataPoints} fill={C.green} fillOpacity="0.25" stroke={C.green} strokeWidth="2" strokeLinejoin="round" className="transition-all duration-500 ease-in-out" />
                 </svg>
             </div>
         );
@@ -52,7 +53,7 @@ export const PentagonChart = ({ data = [
                     <polygon
                         points={outerPoints}
                         fill="none"
-                        stroke="#52B788"
+                        stroke={C.green}
                         strokeWidth="0.5"
                         className="opacity-30"
                     />
@@ -64,7 +65,7 @@ export const PentagonChart = ({ data = [
                                 key={i}
                                 x1={center} y1={center}
                                 x2={px} y2={py}
-                                stroke="#52B788"
+                                stroke={C.green}
                                 strokeWidth="0.2"
                                 className="opacity-20"
                             />
@@ -73,9 +74,9 @@ export const PentagonChart = ({ data = [
 
                     <polygon
                         points={dataPoints}
-                        fill="#52B788"
+                        fill={C.green}
                         fillOpacity="0.25"
-                        stroke="#52B788"
+                        stroke={C.green}
                         strokeWidth="2"
                         strokeLinejoin="round"
                         className="transition-all duration-500 ease-in-out"
@@ -84,16 +85,16 @@ export const PentagonChart = ({ data = [
 
                 </svg>
 
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ color: '#52B788' }}>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ color: C.green }}>
                     <div className="p-2 rounded-full shadow-sm backdrop-blur-sm" style={{ background: '#1E1A1Bcc' }}>
-                        <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#52B788' }}></div>
+                        <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: C.green }}></div>
                     </div>
                 </div>
 
                 <button
                     onClick={(e) => { e.stopPropagation(); setIsInfoOpen(true); }}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap"
-                    style={{ background: '#52B78822', color: '#52B788' }}
+                    style={{ background: `${C.green}22`, color: C.green }}
                 >
                     <CircleQuestionMark size={14} />
                     Entiende tu gráfica
@@ -118,7 +119,7 @@ export const PentagonChart = ({ data = [
                                 <div className="w-6 h-1 rounded-full overflow-hidden" style={{ background: '#333330' }}>
                                     <div
                                         className="h-full rounded-full"
-                                        style={{ width: `${(item.value / 10) * 100}%`, background: '#52B788' }}
+                                        style={{ width: `${(item.value / 10) * 100}%`, background: C.green }}
                                     ></div>
                                 </div>
                                 <span className="font-bold" style={{ color: '#F5F0E8' }}>{item.value}</span>
@@ -148,7 +149,7 @@ export const PentagonChart = ({ data = [
                                     <span><strong style={{ color: '#F5F0E8' }}>7–8</strong> – Áreas estables que funcionan, pero aún pueden crecer.</span>
                                 </li>
                                 <li className="flex items-start gap-3">
-                                    <span className="w-3 h-3 rounded-full mt-1 shrink-0" style={{ background: '#52B788' }}></span>
+                                    <span className="w-3 h-3 rounded-full mt-1 shrink-0" style={{ background: C.red }}></span>
                                     <span><strong style={{ color: '#F5F0E8' }}>9–10</strong> – Áreas alineadas que reflejan hábitos y coherencia.</span>
                                 </li>
                             </ul>

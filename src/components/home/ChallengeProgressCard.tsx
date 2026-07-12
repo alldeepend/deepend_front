@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { C } from '../../styles/colors';
 import { useQuery } from '@tanstack/react-query';
 import { X } from 'lucide-react';
 
@@ -89,10 +90,10 @@ export const ChallengeProgressCard = () => {
     return (
         <>
             <div className="lg:col-span-4 p-6 rounded-2xl shadow-sm border flex flex-col gap-4 relative overflow-hidden" style={{ background: '#1E1A1B', borderColor: '#333330' }}>
-                <div className="absolute top-0 right-0 w-24 h-24 rounded-bl-full -mr-6 -mt-6 opacity-20" style={{ background: '#52B788' }} />
+                <div className="absolute top-0 right-0 w-24 h-24 rounded-bl-full -mr-6 -mt-6 opacity-20" style={{ background: C.red }} />
 
                 <div className="relative z-10">
-                    <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: '#52B788' }}>
+                    <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: C.red }}>
                         Reto Desde Aquí · Semana {weekNumber}
                     </p>
                     <div className="flex items-center gap-2">
@@ -114,11 +115,11 @@ export const ChallengeProgressCard = () => {
 
                 <div className="relative z-10 space-y-3">
                     <div className="flex items-end justify-between">
-                        <span className="text-4xl font-bold" style={{ color: exceeded ? '#52B788' : '#F5F0E8' }}>
+                        <span className="text-4xl font-bold" style={{ color: exceeded ? C.red : '#F5F0E8' }}>
                             {pct}%
                         </span>
                         {exceeded && (
-                            <span className="text-xs font-semibold px-2 py-1 rounded-full mb-1" style={{ color: '#52B788', background: '#52B78822' }}>
+                            <span className="text-xs font-semibold px-2 py-1 rounded-full mb-1" style={{ color: C.red, background: '#EE2A2822' }}>
                                 ¡Meta superada!
                             </span>
                         )}
@@ -127,16 +128,16 @@ export const ChallengeProgressCard = () => {
                     <div className="w-full h-3 rounded-full overflow-hidden" style={{ background: '#252020' }}>
                         <div
                             className="h-full rounded-full transition-all duration-500"
-                            style={{ width: `${barWidth}%`, background: '#52B788' }}
+                            style={{ width: `${barWidth}%`, background: C.red }}
                         />
                     </div>
 
                     <div className="flex justify-between text-sm" style={{ color: '#A8A29E' }}>
                         <span>
-                            <span className="font-semibold" style={{ color: '#52B788' }}>{minutesThisWeek} min</span> registrados
+                            <span className="font-semibold" style={{ color: C.red }}>{minutesThisWeek} min</span> registrados
                         </span>
                         {goalMinutes && (
-                            <span>Meta: <span className="font-semibold" style={{ color: '#52B788' }}>{goalMinutes} min</span></span>
+                            <span>Meta: <span className="font-semibold" style={{ color: C.red }}>{goalMinutes} min</span></span>
                         )}
                     </div>
 
@@ -159,7 +160,7 @@ export const ChallengeProgressCard = () => {
                                     key={i}
                                     className="w-6 h-6 rounded-md text-[10px] font-bold flex items-center justify-center transition-colors"
                                     style={i < (activeDays ?? 0)
-                                        ? { background: '#52B788', color: '#fff' }
+                                        ? { background: C.red, color: '#fff' }
                                         : { background: '#252020', color: '#666' }}
                                 >
                                     {i + 1}
@@ -192,15 +193,15 @@ export const ChallengeProgressCard = () => {
                             <p>Esta tarjeta muestra cómo vas en tu <strong style={{ color: '#F5F0E8' }}>Reto Desde Aquí de 8 semanas</strong>. Todo se reinicia cada lunes.</p>
                             <ul className="space-y-3 mt-2">
                                 <li className="flex items-start gap-3">
-                                    <span className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ background: '#52B788' }}></span>
+                                    <span className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ background: C.red }}></span>
                                     <span><strong style={{ color: '#F5F0E8' }}>Porcentaje</strong> — minutos registrados vs tu meta. Llegar al 100% es el reto. Superarlo, es el extra.</span>
                                 </li>
                                 <li className="flex items-start gap-3">
-                                    <span className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ background: '#52B788' }}></span>
+                                    <span className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ background: C.red }}></span>
                                     <span><strong style={{ color: '#F5F0E8' }}>Min registrados</strong> — suma de todos los minutos de actividad física que registraste esta semana.</span>
                                 </li>
                                 <li className="flex items-start gap-3">
-                                    <span className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ background: '#52B788' }}></span>
+                                    <span className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ background: C.red }}></span>
                                     <span><strong style={{ color: '#F5F0E8' }}>Meta</strong> — los minutos semanales que te comprometiste a mover. Puedes ajustarla cada lunes.</span>
                                 </li>
                                 <li className="flex items-start gap-3">

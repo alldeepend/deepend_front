@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { C } from '../../styles/colors';
 import { useQuery } from '@tanstack/react-query';
 import { Clock, ExternalLink, Calendar, ArrowRight, ChevronLeft, ChevronRight, PlusCircle } from 'lucide-react';
 import { Link } from 'react-router';
@@ -61,7 +62,7 @@ export const RecentActivities = ({ onAddActivity }: RecentActivitiesProps) => {
             <button
                 onClick={onAddActivity}
                 className="inline-flex items-center gap-2 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-opacity hover:opacity-90"
-                style={{ background: '#52B788' }}
+                style={{ background: C.red }}
             >
                 <PlusCircle size={20} />
                 Registrar primera actividad
@@ -79,7 +80,7 @@ export const RecentActivities = ({ onAddActivity }: RecentActivitiesProps) => {
                     <button
                         onClick={onAddActivity}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap"
-                        style={{ background: '#52B78822', color: '#52B788' }}
+                        style={{ background: '#EE2A2822', color: C.red }}
                     >
                         <PlusCircle size={14} />
                         Registrar Actividad
@@ -155,7 +156,7 @@ export const RecentActivities = ({ onAddActivity }: RecentActivitiesProps) => {
                 )}
             </div>
             <div className="flex justify-end pt-4">
-                <Link to="/activities" className="text-sm font-bold flex items-center gap-1 group transition-opacity hover:opacity-80" style={{ color: '#52B788' }}>
+                <Link to="/activities" className="text-sm font-bold flex items-center gap-1 group transition-opacity hover:opacity-80" style={{ color: C.red }}>
                     Ver todas <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                 </Link>
             </div>

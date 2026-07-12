@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { C } from '../../styles/colors';
 import { HomeHeader } from './HomeHeader';
 import { StatsCard } from './StatsCard';
 import { SocialProfileCard } from './SocialProfileCard';
@@ -102,19 +103,19 @@ export const DashboardContent = () => {
             {/* Goal popup — recurrente cada lunes */}
             {goalPopupVisible && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: '#000000b3', backdropFilter: 'blur(4px)' }}>
-                    <div className="rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4 border" style={{ background: '#1E1A1B', borderColor: '#333330' }}>
+                    <div className="rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4 border" style={{ background: C.surface1, borderColor: C.border }}>
                         <div className="text-center">
                             <div className="flex justify-center mb-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#52B788' }}>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: C.red }}>
                                     <circle cx="12" cy="12" r="10"/>
                                     <circle cx="12" cy="12" r="6"/>
                                     <circle cx="12" cy="12" r="2"/>
                                 </svg>
                             </div>
-                            <h3 className="text-lg font-bold" style={{ color: '#F5F0E8', fontFamily: "'American Typewriter', Georgia, serif" }}>
+                            <h3 className="text-lg font-bold" style={{ color: C.text, fontFamily: "'American Typewriter', Georgia, serif" }}>
                                 {modifyingGoal ? 'Ajusta tu meta' : 'Tu meta'}
                             </h3>
-                            <p className="text-sm mt-1" style={{ color: '#A8A29E' }}>
+                            <p className="text-sm mt-1" style={{ color: C.textMuted }}>
                                 {modifyingGoal ? 'Ingresa los minutos que quieres lograr en este bloque' : (() => {
                                     const w = challengePhysical?.weekNumber ?? 1;
                                     const blockStart = Math.floor((w - 1) / 3) * 3 + 1;
@@ -126,23 +127,23 @@ export const DashboardContent = () => {
                         </div>
                         {!modifyingGoal ? (
                             <>
-                                <div className="rounded-xl px-6 py-4 text-center" style={{ background: '#52B78822' }}>
-                                    <span className="text-3xl font-bold" style={{ color: '#52B788' }}>{challengePhysical?.goalMinutes}</span>
-                                    <span className="font-medium ml-1" style={{ color: '#52B788' }}>min</span>
+                                <div className="rounded-xl px-6 py-4 text-center" style={{ background: `${C.red}22` }}>
+                                    <span className="text-3xl font-bold" style={{ color: C.red }}>{challengePhysical?.goalMinutes}</span>
+                                    <span className="font-medium ml-1" style={{ color: C.red }}>min</span>
                                 </div>
                                 <div className="flex gap-3">
                                     <button
                                         onClick={handleConfirmGoal}
                                         disabled={goalMutation.isPending}
                                         className="flex-1 text-white font-semibold py-2.5 rounded-xl transition-opacity hover:opacity-90 disabled:opacity-60"
-                                        style={{ background: '#52B788' }}
+                                        style={{ background: C.red }}
                                     >
                                         ¡Voy con toda!
                                     </button>
                                     <button
                                         onClick={() => setModifyingGoal(true)}
                                         className="flex-1 border font-semibold py-2.5 rounded-xl transition-colors"
-                                        style={{ borderColor: '#333330', color: '#F5F0E8' }}
+                                        style={{ borderColor: C.border, color: C.text }}
                                     >
                                         Quiero ajustarla
                                     </button>
@@ -151,7 +152,7 @@ export const DashboardContent = () => {
                         ) : (
                             <>
                                 <div>
-                                    <label className="block text-sm font-semibold mb-1.5" style={{ color: '#F5F0E8' }}>Nueva meta en minutos</label>
+                                    <label className="block text-sm font-semibold mb-1.5" style={{ color: C.text }}>Nueva meta en minutos</label>
                                     <input
                                         type="number"
                                         min="1"
@@ -159,23 +160,23 @@ export const DashboardContent = () => {
                                         onChange={e => setGoalInput(e.target.value)}
                                         placeholder="Ej: 150 (min)"
                                         className="w-full px-4 py-3 rounded-xl border outline-none focus:ring-2"
-                                        style={{ background: '#252020', borderColor: '#333330', color: '#F5F0E8', ['--tw-ring-color' as any]: '#52B788' }}
+                                        style={{ background: C.surface2, borderColor: C.border, color: C.text, ['--tw-ring-color' as any]: C.red }}
                                     />
-                                    <p className="text-xs mt-1" style={{ color: '#A8A29E' }}>Este valor aplica para las próximas 3 semanas</p>
+                                    <p className="text-xs mt-1" style={{ color: C.textMuted }}>Este valor aplica para las próximas 3 semanas</p>
                                 </div>
                                 <div className="flex gap-3">
                                     <button
                                         onClick={handleConfirmGoal}
                                         disabled={goalMutation.isPending}
                                         className="flex-1 text-white font-semibold py-2.5 rounded-xl transition-opacity hover:opacity-90 disabled:opacity-60"
-                                        style={{ background: '#52B788' }}
+                                        style={{ background: C.red }}
                                     >
                                         {goalMutation.isPending ? 'Guardando...' : 'Guardar meta'}
                                     </button>
                                     <button
                                         onClick={() => setModifyingGoal(false)}
                                         className="flex-1 border font-semibold py-2.5 rounded-xl transition-colors"
-                                        style={{ borderColor: '#333330', color: '#F5F0E8' }}
+                                        style={{ borderColor: C.border, color: C.text }}
                                     >
                                         Cancelar
                                     </button>
@@ -199,14 +200,14 @@ export const DashboardContent = () => {
                     <button
                         onClick={() => setIsRecognitionOpen(true)}
                         className="w-full text-white font-bold py-4 px-6 rounded-2xl shadow-lg hover:scale-[1.01] transition-all flex items-center justify-center gap-3 group"
-                        style={{ background: 'linear-gradient(to right, #52B788, #1B4332)' }}
+                        style={{ background: `linear-gradient(to right, ${C.red}, #7B0000)` }}
                     >
                         <div className="bg-white/20 p-2 rounded-xl group-hover:rotate-12 transition-transform">
                             <Star size={24} className="fill-white" />
                         </div>
                         <div className="text-left">
                             <p className="text-lg leading-tight">Mi Cofre de Reconocimiento</p>
-                            <p className="text-emerald-100 text-xs font-normal">Reconoce lo valioso de tu vida hoy</p>
+                            <p className="text-red-200 text-xs font-normal">Reconoce lo valioso de tu vida hoy</p>
                         </div>
                     </button>
                 </div>

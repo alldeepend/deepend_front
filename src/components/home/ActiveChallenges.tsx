@@ -1,6 +1,7 @@
 import React from 'react';
 import { Wallet, BrainCircuit } from 'lucide-react';
 import { ChallengeCard } from './ChallengeCard';
+import { C } from '../../styles/colors';
 
 import { useNavigate } from 'react-router';
 
@@ -10,10 +11,11 @@ export const ActiveChallenges = () => {
     return (
         <section>
             <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold text-slate-800">Retos Activos</h3>
+                <h3 className="text-xl font-bold" style={{ color: C.text }}>Retos Activos</h3>
                 <button
                     onClick={() => navigate('/challenges')}
-                    className="text-[10px] font-bold text-slate-400 hover:text-emerald-500 tracking-wider cursor-pointer transition-colors"
+                    className="text-[10px] font-bold hover:text-emerald-500 tracking-wider cursor-pointer transition-colors"
+                    style={{ color: C.label }}
                 >
                     VER TODOS
                 </button>
@@ -25,14 +27,16 @@ export const ActiveChallenges = () => {
                     category="Finanzas"
                     title="Auditoría de Gastos Hormiga"
                     subtitle="Identifica 3 fugas de capital esta semana."
-                    colorClass="text-emerald-500 bg-emerald-50"
+                    iconColor={C.green}
+                    iconBg={C.forest}
                 />
                 <ChallengeCard
                     icon={BrainCircuit}
                     category="Mindset"
                     title="Diario de Gratitud"
                     subtitle="Día 5 de 7 completado."
-                    colorClass="text-blue-500 bg-blue-50"
+                    iconColor={C.red}
+                    iconBg={C.surface3}
                 />
             </div>
         </section>

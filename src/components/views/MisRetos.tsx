@@ -5,6 +5,7 @@ import { HomeSidebar } from '../home/HomeSidebar';
 import { useQuery } from '@tanstack/react-query';
 import FinanceDisclaimerModal from '../modals/FinanceDisclaimerModal';
 import { useAuth } from '../../store/useAuth';
+import { C } from '../../styles/colors';
 
 const host = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/api\/?$/, '');
 
@@ -32,25 +33,26 @@ const ChallengeCard = ({ data, onClick }: { data: ChallengeCardData; onClick?: (
     return (
         <div
             onClick={onClick}
-            className={`bg-white border ${isVisuallyLocked ? 'border-slate-100 opacity-70' : 'border-slate-100 cursor-pointer'} rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative flex flex-col h-full`}
+            className={`border ${isVisuallyLocked ? 'opacity-70' : 'cursor-pointer'} rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative flex flex-col h-full`}
+            style={{ background: C.surface1, borderColor: C.border }}
         >
 
             <div className="flex justify-between items-start mb-4">
-                <span className={`text-[10px] font-bold tracking-wider uppercase px-3 py-1 rounded-full ${data.status === 'active' && !data.disclaimerRejected ? 'text-[#ed2629]' : 'text-[#57ba47]'}`}>
+                <span className="text-[10px] font-bold tracking-wider uppercase px-3 py-1 rounded-full" style={{ color: C.label }}>
                     {data.category}
                 </span>
                 {data.status === 'active' && !data.disclaimerRejected ? (
-                    <PlayCircle className={`w-6 h-6 text-[#ed2629] opacity-80 cursor-pointer hover:opacity-100 transition-opacity`} />
+                    <PlayCircle className="w-6 h-6 opacity-80 cursor-pointer hover:opacity-100 transition-opacity" style={{ color: C.textMuted }} />
                 ) : (
-                    <Lock className="w-5 h-5 text-[#57ba47]" />
+                    <Lock className="w-5 h-5" style={{ color: C.label }} />
                 )}
             </div>
 
-            <h3 className={`text-xl font-bold text-slate-800 mb-2 ${isVisuallyLocked ? 'text-slate-400' : ''}`}>
+            <h3 className="text-xl font-bold mb-2" style={{ color: isVisuallyLocked ? C.label : C.text }}>
                 {data.title}
             </h3>
 
-            <p className="text-slate-500 text-sm leading-relaxed mb-8 flex-1">
+            <p className="text-sm leading-relaxed mb-8 flex-1" style={{ color: C.textMuted }}>
                 {data.description}
             </p>
 
@@ -63,7 +65,7 @@ const ChallengeCard = ({ data, onClick }: { data: ChallengeCardData; onClick?: (
                         </span>
                         <span className={`text-xs font-bold ${data.status === 'active' ? 'text-[#ed2629]' : 'text-[#57ba47]'}`}>{data.progress}%</span>
                     </div>
-                    <div className="w-full bg-slate-100 rounded-full h-1.5">
+                    <div className="w-full rounded-full h-1.5" style={{ background: C.surface3 }}>
                         <div
                             className={`h-1.5 rounded-full ${data.status === 'active' ? 'bg-[#ed2629]' : 'bg-[#57ba47]'}`}
                             style={{ width: `${data.progress}%` }}
@@ -71,9 +73,9 @@ const ChallengeCard = ({ data, onClick }: { data: ChallengeCardData; onClick?: (
                     </div>
                 </div>
             ) : (
-                <div className="flex items-center gap-2 pt-2 border-t border-slate-50">
-                    <Lock size={12} className="text-slate-400" />
-                    <span className="text-xs text-slate-400">
+                <div className="flex items-center gap-2 pt-2 border-t" style={{ borderColor: C.border }}>
+                    <Lock size={12} style={{ color: C.label }} />
+                    <span className="text-xs" style={{ color: C.label }}>
                         {data.disclaimerRejected
                             ? "Acceso restringido (Haz clic para habilitar)"
                             : "Desbloquea al completar nivel actual"}
@@ -212,7 +214,7 @@ export default function MisRetos() {
     };
 
     return (
-        <div className="flex flex-col md:flex-row h-screen bg-slate-50 font-sans overflow-hidden">
+        <div className="flex flex-col md:flex-row h-screen font-sans overflow-hidden" style={{ background: C.bg }}>
             <div className="md:hidden w-full">
                 <Header />
             </div>
@@ -228,54 +230,50 @@ export default function MisRetos() {
                             <div>
                                 <button
                                     onClick={() => navigate('/dashboard')}
-                                    className="flex items-center text-slate-400 text-sm mb-2 hover:text-slate-600 transition-colors group"
+                                    className="flex items-center text-sm mb-2 transition-colors group"
+                                    style={{ color: C.label }}
                                 >
                                     <ArrowLeft size={16} className="mr-1 group-hover:-translate-x-1 transition-transform" />
                                     Dashboard
                                 </button>
-                                <h2 className="text-3xl font-light text-slate-800">Mis Retos</h2>
+                                <h2 className="text-3xl font-light" style={{ color: C.text }}>Mis Retos</h2>
                             </div>
 
                             {/* Full-width Logs Button */}
                             <button
                                 onClick={() => navigate('/challenge-logs')}
-                                className="w-full mb-8 bg-gradient-to-r from-emerald-600 to-emerald-800 text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-emerald-100 hover:shadow-xl hover:scale-[1.005] transition-all flex items-center justify-center gap-3 group"
+                                className="w-full mb-8 font-bold py-4 px-6 rounded-2xl hover:scale-[1.005] transition-all flex items-center justify-center gap-3 group text-white"
+                                style={{ background: C.forest }}
                             >
                                 <div className="bg-white/20 p-2 rounded-xl group-hover:rotate-12 transition-transform">
                                     <Star size={24} className="fill-white" />
                                 </div>
                                 <div className="text-left">
                                     <p className="text-lg leading-tight">Registros de Retos</p>
-                                    <p className="text-emerald-100 text-xs font-normal">Consulta tu historial de disciplina y momentos de valor</p>
+                                    <p className="text-xs font-normal">Consulta tu historial de disciplina y momentos de valor</p>
                                 </div>
                             </button>
 
                             {/* Toggle Switch */}
-                            <div className="bg-white p-1 rounded-lg border border-slate-200 inline-flex self-start md:self-auto">
+                            <div className="p-1 rounded-lg border inline-flex self-start md:self-auto" style={{ background: C.surface2, borderColor: C.border }}>
                                 <button
                                     onClick={() => setFilter('active')}
-                                    className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${filter === 'active'
-                                        ? 'bg-slate-900 text-white shadow-sm'
-                                        : 'text-slate-500 hover:text-slate-700'
-                                        }`}
+                                    className="px-4 py-1.5 text-sm font-medium rounded-md transition-all"
+                                    style={filter === 'active' ? { background: C.surface3, color: C.text } : { color: C.textMuted }}
                                 >
                                     Activos
                                 </button>
                                 <button
                                     onClick={() => setFilter('in-progress')}
-                                    className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${filter === 'in-progress'
-                                        ? 'bg-slate-900 text-white shadow-sm'
-                                        : 'text-slate-500 hover:text-slate-700'
-                                        }`}
+                                    className="px-4 py-1.5 text-sm font-medium rounded-md transition-all"
+                                    style={filter === 'in-progress' ? { background: C.surface3, color: C.text } : { color: C.textMuted }}
                                 >
                                     En Progreso
                                 </button>
                                 <button
                                     onClick={() => setFilter('completed')}
-                                    className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${filter === 'completed'
-                                        ? 'bg-slate-900 text-white shadow-sm'
-                                        : 'text-slate-500 hover:text-slate-700'
-                                        }`}
+                                    className="px-4 py-1.5 text-sm font-medium rounded-md transition-all"
+                                    style={filter === 'completed' ? { background: C.surface3, color: C.text } : { color: C.textMuted }}
                                 >
                                     Completados
                                 </button>
@@ -297,7 +295,7 @@ export default function MisRetos() {
                                     />
                                 ))}
                                 {filteredChallenges?.length === 0 && (
-                                    <div className="col-span-full text-center py-12 text-slate-400">
+                                    <div className="col-span-full text-center py-12" style={{ color: C.label }}>
                                         No hay retos en esta categoría.
                                     </div>
                                 )}

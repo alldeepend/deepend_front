@@ -1,6 +1,5 @@
 import LoginForm from '../LoginForm'
-
-const C = { bg: '#231F20' }
+import { C } from '../../styles/colors'
 
 export default function Login() {
   return (

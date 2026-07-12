@@ -2,18 +2,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 import { useAuth } from '../store/useAuth';
-
-const C = {
-  bg:        '#231F20',
-  surface1:  '#1E1A1B',
-  surface2:  '#252020',
-  text:      '#F5F0E8',
-  textMuted: '#A8A29E',
-  red:       '#EE2A28',
-  amber:     '#EF9F27',
-  green:     '#52B788',
-  border:    '#333330',
-}
+import { C } from '../styles/colors'
 
 export default function LoginForm() {
   const navigate = useNavigate();

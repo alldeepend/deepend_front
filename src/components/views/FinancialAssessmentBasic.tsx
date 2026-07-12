@@ -6,6 +6,7 @@ import { DollarSign, Home, Zap, ShoppingCart, Car, Coffee, HeartPulse, HelpCircl
 import { useAuth } from '../../store/useAuth';
 // @ts-ignore
 import canvasConfetti from 'canvas-confetti';
+import { C } from '../../styles/colors';
 
 interface FinancialState {
     [key: string]: number;
@@ -245,7 +246,7 @@ export default function FinancialAssessmentBasic() {
 
 
     return (
-        <div className="flex flex-col md:flex-row h-screen bg-slate-50 font-sans overflow-hidden">
+        <div className="flex flex-col md:flex-row h-screen font-sans overflow-hidden" style={{ background: C.bg }}>
             <div className="md:hidden w-full">
                 <Header />
             </div>
@@ -264,14 +265,14 @@ export default function FinancialAssessmentBasic() {
 
                     <div className="flex justify-between items-start mb-8">
                         <div>
-                            <h1 className="text-3xl font-bold text-slate-800 mb-2">Evaluación Financiera (Básica)</h1>
-                            <p className="text-slate-500">Ingresa tus datos mensuales para obtener un diagnóstico de tu salud financiera.</p>
-                            {saveStatus === 'saved' && <span className="text-xs text-emerald-500 flex items-center mt-2"><CheckCircle size={12} className="mr-1" /> Guardado en borrador</span>}
+                            <h1 className="text-3xl font-bold mb-2" style={{ color: C.text }}>Evaluación Financiera (Básica)</h1>
+                            <p style={{ color: C.textMuted }}>Ingresa tus datos mensuales para obtener un diagnóstico de tu salud financiera.</p>
+                            {saveStatus === 'saved' && <span className="text-xs flex items-center mt-2" style={{ color: C.green }}><CheckCircle size={12} className="mr-1" /> Guardado en borrador</span>}
                         </div>
                         <button
                             onClick={handleSubmit}
                             disabled={isSubmitting}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg hover:shadow-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                            className="text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center" style={{ background: C.green }}
                         >
                             {isSubmitting ? 'Guardando...' : <><Save size={18} className="mr-2" /> Guardar Resultados</>}
                         </button>
@@ -280,8 +281,8 @@ export default function FinancialAssessmentBasic() {
                     <div className="space-y-8">
 
                         {/* SECCION: INGRESOS */}
-                        <section className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                            <h2 className="flex items-center text-xl font-bold text-emerald-600 mb-6 border-b border-slate-100 pb-2">
+                        <section className="rounded-2xl shadow-sm p-6" style={{ background: C.surface1, borderWidth: 1, borderStyle: 'solid', borderColor: C.border }}>
+                            <h2 className="flex items-center text-xl font-bold mb-6 pb-2" style={{ color: C.green, borderBottomWidth: 1, borderBottomStyle: 'solid', borderBottomColor: C.border }}>
                                 <DollarSign className="mr-2" /> INGRESOS
                             </h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -305,15 +306,15 @@ export default function FinancialAssessmentBasic() {
                                     onChange={(e) => handleNumberChange(e, setIngresos, 'ocasionales')}
                                 />
                             </div>
-                            <div className="mt-6 p-4 bg-emerald-50 rounded-xl flex justify-between items-center text-emerald-800 font-bold">
+                            <div className="mt-6 p-4 rounded-xl flex justify-between items-center font-bold" style={{ background: C.forest, color: C.green }}>
                                 <span>TOTAL INGRESOS MENSUALES</span>
                                 <span className="text-xl">{formatCurrency(totalIngresos)}</span>
                             </div>
                         </section>
 
                         {/* SECCION: VIVIENDA */}
-                        <section className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                            <h2 className="flex items-center text-xl font-bold text-slate-700 mb-6 border-b border-slate-100 pb-2">
+                        <section className="rounded-2xl shadow-sm p-6" style={{ background: C.surface1, borderWidth: 1, borderStyle: 'solid', borderColor: C.border }}>
+                            <h2 className="flex items-center text-xl font-bold mb-6 pb-2" style={{ color: C.textSec, borderBottomWidth: 1, borderBottomStyle: 'solid', borderBottomColor: C.border }}>
                                 <Home className="mr-2" /> VIVIENDA
                             </h2>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -325,8 +326,8 @@ export default function FinancialAssessmentBasic() {
                         </section>
 
                         {/* SECCION: SERVICIOS */}
-                        <section className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                            <h2 className="flex items-center text-xl font-bold text-slate-700 mb-6 border-b border-slate-100 pb-2">
+                        <section className="rounded-2xl shadow-sm p-6" style={{ background: C.surface1, borderWidth: 1, borderStyle: 'solid', borderColor: C.border }}>
+                            <h2 className="flex items-center text-xl font-bold mb-6 pb-2" style={{ color: C.textSec, borderBottomWidth: 1, borderBottomStyle: 'solid', borderBottomColor: C.border }}>
                                 <Zap className="mr-2" /> SERVICIOS
                             </h2>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -340,8 +341,8 @@ export default function FinancialAssessmentBasic() {
                         </section>
 
                         {/* SECCION: ALIMENTACIÓN */}
-                        <section className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                            <h2 className="flex items-center text-xl font-bold text-slate-700 mb-6 border-b border-slate-100 pb-2">
+                        <section className="rounded-2xl shadow-sm p-6" style={{ background: C.surface1, borderWidth: 1, borderStyle: 'solid', borderColor: C.border }}>
+                            <h2 className="flex items-center text-xl font-bold mb-6 pb-2" style={{ color: C.textSec, borderBottomWidth: 1, borderBottomStyle: 'solid', borderBottomColor: C.border }}>
                                 <ShoppingCart className="mr-2" /> ALIMENTACIÓN
                             </h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -350,8 +351,8 @@ export default function FinancialAssessmentBasic() {
                             </div>
                             <SummaryRow label="GASTO ALIMENTACIÓN" value={totalAlimentacion} percent={pctAlimentacion} formatCurrency={formatCurrency} formatPercent={formatPercent} />
 
-                            <div className="mt-2 pt-2 border-t border-slate-100 md:col-span-2">
-                                <div className="flex justify-between items-center text-slate-500 text-sm">
+                            <div className="mt-2 pt-2 md:col-span-2" style={{ borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.border }}>
+                                <div className="flex justify-between items-center text-sm" style={{ color: C.textMuted }}>
                                     <span>Subtotal Gastos Básicos (Vivienda+Servicios+Alim)</span>
                                     <span>{formatCurrency(totalVivienda + totalServicios + totalAlimentacion)}</span>
                                 </div>
@@ -359,8 +360,8 @@ export default function FinancialAssessmentBasic() {
                         </section>
 
                         {/* SECCION: TRANSPORTE */}
-                        <section className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                            <h2 className="flex items-center text-xl font-bold text-slate-700 mb-6 border-b border-slate-100 pb-2">
+                        <section className="rounded-2xl shadow-sm p-6" style={{ background: C.surface1, borderWidth: 1, borderStyle: 'solid', borderColor: C.border }}>
+                            <h2 className="flex items-center text-xl font-bold mb-6 pb-2" style={{ color: C.textSec, borderBottomWidth: 1, borderBottomStyle: 'solid', borderBottomColor: C.border }}>
                                 <Car className="mr-2" /> TRANSPORTE
                             </h2>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -375,8 +376,8 @@ export default function FinancialAssessmentBasic() {
                         </section>
 
                         {/* SECCION: ESTILO DE VIDA */}
-                        <section className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                            <h2 className="flex items-center text-xl font-bold text-slate-700 mb-6 border-b border-slate-100 pb-2">
+                        <section className="rounded-2xl shadow-sm p-6" style={{ background: C.surface1, borderWidth: 1, borderStyle: 'solid', borderColor: C.border }}>
+                            <h2 className="flex items-center text-xl font-bold mb-6 pb-2" style={{ color: C.textSec, borderBottomWidth: 1, borderBottomStyle: 'solid', borderBottomColor: C.border }}>
                                 <Coffee className="mr-2" /> ESTILO DE VIDA
                             </h2>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -390,8 +391,8 @@ export default function FinancialAssessmentBasic() {
                         </section>
 
                         {/* SECCION: SALUD */}
-                        <section className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                            <h2 className="flex items-center text-xl font-bold text-slate-700 mb-6 border-b border-slate-100 pb-2">
+                        <section className="rounded-2xl shadow-sm p-6" style={{ background: C.surface1, borderWidth: 1, borderStyle: 'solid', borderColor: C.border }}>
+                            <h2 className="flex items-center text-xl font-bold mb-6 pb-2" style={{ color: C.textSec, borderBottomWidth: 1, borderBottomStyle: 'solid', borderBottomColor: C.border }}>
                                 <HeartPulse className="mr-2" /> SALUD
                             </h2>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -403,8 +404,8 @@ export default function FinancialAssessmentBasic() {
                         </section>
 
                         {/* SECCION: OTROS */}
-                        <section className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                            <h2 className="flex items-center text-xl font-bold text-slate-700 mb-6 border-b border-slate-100 pb-2">
+                        <section className="rounded-2xl shadow-sm p-6" style={{ background: C.surface1, borderWidth: 1, borderStyle: 'solid', borderColor: C.border }}>
+                            <h2 className="flex items-center text-xl font-bold mb-6 pb-2" style={{ color: C.textSec, borderBottomWidth: 1, borderBottomStyle: 'solid', borderBottomColor: C.border }}>
                                 <HelpCircle className="mr-2" /> OTROS
                             </h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -415,18 +416,18 @@ export default function FinancialAssessmentBasic() {
                         </section>
 
                         {/* RESULTADOS y BALANCE */}
-                        <section className="bg-slate-900 rounded-3xl shadow-xl p-8 text-white mt-8">
-                            <h2 className="text-2xl font-bold mb-8 text-center text-emerald-400">Balance Financiero</h2>
+                        <section className="rounded-3xl shadow-xl p-8 text-white mt-8" style={{ background: C.bgDeep }}>
+                            <h2 className="text-2xl font-bold mb-8 text-center" style={{ color: C.green }}>Balance Financiero</h2>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 border-b border-slate-700 pb-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 pb-8" style={{ borderBottomWidth: 1, borderBottomStyle: 'solid', borderBottomColor: C.border }}>
                                 <div className="text-center">
-                                    <h3 className="text-slate-400 text-sm uppercase tracking-wider mb-2">Total Ingresos</h3>
-                                    <p className="text-3xl font-bold text-white">{formatCurrency(totalIngresos)}</p>
+                                    <h3 className="text-sm uppercase tracking-wider mb-2" style={{ color: C.label }}>Total Ingresos</h3>
+                                    <p className="text-3xl font-bold" style={{ color: C.text }}>{formatCurrency(totalIngresos)}</p>
                                 </div>
                                 <div className="text-center">
-                                    <h3 className="text-slate-400 text-sm uppercase tracking-wider mb-2">Total Gastos</h3>
+                                    <h3 className="text-sm uppercase tracking-wider mb-2" style={{ color: C.label }}>Total Gastos</h3>
                                     <p className="text-3xl font-bold text-red-400">{formatCurrency(totalGastos)}</p>
-                                    <p className="text-sm text-slate-500">{formatPercent(pctTotalGastos)} de tus ingresos</p>
+                                    <p className="text-sm" style={{ color: C.textMuted }}>{formatPercent(pctTotalGastos)} de tus ingresos</p>
                                 </div>
                             </div>
 
@@ -468,36 +469,37 @@ export default function FinancialAssessmentBasic() {
 function InputGroup({ label, subLabel, value, onChange, tooltip }: { label: string, subLabel?: string, value: number, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, tooltip?: string }) {
     return (
         <div className="flex flex-col">
-            <label className="text-sm font-medium text-slate-700 mb-1">
+            <label className="text-sm font-medium mb-1" style={{ color: C.textSec }}>
                 {label}
-                {subLabel && <span className="text-slate-400 font-normal ml-1">{subLabel}</span>}
+                {subLabel && <span className="font-normal ml-1" style={{ color: C.label }}>{subLabel}</span>}
             </label>
             <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: C.label }}>$</span>
                 <input
                     type="number"
                     min="0"
                     value={value || ''}
                     onChange={onChange}
-                    className="w-full pl-7 pr-4 py-2 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                    className="w-full pl-7 pr-4 py-2 rounded-xl outline-none transition-all"
+                    style={{ background: C.surface2, borderWidth: 1, borderStyle: 'solid', borderColor: C.border, color: C.text }}
                     placeholder="0"
                 />
             </div>
-            {tooltip && <p className="text-xs text-slate-400 mt-1">{tooltip}</p>}
+            {tooltip && <p className="text-xs mt-1" style={{ color: C.label }}>{tooltip}</p>}
         </div>
     );
 }
 
 function SummaryRow({ label, value, percent, formatCurrency, formatPercent }: { label: string, value: number, percent: number, formatCurrency: (v: number) => string, formatPercent: (v: number) => string }) {
     return (
-        <div className="mt-6 p-4 bg-slate-50 rounded-xl flex justify-between items-center text-slate-700 font-medium">
+        <div className="mt-6 p-4 rounded-xl flex justify-between items-center font-medium" style={{ background: C.surface2, color: C.textSec }}>
             <div className="flex flex-col">
-                <span className="uppercase text-xs font-bold text-slate-400 tracking-wider">Subtotal</span>
+                <span className="uppercase text-xs font-bold tracking-wider" style={{ color: C.label }}>Subtotal</span>
                 <span>{label}</span>
             </div>
             <div className="text-right">
                 <div className="text-lg font-bold">{formatCurrency(value)}</div>
-                <div className="text-xs text-slate-400">{formatPercent(percent)} de ingresos</div>
+                <div className="text-xs" style={{ color: C.label }}>{formatPercent(percent)} de ingresos</div>
             </div>
         </div>
     );
@@ -505,10 +507,10 @@ function SummaryRow({ label, value, percent, formatCurrency, formatPercent }: { 
 
 function ResultCard({ label, value, subtext, color = "text-white" }: { label: string, value: string, subtext?: string, color?: string }) {
     return (
-        <div className="bg-slate-800 p-4 rounded-2xl border border-slate-700">
-            <h4 className="text-slate-400 text-xs uppercase tracking-wider mb-2">{label}</h4>
+        <div className="p-4 rounded-2xl" style={{ background: C.surface1, borderWidth: 1, borderStyle: 'solid', borderColor: C.border }}>
+            <h4 className="text-xs uppercase tracking-wider mb-2" style={{ color: C.label }}>{label}</h4>
             <div className={`text-xl font-bold ${color} mb-1`}>{value}</div>
-            {subtext && <p className="text-xs text-slate-500">{subtext}</p>}
+            {subtext && <p className="text-xs" style={{ color: C.textMuted }}>{subtext}</p>}
         </div>
     );
 }

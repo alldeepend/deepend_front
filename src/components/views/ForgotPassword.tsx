@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
+import { C } from '../../styles/colors';
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState('');
@@ -35,35 +36,36 @@ const ForgotPassword = () => {
     };
 
     return (
-        <div className="flex min-h-screen bg-gray-50 items-center justify-center p-4">
-            <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+        <div className="flex min-h-screen items-center justify-center p-4" style={{ background: C.bg }}>
+            <div className="w-full max-w-md rounded-2xl shadow-xl p-8" style={{ background: C.surface1 }}>
                 <div className="text-center mb-8">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-2">Recuperar Contraseña</h2>
-                    <p className="text-gray-600">Ingresa tu correo para recibir un enlace de recuperación.</p>
+                    <h2 className="text-3xl font-bold mb-2" style={{ color: C.text }}>Recuperar Contraseña</h2>
+                    <p style={{ color: C.textMuted }}>Ingresa tu correo para recibir un enlace de recuperación.</p>
                 </div>
 
                 {message && (
-                    <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm">
+                    <div className="mb-6 p-4 rounded-lg text-sm border" style={{ background: C.forest, borderColor: C.border, color: C.green }}>
                         {message}
                     </div>
                 )}
 
                 {error && (
-                    <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                    <div className="mb-6 p-4 rounded-lg text-sm border" style={{ background: C.surface2, borderColor: C.red, color: C.red }}>
                         {error}
                     </div>
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="email" className="block text-sm font-medium mb-1" style={{ color: C.textMuted }}>
                             Correo Electrónico
                         </label>
                         <input
                             type="email"
                             id="email"
                             required
-                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none"
+                            className="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all outline-none"
+                            style={{ background: C.surface2, borderColor: C.border, color: C.text }}
                             placeholder="tu@email.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -73,14 +75,15 @@ const ForgotPassword = () => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full text-white font-bold py-3 px-4 rounded-lg transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{ background: C.red }}
                     >
                         {loading ? 'Enviando...' : 'Enviar Enlace'}
                     </button>
                 </form>
 
                 <div className="mt-6 text-center">
-                    <Link to="/login" className="text-indigo-600 hover:text-indigo-800 font-medium text-sm">
+                    <Link to="/login" className="font-medium text-sm hover:opacity-80 transition-opacity" style={{ color: C.red }}>
                         Volver a Iniciar Sesión
                     </Link>
                 </div>

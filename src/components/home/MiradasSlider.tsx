@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { C } from '../../styles/colors';
 import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, CircleQuestionMark, X } from 'lucide-react';
 import { PentagonChart } from './PentagonChart';
@@ -33,7 +34,7 @@ export const MiradasSlider = ({ miradas }: { miradas: MiradaData[] }) => {
     if (miradas.length === 1) {
         return (
             <div className="flex flex-col items-center">
-                <span className="text-[11px] font-medium mb-1" style={{ color: '#52B788' }}>
+                <span className="text-[11px] font-medium mb-1" style={{ color: C.red }}>
                     {stepLabel(miradas[0].step)}
                 </span>
                 <PentagonChart data={miradas[0].data} />
@@ -55,7 +56,7 @@ export const MiradasSlider = ({ miradas }: { miradas: MiradaData[] }) => {
             >
                 {miradas.map((m, i) => (
                     <div key={m.step} className="snap-start flex-none w-full flex flex-col items-center px-2">
-                        <span className="text-[11px] font-medium mb-1" style={{ color: i === miradas.length - 1 ? '#52B788' : '#A8A29E' }}>
+                        <span className="text-[11px] font-medium mb-1" style={{ color: i === miradas.length - 1 ? C.red : '#A8A29E' }}>
                             {stepLabel(m.step)}
                         </span>
                         <PentagonChart data={m.data} compact />
@@ -65,7 +66,7 @@ export const MiradasSlider = ({ miradas }: { miradas: MiradaData[] }) => {
             {miradas.length > 1 && (
                 <div className="flex md:hidden justify-center gap-1.5 mt-2">
                     {miradas.map((_, i) => (
-                        <div key={i} className="w-1.5 h-1.5 rounded-full transition-colors" style={{ background: i === mobileIndex ? '#52B788' : '#333330' }} />
+                        <div key={i} className="w-1.5 h-1.5 rounded-full transition-colors" style={{ background: i === mobileIndex ? C.red : '#333330' }} />
                     ))}
                 </div>
             )}
@@ -84,7 +85,7 @@ export const MiradasSlider = ({ miradas }: { miradas: MiradaData[] }) => {
                 </div>
 
                 <div className="flex-1 flex flex-col items-center">
-                    <span className="text-[11px] font-medium mb-1" style={{ color: '#52B788' }}>
+                    <span className="text-[11px] font-medium mb-1" style={{ color: C.red }}>
                         {stepLabel(curr.step)}
                     </span>
                     <PentagonChart data={curr.data} compact />
@@ -96,7 +97,7 @@ export const MiradasSlider = ({ miradas }: { miradas: MiradaData[] }) => {
                 <button
                     onClick={() => setIsInfoOpen(true)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
-                    style={{ background: '#52B78822', color: '#52B788' }}
+                    style={{ background: '#EE2A2822', color: C.red }}
                 >
                     <CircleQuestionMark size={14} />
                     Entiende tu gráfica
@@ -121,7 +122,7 @@ export const MiradasSlider = ({ miradas }: { miradas: MiradaData[] }) => {
                         <span className="flex-1" />
                         <span className="w-5 text-center">{stepLabel(prev.step).split(' ')[0]}</span>
                         <span className="w-5 text-center mx-3" />
-                        <span className="w-5 text-center" style={{ color: '#52B788' }}>{stepLabel(curr.step).split(' ')[0]}</span>
+                        <span className="w-5 text-center" style={{ color: C.red }}>{stepLabel(curr.step).split(' ')[0]}</span>
                     </div>
 
                     {prev.data.map((item, i) => {
@@ -137,12 +138,12 @@ export const MiradasSlider = ({ miradas }: { miradas: MiradaData[] }) => {
                                 <span className="font-bold w-4 text-center" style={{ color: '#A8A29E' }}>{item.value}</span>
                                 <span className="w-5 text-center text-base leading-none">
                                     {delta > 0
-                                        ? <span className="text-xs" style={{ color: '#52B788' }}>↑</span>
+                                        ? <span className="text-xs" style={{ color: C.red }}>↑</span>
                                         : delta < 0
                                         ? <span className="text-xs text-red-400">↓</span>
                                         : <span className="text-xs" style={{ color: '#666' }}>─</span>}
                                 </span>
-                                <span className="font-bold w-4 text-center" style={{ color: '#52B788' }}>{currVal}</span>
+                                <span className="font-bold w-4 text-center" style={{ color: C.red }}>{currVal}</span>
                             </div>
                         );
                     })}
@@ -167,7 +168,7 @@ export const MiradasSlider = ({ miradas }: { miradas: MiradaData[] }) => {
                                 key={i}
                                 onClick={() => setIndex(i)}
                                 className="w-1.5 h-1.5 rounded-full transition-colors"
-                                style={{ background: i === index ? '#52B788' : '#333330' }}
+                                style={{ background: i === index ? C.red : '#333330' }}
                             />
                         ))}
                     </div>
@@ -202,7 +203,7 @@ export const MiradasSlider = ({ miradas }: { miradas: MiradaData[] }) => {
                                     <span><strong style={{ color: '#F5F0E8' }}>7–8</strong> – Áreas estables que funcionan, pero aún pueden crecer.</span>
                                 </li>
                                 <li className="flex items-start gap-3">
-                                    <span className="w-3 h-3 rounded-full mt-1 shrink-0" style={{ background: '#52B788' }}></span>
+                                    <span className="w-3 h-3 rounded-full mt-1 shrink-0" style={{ background: C.red }}></span>
                                     <span><strong style={{ color: '#F5F0E8' }}>9–10</strong> – Áreas alineadas que reflejan hábitos y coherencia.</span>
                                 </li>
                             </ul>
