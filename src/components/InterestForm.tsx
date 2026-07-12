@@ -1,27 +1,40 @@
 import React, { useState } from 'react';
-import { Send } from 'lucide-react';
+import { Send, Loader2 } from 'lucide-react';
+import { C } from '../styles/colors'
 
-const C = {
-  bg:        '#231F20',
-  surface1:  '#1E1A1B',
-  surface2:  '#252020',
-  text:      '#F5F0E8',
-  textMuted: '#A8A29E',
-  green:     '#52B788',
-  border:    '#333330',
-}
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export default function InterestForm() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
   const [improve, setImprove] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // TODO: conectar a un endpoint cuando se defina dónde se va a guardar el interés
-    setSubmitted(true);
+    setLoading(true);
+    setError('');
+
+    try {
+      const res = await fetch(`${API_URL}/leads`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, message: improve || undefined }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Error al enviar tus datos');
+      }
+
+      setSubmitted(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al enviar tus datos. Intenta nuevamente.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (submitted) {
@@ -68,6 +81,7 @@ export default function InterestForm() {
           <input
             id="name"
             type="text"
+            autoComplete="name"
             placeholder="Tu nombre"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -84,25 +98,10 @@ export default function InterestForm() {
           <input
             id="email"
             type="email"
+            autoComplete="email"
             placeholder="tucorreo@gmail.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-xl px-4 py-4 border outline-none transition-all focus:ring-2"
-            style={{ background: C.surface2, borderColor: C.border, color: C.text, ['--tw-ring-color' as any]: C.green }}
-            required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="phone" className="block text-sm font-medium mb-2" style={{ color: C.textMuted }}>
-            Teléfono:
-          </label>
-          <input
-            id="phone"
-            type="tel"
-            placeholder="300 123 4567"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
             className="w-full rounded-xl px-4 py-4 border outline-none transition-all focus:ring-2"
             style={{ background: C.surface2, borderColor: C.border, color: C.text, ['--tw-ring-color' as any]: C.green }}
             required
@@ -119,18 +118,24 @@ export default function InterestForm() {
             value={improve}
             onChange={(e) => setImprove(e.target.value)}
             rows={3}
+            maxLength={500}
             className="w-full rounded-xl px-4 py-3 border outline-none transition-all focus:ring-2 resize-none"
             style={{ background: C.surface2, borderColor: C.border, color: C.text, ['--tw-ring-color' as any]: C.green }}
           />
+          <p className="text-xs text-right mt-1" style={{ color: C.textMuted }}>{improve.length}/500</p>
         </div>
+
+        {error && (
+          <p className="text-sm text-center" style={{ color: '#E85D5D' }}>{error}</p>
+        )}
 
         <button
           type="submit"
-          className="w-full mt-8 cursor-pointer py-4 rounded-full font-bold transition-opacity hover:opacity-90 flex items-center justify-center gap-2 tracking-wide"
+          disabled={loading}
+          className="w-full mt-8 cursor-pointer py-4 rounded-full font-bold transition-opacity hover:opacity-90 flex items-center justify-center gap-2 tracking-wide disabled:opacity-60 disabled:cursor-not-allowed"
           style={{ background: C.green, color: C.bg }}
         >
-          Quiero unirme
-          <Send size={18} />
+          {loading ? <Loader2 size={18} className="animate-spin" /> : <>Quiero unirme <Send size={18} /></>}
         </button>
       </form>
     </div>
