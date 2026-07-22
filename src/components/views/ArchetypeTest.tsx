@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
-import { ArrowRight, ChevronLeft, RotateCcw, X, Fingerprint, Lock } from 'lucide-react'
+import { ArrowRight, ChevronLeft, RotateCcw, X, Fingerprint, Lock, Play, Pause } from 'lucide-react'
 import { C } from '../../styles/colors'
 import {
   BLOCK0, BLOCK1, BLOCK2,
@@ -44,6 +44,132 @@ function computeResult(answers: Record<number, string | number>) {
     secondaryNum,
     secondaryName: ARCHETYPE_NAMES[secondaryNum],
   }
+}
+
+// ─── Shared layout wrapper ──────────────────────────────────────────────────
+
+const FINGERPRINT_TEXTURE: {
+  side: 'left' | 'right'
+  offset: string
+  top: string
+  rotate: number
+  opacity: number
+  size: number
+}[] = [
+  { side: 'left', offset: '-6%', top: '4%', rotate: -18, opacity: 0.12, size: 190 },
+  { side: 'left', offset: '-5%', top: '18%', rotate: -12, opacity: 0.18, size: 300 },
+  { side: 'left', offset: '-8%', top: '54%', rotate: -6, opacity: 0.1, size: 220 },
+  { side: 'left', offset: '-4%', top: '82%', rotate: -22, opacity: 0.14, size: 160 },
+  { side: 'right', offset: '-7%', top: '8%', rotate: 16, opacity: 0.13, size: 210 },
+  { side: 'right', offset: '-5%', top: '38%', rotate: 8, opacity: 0.1, size: 170 },
+  { side: 'right', offset: '-5%', top: '60%', rotate: 10, opacity: 0.18, size: 300 },
+  { side: 'right', offset: '-8%', top: '88%', rotate: 20, opacity: 0.12, size: 190 },
+]
+
+function Wrapper({
+  phase, onClose, children,
+}: {
+  phase: Phase
+  onClose?: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <div
+      className="min-h-screen flex flex-col relative overflow-hidden"
+      style={{ background: C.bg, fontFamily: 'Montserrat, sans-serif', color: C.text }}
+    >
+      {/* Textura decorativa — huellas tenues a los lados, mismo tema del "Espejo" */}
+      {FINGERPRINT_TEXTURE.map((fp, i) => (
+        <div
+          key={i}
+          className="absolute pointer-events-none select-none"
+          style={{
+            [fp.side]: fp.offset,
+            top: fp.top,
+            transform: `rotate(${fp.rotate}deg)`,
+            color: C.red,
+            opacity: fp.opacity,
+          }}
+        >
+          <Fingerprint size={fp.size} strokeWidth={0.7} />
+        </div>
+      ))}
+
+      {onClose && (phase === 'intro' || phase === 'result') && (
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-20 p-2 rounded-full transition-opacity hover:opacity-70"
+          style={{ background: C.surface1, color: C.textMuted }}
+        >
+          <X size={18} />
+        </button>
+      )}
+      <div className="relative z-10 flex-1 flex flex-col">
+        {children}
+      </div>
+    </div>
+  )
+}
+
+// ─── Result audio player ────────────────────────────────────────────────────
+
+function ResultAudioPlayer({ audioKey }: { audioKey: string }) {
+  const audioRef = useRef<HTMLAudioElement>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [progress, setProgress] = useState(0)
+
+  useEffect(() => {
+    setIsPlaying(false)
+    setProgress(0)
+  }, [audioKey])
+
+  function togglePlay() {
+    const audio = audioRef.current
+    if (!audio) return
+    if (audio.paused) {
+      audio.play()
+      setIsPlaying(true)
+    } else {
+      audio.pause()
+      setIsPlaying(false)
+    }
+  }
+
+  return (
+    <div
+      className="flex items-center gap-4 mb-8 p-4 rounded-2xl border"
+      style={{ borderColor: C.border, background: C.surface1 }}
+    >
+      <button
+        onClick={togglePlay}
+        className="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center transition-opacity hover:opacity-90"
+        style={{ background: C.red, color: '#fff' }}
+      >
+        {isPlaying ? <Pause size={18} /> : <Play size={18} style={{ marginLeft: 2 }} />}
+      </button>
+      <div className="flex-1 min-w-0">
+        <p className="text-[10px] font-bold tracking-[0.18em] uppercase mb-2" style={{ color: C.label }}>
+          Escuchar tu resultado
+        </p>
+        <div className="h-1.5 rounded-full overflow-hidden" style={{ background: C.surface2 }}>
+          <div
+            className="h-full rounded-full"
+            style={{ width: `${progress}%`, background: C.red }}
+          />
+        </div>
+      </div>
+      <audio
+        ref={audioRef}
+        src={`/audio/archetypes/${audioKey}.mp3`}
+        preload="none"
+        onEnded={() => { setIsPlaying(false); setProgress(0) }}
+        onTimeUpdate={(e) => {
+          const audio = e.currentTarget
+          if (audio.duration) setProgress((audio.currentTime / audio.duration) * 100)
+        }}
+      />
+    </div>
+  )
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -112,44 +238,9 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
     setUnlockedSections(prev => prev.includes(index) ? prev : [...prev, index])
   }
 
-  // ── Shared layout wrapper ──
-  const Wrapper = ({ children }: { children: React.ReactNode }) => (
-    <div
-      className="min-h-screen flex flex-col relative overflow-hidden"
-      style={{ background: C.bg, fontFamily: 'Montserrat, sans-serif', color: C.text }}
-    >
-      {/* Textura decorativa — huellas tenues a los lados, mismo tema del "Espejo" */}
-      <div
-        className="absolute pointer-events-none select-none"
-        style={{ left: '-9%', top: '18%', transform: 'rotate(-12deg)', color: C.red, opacity: 0.05 }}
-      >
-        <Fingerprint size={300} strokeWidth={0.8} />
-      </div>
-      <div
-        className="absolute pointer-events-none select-none"
-        style={{ right: '-9%', bottom: '12%', transform: 'rotate(10deg)', color: C.red, opacity: 0.05 }}
-      >
-        <Fingerprint size={300} strokeWidth={0.8} />
-      </div>
-
-      {onClose && (phase === 'intro' || phase === 'result') && (
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-20 p-2 rounded-full transition-opacity hover:opacity-70"
-          style={{ background: C.surface1, color: C.textMuted }}
-        >
-          <X size={18} />
-        </button>
-      )}
-      <div className="relative z-10 flex-1 flex flex-col">
-        {children}
-      </div>
-    </div>
-  )
-
   // ── INTRO ──────────────────────────────────────────────────────────────────
   if (phase === 'intro') return (
-    <Wrapper>
+    <Wrapper phase={phase} onClose={onClose}>
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-16">
         <div className="w-full max-w-lg">
           <p className="text-[11px] font-bold tracking-[0.2em] uppercase mb-8" style={{ color: C.red }}>
@@ -225,7 +316,7 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
     }
 
     return (
-      <Wrapper>
+      <Wrapper phase={phase} onClose={onClose}>
         <div className="flex-1 flex flex-col items-center py-12 px-6">
           <div className="w-full max-w-lg">
             {/* Header */}
@@ -241,6 +332,8 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
             <p className="text-sm italic mb-8" style={{ color: C.textMuted }}>
               {res.variant}
             </p>
+
+            <ResultAudioPlayer audioKey={result.dominantKey} />
 
             <div className="border-t" style={{ borderColor: C.border }} />
 
@@ -307,7 +400,7 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
     const canAdvance = !!selected
 
     return (
-      <Wrapper>
+      <Wrapper phase={phase} onClose={onClose}>
         <QuestionHeader progress={progress} onBack={goBack} totalQ={totalQuestions} currentIdx={answeredSoFar} onClose={onClose} />
         <div className="flex-1 flex flex-col items-center px-6 py-8">
           <div className="w-full max-w-lg">
@@ -340,7 +433,7 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
     const selected = answers[q.id] as string | undefined
 
     return (
-      <Wrapper>
+      <Wrapper phase={phase} onClose={onClose}>
         <QuestionHeader progress={progress} onBack={goBack} totalQ={BLOCK1.length} currentIdx={currentQ} label="Diagnóstico" onClose={onClose} />
         <div className="flex-1 flex flex-col items-center px-6 py-8">
           <div className="w-full max-w-lg">
@@ -371,7 +464,7 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
     const likertLabels = ['No me describe', 'Un poco', 'Bastante', 'Me describe completamente']
 
     return (
-      <Wrapper>
+      <Wrapper phase={phase} onClose={onClose}>
         <QuestionHeader progress={progress} onBack={goBack} totalQ={BLOCK2.length} currentIdx={currentQ} label="Casi listo" onClose={onClose} />
         <div className="flex-1 flex flex-col items-center px-6 py-8">
           <div className="w-full max-w-lg">
