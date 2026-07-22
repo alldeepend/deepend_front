@@ -4,20 +4,9 @@ import { Sparkles, Award, Flame } from 'lucide-react'
 import { journeyApi } from '../../../services/journey'
 import type { Block, BlockInteractResult, JourneyDetailsResponse, Station } from '../../../types/journey'
 
-const C = {
-    bg:       '#231F20',
-    surface1: '#1E1A1B',
-    surface2: '#252020',
-    text:     '#F5F0E8',
-    textMuted:'#A8A29E',
-    red:      '#EE2A28',
-    amber:    '#EF9F27',
-    green:    '#52B788',
-    border:   '#333330',
-}
-
-const BADGE_COLORS = ['#52B788', '#5B9BF7', '#E8C547', '#B57BEE', '#818CF8', '#3FC6D8', '#F4669B']
-
+import { C } from '../../../styles/colors'
+import WorldsRightSidebar, { badgesForJourney, badgeColorFor } from './WorldsRightSidebar'
+import { HomeSidebar } from '../../home/HomeSidebar'
 
 const BLOCK_LABELS: Record<string, string> = {
     punto_partida:      'Punto de Partida',
@@ -51,7 +40,10 @@ function findBlockById(data: JourneyDetailsResponse, blockId: string): Block | n
 // Convierte la respuesta guardada (forma distinta según el tipo/modo del bloque) en texto legible
 function extractRecallText(blockType: string, content: any, value: any): string {
     if (value == null) return ''
-    if (typeof value === 'string') return value === '__foto__' ? '(Foto subida)' : value
+    if (blockType === 'accion_real' && content?.actionType === 'foto' && typeof value === 'string') {
+        return value ? '(Foto subida)' : ''
+    }
+    if (typeof value === 'string') return value
     if (Array.isArray(value)) return value.filter(Boolean).join(', ')
 
     if (blockType === 'activacion') {
@@ -77,6 +69,7 @@ function extractRecallText(blockType: string, content: any, value: any): string 
             const sel: string[] = value.selected ?? []
             return [...sel.filter((s: string) => s !== 'Otra — escribo yo'), value.otherText].filter(Boolean).join(', ')
         }
+        if (value.mode === 'audio') return value.audioUrl ? '(Nota de voz)' : ''
         return value.text ?? ''
     }
 
@@ -84,6 +77,8 @@ function extractRecallText(blockType: string, content: any, value: any): string 
         if (content?.actionType === 'seleccion') {
             return value.selected === 'guided' ? (value.guidedText ?? '') : (value.selected ?? '')
         }
+        if (value.activeTab === 'photo') return value.photoUrl ? '(Foto subida)' : ''
+        if (value.activeTab === 'audio') return value.audioUrl ? '(Nota de voz)' : ''
         return value.text ?? ''
     }
 
@@ -410,10 +405,11 @@ export default function WorldsStation() {
         : earnedEligibleCount * xpPerBlock
 
     return (
+        <div className="flex" style={{ background: C.bg, color: C.text, fontFamily: 'Montserrat, sans-serif' }}>
+        <HomeSidebar activeTab="Mundos" dark />
         <div
             ref={topRef}
-            className="min-h-screen flex flex-col"
-            style={{ background: C.bg, color: C.text, fontFamily: 'Montserrat, sans-serif' }}
+            className="flex-1 flex flex-col min-h-screen"
         >
             {/* Exit warning popup */}
             {showExitWarning && (
@@ -577,6 +573,8 @@ export default function WorldsStation() {
                 ) : null}
             </div>
         </div>
+        <WorldsRightSidebar mode="journey" journeyTitle={data?.journey.title} badges={data ? badgesForJourney(data.journey, data.progress.userJourney) : []} totalXp={data?.progress.userJourney?.totalXpEarned ?? 0} />
+        </div>
     )
 }
 
@@ -616,6 +614,7 @@ function isResponseValid(blockType: string, response: any): boolean {
                 if (selected.includes('Otra — escribo yo')) return !!(v.otherText?.trim())
                 return true
             }
+            if (mode === 'audio') return !!v.audioUrl
             return false
         }
 
@@ -630,9 +629,13 @@ function isResponseValid(blockType: string, response: any): boolean {
                     if (response.selected === 'guided') return !!(response.guidedText?.trim())
                     return true
                 }
+                if ('activeTab' in response) {
+                    if (response.activeTab === 'photo') return !!response.photoUrl
+                    if (response.activeTab === 'audio') return !!response.audioUrl
+                    return !!(response.text?.trim())
+                }
                 if ('text' in response) return !!(response.text?.trim())
             }
-            if (response === '__foto__') return true
             return !!(typeof response === 'string' && response.trim())
 
         case 'evidencia':
@@ -691,8 +694,7 @@ function BlockPlayer({
     const [showRecall, setShowRecall] = useState(false)
 
     const isCierre = block.type === 'cierre'
-    const isFotoOnly = block.type === 'accion_real' && c.actionType === 'foto'
-    const canSubmit = alreadyDone || isFotoOnly || isResponseValid(block.type, response)
+    const canSubmit = alreadyDone || isResponseValid(block.type, response)
 
     const showStation1Celebration = block.type === 'punto_partida' && station.orderIndex === 2
     const showLastStationCelebration = block.type === 'punto_partida' && isLastStation
@@ -782,13 +784,13 @@ function BlockPlayer({
             {block.type === 'punto_partida' && <PuntoPartida content={c} />}
             {block.type === 'capsula' && <Capsula content={c} />}
             {block.type === 'activacion' && (
-                <Activacion content={c} value={response} onChange={onResponse} disabled={alreadyDone} />
+                <Activacion content={c} value={response} onChange={onResponse} disabled={alreadyDone} blockId={block.id} />
             )}
             {block.type === 'opciones_respuesta' && (
                 <OpcionesRespuesta content={c} value={response} onChange={onResponse} disabled={alreadyDone} />
             )}
             {block.type === 'accion_real' && (
-                <AccionReal content={c} value={response} onChange={onResponse} disabled={alreadyDone} />
+                <AccionReal content={c} value={response} onChange={onResponse} disabled={alreadyDone} blockId={block.id} />
             )}
             {block.type === 'evidencia' && (
                 <Evidencia content={c} value={response} onChange={onResponse} disabled={alreadyDone} />
@@ -1014,9 +1016,215 @@ function Capsula({ content }: { content: any }) {
     )
 }
 
+// ─── Foto / Nota de voz (subida real) ──────────────────────────────────────────
+
+function PhotoUploadField({
+    blockId, value, onChange, disabled,
+}: { blockId: string; value: string | null; onChange: (url: string | null) => void; disabled: boolean }) {
+    const [uploading, setUploading] = useState(false)
+    const inputRef = useRef<HTMLInputElement>(null)
+
+    const handleFile = async (file: File) => {
+        setUploading(true)
+        try {
+            const { url } = await journeyApi.uploadBlockMedia(blockId, file, file.name)
+            onChange(url)
+        } catch {
+            alert('No se pudo subir la foto. Intenta de nuevo.')
+        } finally {
+            setUploading(false)
+        }
+    }
+
+    if (value) {
+        return (
+            <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${C.green}` }}>
+                <img src={value} alt="" className="w-full object-cover" style={{ maxHeight: '260px' }} />
+                {!disabled && (
+                    <button
+                        type="button"
+                        onClick={() => onChange(null)}
+                        className="w-full py-2.5 text-xs font-semibold"
+                        style={{ background: C.surface2, color: C.textMuted }}
+                    >
+                        Cambiar foto
+                    </button>
+                )}
+            </div>
+        )
+    }
+
+    return (
+        <div>
+            <input
+                ref={inputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                disabled={disabled || uploading}
+                onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])}
+            />
+            <button
+                type="button"
+                onClick={() => !disabled && !uploading && inputRef.current?.click()}
+                className="w-full rounded-xl flex flex-col items-center justify-center gap-3 py-10 transition-all"
+                style={{
+                    background: C.surface1,
+                    border: `2px dashed ${C.border}`,
+                    cursor: disabled || uploading ? 'default' : 'pointer',
+                }}
+            >
+                {uploading ? (
+                    <p className="text-sm font-medium" style={{ color: C.textMuted }}>Subiendo...</p>
+                ) : (
+                    <>
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: C.textMuted }}>
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                            <circle cx="12" cy="13" r="4"/>
+                        </svg>
+                        <p className="text-sm font-medium" style={{ color: C.textMuted }}>
+                            Tomar / subir foto
+                        </p>
+                    </>
+                )}
+            </button>
+        </div>
+    )
+}
+
+function AudioRecorderField({
+    blockId, value, onChange, disabled,
+}: { blockId: string; value: string | null; onChange: (url: string | null) => void; disabled: boolean }) {
+    const [recording, setRecording] = useState(false)
+    const [elapsed, setElapsed] = useState(0)
+    const [uploading, setUploading] = useState(false)
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+    const chunksRef = useRef<Blob[]>([])
+    const streamRef = useRef<MediaStream | null>(null)
+    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+    const cleanup = () => {
+        if (timerRef.current) clearInterval(timerRef.current)
+        timerRef.current = null
+        streamRef.current?.getTracks().forEach(t => t.stop())
+        streamRef.current = null
+    }
+
+    useEffect(() => () => cleanup(), [])
+
+    const pickMimeType = () => {
+        if (typeof MediaRecorder === 'undefined' || !MediaRecorder.isTypeSupported) return undefined
+        const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']
+        return candidates.find(t => MediaRecorder.isTypeSupported(t))
+    }
+
+    const startRecording = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+            streamRef.current = stream
+            const mimeType = pickMimeType()
+            const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
+            chunksRef.current = []
+            recorder.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data) }
+            recorder.onstop = async () => {
+                cleanup()
+                const blob = new Blob(chunksRef.current, { type: mimeType ?? 'audio/webm' })
+                setUploading(true)
+                try {
+                    const ext = blob.type.includes('mp4') ? 'm4a' : 'webm'
+                    const { url } = await journeyApi.uploadBlockMedia(blockId, blob, `nota-de-voz.${ext}`)
+                    onChange(url)
+                } catch {
+                    alert('No se pudo subir la nota de voz. Intenta de nuevo.')
+                } finally {
+                    setUploading(false)
+                }
+            }
+            mediaRecorderRef.current = recorder
+            recorder.start()
+            setRecording(true)
+            setElapsed(0)
+            timerRef.current = setInterval(() => {
+                setElapsed(prev => {
+                    if (prev + 1 >= 60) {
+                        mediaRecorderRef.current?.stop()
+                        setRecording(false)
+                        return 60
+                    }
+                    return prev + 1
+                })
+            }, 1000)
+        } catch {
+            alert('No se pudo acceder al micrófono. Revisa los permisos del navegador.')
+        }
+    }
+
+    const stopRecording = () => {
+        mediaRecorderRef.current?.stop()
+        setRecording(false)
+    }
+
+    const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+
+    if (value) {
+        return (
+            <div className="rounded-xl p-4 space-y-3" style={{ background: C.surface1, border: `1px solid ${C.green}` }}>
+                <audio controls src={value} className="w-full" style={{ height: '36px', colorScheme: 'dark' }} />
+                {!disabled && (
+                    <button
+                        type="button"
+                        onClick={() => onChange(null)}
+                        className="w-full py-2 rounded-lg text-xs font-semibold"
+                        style={{ background: C.surface2, color: C.textMuted, border: `1px solid ${C.border}` }}
+                    >
+                        Grabar de nuevo
+                    </button>
+                )}
+            </div>
+        )
+    }
+
+    return (
+        <div
+            className="rounded-xl p-6 flex flex-col items-center justify-center gap-4"
+            style={{ background: C.surface1, border: `1px solid ${C.border}` }}
+        >
+            <div
+                className="w-16 h-16 rounded-full flex items-center justify-center"
+                style={{ background: C.red, opacity: recording ? 1 : 0.85 }}
+            >
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                    <line x1="12" y1="19" x2="12" y2="23" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                    <line x1="8" y1="23" x2="16" y2="23" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+            </div>
+            <p className="text-xs" style={{ color: recording ? C.red : C.textMuted }}>
+                {uploading ? 'Subiendo...' : recording ? `Grabando · ${mmss(elapsed)} / 1:00` : 'Habla libremente · max 60 seg'}
+            </p>
+            <button
+                type="button"
+                onClick={() => !disabled && !uploading && (recording ? stopRecording() : startRecording())}
+                disabled={disabled || uploading}
+                className="w-full py-3 rounded-xl text-sm font-semibold"
+                style={{
+                    background: recording ? C.red : C.surface2,
+                    border: `1px solid ${recording ? C.red : C.border}`,
+                    color: recording ? '#fff' : C.textMuted,
+                    opacity: disabled || uploading ? 0.6 : 1,
+                }}
+            >
+                {recording ? 'Detener grabación' : 'Empezar a grabar'}
+            </button>
+        </div>
+    )
+}
+
 function Activacion({
-    content, value, onChange, disabled,
-}: { content: any; value: any; onChange: (v: any) => void; disabled: boolean }) {
+    content, value, onChange, disabled, blockId,
+}: { content: any; value: any; onChange: (v: any) => void; disabled: boolean; blockId: string }) {
     const [showRouteChangeWarning, setShowRouteChangeWarning] = useState(false)
     const question = content.question ?? content.prompt ?? ''
     const options: string[] = content.options ?? []
@@ -1565,32 +1773,12 @@ function Activacion({
             )}
 
             {mode === 'audio' && (
-                <div
-                    className="rounded-xl p-6 flex flex-col items-center justify-center gap-4"
-                    style={{ background: C.surface1, border: `1px solid ${C.border}` }}
-                >
-                    <div
-                        className="w-16 h-16 rounded-full flex items-center justify-center"
-                        style={{ background: C.red }}
-                    >
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                            <path d="M19 10v2a7 7 0 0 1-14 0v-2" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round"/>
-                            <line x1="12" y1="19" x2="12" y2="23" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                            <line x1="8" y1="23" x2="16" y2="23" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                        </svg>
-                    </div>
-                    <p className="text-xs" style={{ color: C.textMuted }}>
-                        Habla libremente · max 60 seg
-                    </p>
-                    <button
-                        className="w-full py-3 rounded-xl text-sm font-semibold"
-                        style={{ background: C.surface2, border: `1px solid ${C.border}`, color: C.textMuted }}
-                        disabled
-                    >
-                        Empezar a grabar
-                    </button>
-                </div>
+                <AudioRecorderField
+                    blockId={blockId}
+                    value={v.audioUrl ?? null}
+                    onChange={url => onChange({ ...v, mode: 'audio', audioUrl: url ?? undefined })}
+                    disabled={disabled}
+                />
             )}
         </div>
     )
@@ -1656,14 +1844,16 @@ function OpcionesRespuesta({
 }
 
 function AccionReal({
-    content, value, onChange, disabled,
-}: { content: any; value: any; onChange: (v: any) => void; disabled: boolean }) {
+    content, value, onChange, disabled, blockId,
+}: { content: any; value: any; onChange: (v: any) => void; disabled: boolean; blockId: string }) {
     const phrase = content.phrase ?? ''
     const isSeleccion = content.actionType === 'seleccion'
 
     const freeText: string = typeof value === 'object' && value !== null && 'text' in value
         ? (value.text ?? '')
         : (typeof value === 'string' ? value : '')
+    const photoUrl: string | undefined = typeof value === 'object' && value !== null ? value.photoUrl : undefined
+    const audioUrl: string | undefined = typeof value === 'object' && value !== null ? value.audioUrl : undefined
     const initialTab: 'text' | 'photo' | 'audio' =
         typeof value === 'object' && value !== null && 'activeTab' in value
             ? value.activeTab
@@ -1792,7 +1982,7 @@ function AccionReal({
     // ── Solo foto mode ──
     if (content.actionType === 'foto') {
         const instruction: string = content.phrase ?? ''
-        const captured = value === '__foto__'
+        const capturedUrl: string | null = typeof value === 'string' ? value : null
         return (
             <div className="space-y-5">
                 {instruction && (
@@ -1808,40 +1998,12 @@ function AccionReal({
                         </p>
                     </div>
                 )}
-                <button
-                    type="button"
-                    onClick={() => !disabled && !captured && onChange('__foto__')}
-                    className="w-full rounded-xl flex flex-col items-center justify-center gap-3 py-10 transition-all"
-                    style={{
-                        background: captured ? `${C.green}15` : C.surface1,
-                        border: `2px dashed ${captured ? C.green : C.border}`,
-                        cursor: disabled || captured ? 'default' : 'pointer',
-                    }}
-                >
-                    {captured ? (
-                        <>
-                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: C.green }}>
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            <p className="text-sm font-semibold" style={{ color: C.green }}>
-                                Foto registrada
-                            </p>
-                        </>
-                    ) : (
-                        <>
-                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: C.textMuted }}>
-                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                                <circle cx="12" cy="13" r="4"/>
-                            </svg>
-                            <p className="text-sm font-medium" style={{ color: C.textMuted }}>
-                                Tomar / subir foto
-                            </p>
-                            <p className="text-xs" style={{ color: C.border }}>
-                                Disponible próximamente
-                            </p>
-                        </>
-                    )}
-                </button>
+                <PhotoUploadField
+                    blockId={blockId}
+                    value={capturedUrl}
+                    onChange={url => onChange(url)}
+                    disabled={disabled}
+                />
             </div>
         )
     }
@@ -1940,47 +2102,21 @@ function AccionReal({
             )}
 
             {activeTab === 'photo' && (
-                <div
-                    className="rounded-xl p-6 flex flex-col items-center justify-center gap-2"
-                    style={{ background: C.surface1, border: `1px dashed ${C.border}`, cursor: 'pointer' }}
-                >
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: C.textMuted }}>
-                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                        <circle cx="12" cy="13" r="4"/>
-                    </svg>
-                    <p className="text-xs text-center" style={{ color: C.textMuted }}>
-                        Sube foto de lo escrito a mano
-                    </p>
-                </div>
+                <PhotoUploadField
+                    blockId={blockId}
+                    value={photoUrl ?? null}
+                    onChange={url => onChange({ text: freeText, activeTab, photoUrl: url ?? undefined, audioUrl })}
+                    disabled={disabled}
+                />
             )}
 
             {activeTab === 'audio' && (
-                <div
-                    className="rounded-xl p-6 flex flex-col items-center justify-center gap-4"
-                    style={{ background: C.surface1, border: `1px solid ${C.border}` }}
-                >
-                    <div
-                        className="w-16 h-16 rounded-full flex items-center justify-center"
-                        style={{ background: C.red }}
-                    >
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                            <path d="M19 10v2a7 7 0 0 1-14 0v-2" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round"/>
-                            <line x1="12" y1="19" x2="12" y2="23" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                            <line x1="8" y1="23" x2="16" y2="23" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                        </svg>
-                    </div>
-                    <p className="text-xs" style={{ color: C.textMuted }}>
-                        Habla libremente · max 60 seg
-                    </p>
-                    <button
-                        className="w-full py-3 rounded-xl text-sm font-semibold"
-                        style={{ background: C.surface2, border: `1px solid ${C.border}`, color: C.textMuted }}
-                        disabled
-                    >
-                        Empezar a grabar
-                    </button>
-                </div>
+                <AudioRecorderField
+                    blockId={blockId}
+                    value={audioUrl ?? null}
+                    onChange={url => onChange({ text: freeText, activeTab, audioUrl: url ?? undefined, photoUrl })}
+                    disabled={disabled}
+                />
             )}
         </div>
     )
@@ -2221,20 +2357,20 @@ function WorldCompletionScreen({
                         </p>
                         <div className="flex flex-wrap justify-center gap-2">
                             {badges.map((b, i) => {
-                                const badgeColor = BADGE_COLORS[i % BADGE_COLORS.length]
+                                const badgeColor = badgeColorFor(b)
                                 return (
-                                <span
-                                    key={i}
-                                    className="text-xs px-3 py-2 rounded-full font-semibold flex items-center gap-1.5"
-                                    style={{
-                                        border: `1px solid ${badgeColor}`,
-                                        color: badgeColor,
-                                        background: `${badgeColor}20`,
-                                    }}
-                                >
-                                    <Award size={14} />
-                                    {b}
-                                </span>
+                                    <span
+                                        key={i}
+                                        className="text-xs px-3 py-2 rounded-full font-semibold flex items-center gap-1.5"
+                                        style={{
+                                            border: `1px solid ${badgeColor}`,
+                                            color: badgeColor,
+                                            background: `${badgeColor}20`,
+                                        }}
+                                    >
+                                        <Award size={14} />
+                                        {b}
+                                    </span>
                                 )
                             })}
                         </div>

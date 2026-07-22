@@ -3,6 +3,9 @@ import { useNavigate, useParams } from 'react-router'
 import { Lock, Award } from 'lucide-react'
 import { journeyApi } from '../../../services/journey'
 import type { JourneyDetailsResponse, StationProgress } from '../../../types/journey'
+import { C } from '../../../styles/colors'
+import WorldsRightSidebar, { badgesForJourney, badgeColorFor } from './WorldsRightSidebar'
+import { HomeSidebar } from '../../home/HomeSidebar'
 
 function PinIcon({ color, size = 32 }: { color: string; size?: number }) {
     return (
@@ -11,18 +14,6 @@ function PinIcon({ color, size = 32 }: { color: string; size?: number }) {
             <circle cx="12" cy="11" r="3.5" fill="white" />
         </svg>
     )
-}
-
-const C = {
-    bg:       '#231F20',
-    surface1: '#1E1A1B',
-    surface2: '#252020',
-    text:     '#F5F0E8',
-    textMuted:'#A8A29E',
-    red:      '#EE2A28',
-    amber:    '#EF9F27',
-    green:    '#52B788',
-    border:   '#333330',
 }
 
 export default function WorldsJourney() {
@@ -97,9 +88,11 @@ export default function WorldsJourney() {
 
     return (
         <div
-            className="min-h-screen flex flex-col"
+            className="flex min-h-screen"
             style={{ background: C.bg, color: C.text, fontFamily: 'Montserrat, sans-serif' }}
         >
+        <HomeSidebar activeTab="Mundos" dark />
+        <div className="flex-1 flex flex-col">
             {/* Top bar con banner */}
             <div
                 className="px-6 pt-8 pb-4 relative overflow-hidden bg-center md:bg-[center_40%]"
@@ -300,6 +293,8 @@ export default function WorldsJourney() {
                 </div>
             </div>
         </div>
+        <WorldsRightSidebar mode="journey" journeyTitle={journey.title} badges={badgesForJourney(journey, userJourney)} totalXp={userJourney?.totalXpEarned ?? 0} />
+        </div>
     )
 }
 
@@ -362,7 +357,10 @@ function StationCard({
                 <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                     <span className="text-[11px]" style={{ color: C.textMuted }}>{blockCount} bloques</span>
                     {badgeName && (
-                        <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: C.amber + '20', color: C.amber }}>
+                        <span
+                            className="text-[11px] px-2 py-0.5 rounded-full"
+                            style={{ background: badgeColorFor(badgeName) + '20', color: badgeColorFor(badgeName) }}
+                        >
                             <Award size={10} className="inline mr-1" />{badgeName}
                         </span>
                     )}

@@ -40,6 +40,7 @@ export interface Journey {
     allowed_memberships: string[];
     worlds: World[];
     area?: { id: string; name: string };
+    userJourneys?: UserJourneyProgress[];
 }
 
 export interface Area {
