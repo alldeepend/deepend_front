@@ -32,7 +32,7 @@ export const HomeSidebar = ({ activeTab, dark = true }: HomeSidebarProps) => {
 
     return (
         <aside
-            className="w-64 flex flex-col justify-between hidden md:flex flex-shrink-0 z-20 sticky top-0 overflow-y-auto"
+            className={`w-64 flex flex-col justify-between hidden md:flex flex-shrink-0 z-20 sticky top-0 overflow-y-auto${dark ? ' dark-scrollbar' : ''}`}
             style={{ background: bg, borderRight: `1px solid ${border}`, height: '100dvh' }}
         >
             <div className="p-8">

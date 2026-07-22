@@ -71,3 +71,27 @@ em, i {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
+
+/* Scrollbar delgado y oscuro para las secciones con tema dark (dashboard, mundos, test) */
+.dark-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #444441 transparent;
+}
+
+.dark-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dark-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dark-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #444441;
+  border-radius: 9999px;
+}
+
+.dark-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #6b6460;
+}
