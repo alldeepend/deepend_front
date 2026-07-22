@@ -4,7 +4,7 @@ import { Lock, Award } from 'lucide-react'
 import { journeyApi } from '../../../services/journey'
 import type { JourneyDetailsResponse, StationProgress } from '../../../types/journey'
 import { C } from '../../../styles/colors'
-import WorldsRightSidebar, { badgesForJourney } from './WorldsRightSidebar'
+import WorldsRightSidebar, { badgesForJourney, badgeColorFor } from './WorldsRightSidebar'
 import { HomeSidebar } from '../../home/HomeSidebar'
 
 function PinIcon({ color, size = 32 }: { color: string; size?: number }) {
@@ -357,7 +357,10 @@ function StationCard({
                 <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                     <span className="text-[11px]" style={{ color: C.textMuted }}>{blockCount} bloques</span>
                     {badgeName && (
-                        <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: C.amber + '20', color: C.amber }}>
+                        <span
+                            className="text-[11px] px-2 py-0.5 rounded-full"
+                            style={{ background: badgeColorFor(badgeName) + '20', color: badgeColorFor(badgeName) }}
+                        >
                             <Award size={10} className="inline mr-1" />{badgeName}
                         </span>
                     )}

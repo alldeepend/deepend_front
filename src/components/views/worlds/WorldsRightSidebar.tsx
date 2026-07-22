@@ -4,6 +4,16 @@ import type { Area, Journey, UserJourneyProgress } from '../../../types/journey'
 
 const BADGE_COLORS = ['#52B788', '#5B9BF7', '#E8C547', '#B57BEE', '#818CF8', '#3FC6D8', '#F4669B']
 
+// Color determinístico por nombre de insignia, para que la misma insignia
+// se vea siempre del mismo color sin importar en qué pantalla/lista aparezca.
+export function badgeColorFor(name: string): string {
+    let hash = 0
+    for (let i = 0; i < name.length; i++) {
+        hash = (hash * 31 + name.charCodeAt(i)) | 0
+    }
+    return BADGE_COLORS[Math.abs(hash) % BADGE_COLORS.length]
+}
+
 export interface SidebarBadge {
     name: string
     journey?: string
@@ -169,9 +179,7 @@ export default function WorldsRightSidebar({ mode, journeyTitle: _journeyTitle, 
                     ) : (
                         <div className="flex flex-col gap-2">
                             {earned.map((item, i) => {
-                                const color = mode === 'home'
-                                    ? BADGE_COLORS[i % BADGE_COLORS.length]
-                                    : C.green
+                                const color = C.green
                                 return (
                                     <div
                                         key={`e-${i}`}

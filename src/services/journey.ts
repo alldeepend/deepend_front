@@ -41,5 +41,20 @@ export const journeyApi = {
         });
         if (!response.ok) throw new Error('Error interacting with block');
         return response.json();
+    },
+
+    uploadBlockMedia: async (blockId: string, file: Blob, fileName: string): Promise<{ url: string }> => {
+        const token = localStorage.getItem('token');
+        const formData = new FormData();
+        formData.append('file', file, fileName);
+        const response = await fetch(`${API_URL}/v2/journeys/blocks/${blockId}/media`, {
+            method: 'POST',
+            headers: {
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            },
+            body: formData
+        });
+        if (!response.ok) throw new Error('Error uploading media');
+        return response.json();
     }
 };
