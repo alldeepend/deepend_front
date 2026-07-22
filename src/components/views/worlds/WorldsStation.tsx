@@ -200,9 +200,15 @@ export default function WorldsStation() {
         if (!currentBlock || submitting) return null
         setSubmitting(true)
         try {
+            const rawResponse = responses[currentBlock.id]
+            // Si el usuario marcó "omitir", se guarda el mensaje que definió el admin en vez del objeto de respuesta
+            const responseToSubmit = (rawResponse && typeof rawResponse === 'object' && rawResponse.skipped)
+                ? ((currentBlock.content as any)?.skipLabel || 'Prefiero no responder esta pregunta')
+                : rawResponse
+
             const result: BlockInteractResult = await journeyApi.interactWithBlock(
                 currentBlock.id,
-                responses[currentBlock.id]
+                responseToSubmit
             )
             setCompletedBlockIds(prev => new Set([...prev, currentBlock.id]))
 
@@ -590,6 +596,7 @@ function isResponseValid(blockType: string, response: any): boolean {
 
         case 'activacion': {
             const v = response ?? {}
+            if (v.skipped) return true
             if (v.selectedRoute) {
                 const answers: string[] = (v.allRouteAnswers ?? {})[v.selectedRoute] ?? []
                 return answers.length > 0 && answers.every(a => !!(a?.trim()))
@@ -624,6 +631,7 @@ function isResponseValid(blockType: string, response: any): boolean {
 
         case 'accion_real':
             if (typeof response === 'object' && response !== null) {
+                if (response.skipped) return true
                 if ('selected' in response) {
                     if (!response.selected) return false
                     if (response.selected === 'guided') return !!(response.guidedText?.trim())
@@ -1222,6 +1230,41 @@ function AudioRecorderField({
     )
 }
 
+function SkipCheckbox({
+    checked, label, onChange, disabled,
+}: { checked: boolean; label: string; onChange: (v: boolean) => void; disabled: boolean }) {
+    return (
+        <label
+            className="flex items-center gap-3 rounded-xl px-4 py-3 cursor-pointer select-none transition-colors"
+            style={{
+                background: checked ? `${C.green}20` : C.surface1,
+                border: `1px solid ${checked ? C.green : C.border}`,
+                opacity: disabled ? 0.6 : 1,
+                cursor: disabled ? 'default' : 'pointer',
+            }}
+        >
+            <input
+                type="checkbox"
+                checked={checked}
+                disabled={disabled}
+                onChange={e => onChange(e.target.checked)}
+                className="sr-only"
+            />
+            <span
+                className="inline-flex w-5 h-5 rounded-full border items-center justify-center text-xs shrink-0"
+                style={{
+                    borderColor: checked ? C.green : C.border,
+                    background: checked ? C.green : 'transparent',
+                    color: '#fff',
+                }}
+            >
+                {checked ? '✓' : ''}
+            </span>
+            <span className="text-sm" style={{ color: checked ? C.green : C.textMuted }}>{label}</span>
+        </label>
+    )
+}
+
 function Activacion({
     content, value, onChange, disabled, blockId,
 }: { content: any; value: any; onChange: (v: any) => void; disabled: boolean; blockId: string }) {
@@ -1678,14 +1721,14 @@ function Activacion({
                     <button
                         key={tab.id}
                         onClick={() => tab.enabled && setMode(tab.id)}
-                        disabled={!tab.enabled || disabled}
+                        disabled={!tab.enabled || disabled || v.skipped}
                         className="flex-1 py-2.5 px-2 rounded-xl text-xs font-semibold text-center transition-all"
                         style={{
                             border: `1px solid ${mode === tab.id && tab.enabled ? C.green : C.amber}`,
                             color: mode === tab.id && tab.enabled ? C.green : C.amber,
                             background: C.surface2,
-                            cursor: tab.enabled && !disabled ? 'pointer' : 'default',
-                            opacity: !tab.enabled ? 0.35 : 1,
+                            cursor: tab.enabled && !disabled && !v.skipped ? 'pointer' : 'default',
+                            opacity: !tab.enabled || v.skipped ? 0.35 : 1,
                         }}
                     >
                         {tab.label}
@@ -1693,8 +1736,17 @@ function Activacion({
                 ))}
             </div>
 
+            {content.allowSkip && (
+                <SkipCheckbox
+                    checked={!!v.skipped}
+                    label={content.skipLabel || 'Prefiero no responder esta pregunta'}
+                    onChange={skipped => onChange({ ...v, skipped })}
+                    disabled={disabled}
+                />
+            )}
+
             {/* Escribir */}
-            {mode === 'text' && (
+            {!v.skipped && mode === 'text' && (
                 <>
                 <textarea
                     rows={6}
@@ -1719,7 +1771,7 @@ function Activacion({
             )}
 
             {/* Elegir */}
-            {mode === 'select' && (
+            {!v.skipped && mode === 'select' && (
                 <div className="space-y-2">
                     {options.map((opt, i) => {
                         const isOtra = opt === 'Otra — escribo yo'
@@ -1772,7 +1824,7 @@ function Activacion({
                 </div>
             )}
 
-            {mode === 'audio' && (
+            {!v.skipped && mode === 'audio' && (
                 <AudioRecorderField
                     blockId={blockId}
                     value={v.audioUrl ?? null}
@@ -1854,6 +1906,7 @@ function AccionReal({
         : (typeof value === 'string' ? value : '')
     const photoUrl: string | undefined = typeof value === 'object' && value !== null ? value.photoUrl : undefined
     const audioUrl: string | undefined = typeof value === 'object' && value !== null ? value.audioUrl : undefined
+    const skipped: boolean = typeof value === 'object' && value !== null ? !!value.skipped : false
     const initialTab: 'text' | 'photo' | 'audio' =
         typeof value === 'object' && value !== null && 'activeTab' in value
             ? value.activeTab
@@ -2041,18 +2094,19 @@ function AccionReal({
                             key={tab.id}
                             type="button"
                             onClick={() => {
-                                if (tab.clickable) {
+                                if (tab.clickable && !skipped) {
                                     setActiveTab(tab.id)
-                                    onChange({ text: freeText, activeTab: tab.id })
+                                    onChange({ text: freeText, activeTab: tab.id, photoUrl, audioUrl, skipped })
                                 }
                             }}
-                            disabled={!tab.clickable}
+                            disabled={!tab.clickable || skipped}
                             className="flex-1 py-2.5 px-2 rounded-xl text-xs font-semibold text-center transition-colors"
                             style={{
                                 border: `1px solid ${activeTab === tab.id ? C.green : tab.clickable ? C.amber : C.border}`,
                                 color: activeTab === tab.id ? C.green : tab.clickable ? C.amber : C.border,
                                 background: C.surface2,
-                                cursor: tab.clickable ? 'pointer' : 'default',
+                                cursor: tab.clickable && !skipped ? 'pointer' : 'default',
+                                opacity: skipped ? 0.35 : 1,
                             }}
                         >
                             {tab.label}
@@ -2061,8 +2115,17 @@ function AccionReal({
                 </div>
             </div>
 
+            {content.allowSkip && (
+                <SkipCheckbox
+                    checked={skipped}
+                    label={content.skipLabel || 'Prefiero no responder esta pregunta'}
+                    onChange={next => onChange({ text: freeText, activeTab, photoUrl, audioUrl, skipped: next })}
+                    disabled={disabled}
+                />
+            )}
+
             {/* Área de respuesta con frase repetida como guía */}
-            {activeTab === 'text' && (
+            {!skipped && activeTab === 'text' && (
                 <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${C.border}` }}>
                     {phrase && (
                         <div className="px-4 pt-3 pb-2" style={{ background: C.surface1 }}>
@@ -2101,7 +2164,7 @@ function AccionReal({
                 </div>
             )}
 
-            {activeTab === 'photo' && (
+            {!skipped && activeTab === 'photo' && (
                 <PhotoUploadField
                     blockId={blockId}
                     value={photoUrl ?? null}
@@ -2110,7 +2173,7 @@ function AccionReal({
                 />
             )}
 
-            {activeTab === 'audio' && (
+            {!skipped && activeTab === 'audio' && (
                 <AudioRecorderField
                     blockId={blockId}
                     value={audioUrl ?? null}
