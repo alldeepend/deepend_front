@@ -46,7 +46,7 @@ export default function WorldsJourney() {
     if (!data) {
         return (
             <div className="min-h-screen flex items-center justify-center" style={{ background: C.bg, color: C.text }}>
-                <p>No se encontró el reto.</p>
+                <p>No se encontró el viaje.</p>
             </div>
         )
     }
@@ -106,7 +106,7 @@ export default function WorldsJourney() {
                 <div className="relative z-10 flex items-center justify-between">
                     <div>
                         <p className="text-xs tracking-[0.2em] uppercase" style={{ color: C.textMuted }}>
-                            {journey.area?.name || 'Área'} · Reto
+                            {journey.area?.name || 'Área'} · Viaje
                         </p>
                         <h1
                             className="text-2xl font-bold mt-1 leading-tight"

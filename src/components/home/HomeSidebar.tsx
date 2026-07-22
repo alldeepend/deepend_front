@@ -62,7 +62,7 @@ export const HomeSidebar = ({ activeTab, dark = true }: HomeSidebarProps) => {
                     {user?.membership === 'test' && (
                         <SidebarItem
                             icon={Globe}
-                            label="Mundos & Retos"
+                            label="Mundos & Viajes"
                             active={activeTab === 'Mundos'}
                             onClick={() => navigate('/worlds')}
                             dark={dark}

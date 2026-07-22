@@ -1,4 +1,4 @@
-import type { JourneyDetailsResponse, Area } from '../types/journey';
+import type { JourneyDetailsResponse, Area, Collection } from '../types/journey';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -13,6 +13,19 @@ export const journeyApi = {
             }
         });
         if (!response.ok) throw new Error('Error fetching journeys');
+        return response.json();
+    },
+
+    getCollections: async (): Promise<{ collections: Collection[] }> => {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/v2/collections`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            }
+        });
+        if (!response.ok) throw new Error('Error fetching collections');
         return response.json();
     },
 

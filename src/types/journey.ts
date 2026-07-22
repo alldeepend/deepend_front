@@ -50,6 +50,13 @@ export interface Area {
     journeys: Journey[];
 }
 
+export interface Collection {
+    id: string;
+    title: string;
+    description: string | null;
+    journeys: (Journey & { areaName: string })[];
+}
+
 export interface UserJourneyProgress {
     id: string;
     status: string;

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { journeyApi } from '../../../services/journey'
-import type { Area, Journey, UserJourneyProgress } from '../../../types/journey'
+import type { Area, Collection, Journey, UserJourneyProgress } from '../../../types/journey'
 import { useAuth } from '../../../store/useAuth'
 import { HomeSidebar } from '../../home/HomeSidebar'
 import { C } from '../../../styles/colors'
@@ -38,6 +38,7 @@ export default function WorldsHome() {
     const navigate  = useNavigate()
     const { user }  = useAuth()
     const [areas, setAreas]       = useState<Area[]>([])
+    const [collections, setCollections] = useState<Collection[]>([])
     const [loading, setLoading]   = useState(true)
     const [currentIdx, setCurrentIdx] = useState(0)
     const [descOpenId, setDescOpenId] = useState<string | null>(null)
@@ -45,23 +46,18 @@ export default function WorldsHome() {
     const [pendingJourneyId, setPendingJourneyId] = useState<string | null>(null)
 
     useEffect(() => {
-        journeyApi.getAvailableJourneys()
-            .then(d => setAreas(d.areas))
+        // `areas` solo se usa para agregar insignias/XP en el sidebar (independiente de las colecciones)
+        Promise.all([
+            journeyApi.getAvailableJourneys().then(d => setAreas(d.areas)),
+            journeyApi.getCollections().then(d => setCollections(d.collections)),
+        ])
             .catch(console.error)
             .finally(() => setLoading(false))
     }, [])
 
-    const allJourneys: (Journey & { areaName: string })[] = areas
-        .flatMap(a => a.journeys.map(j => ({ ...j, areaName: a.name })))
-        .sort((a, b) => {
-            const statusRank = (j: Journey) => {
-                const uj = (j as any).userJourneys?.[0] as UserJourneyProgress | undefined
-                if (uj && uj.status !== 'completado') return 0  // in-progress first
-                if (!uj) return 1                               // not started second
-                return 2                                        // completed last
-            }
-            return statusRank(a) - statusRank(b)
-        })
+    // Orden curado por el admin: colecciones en su orden, journeys en su orden dentro de cada una
+    // (la deduplicacion entre colecciones ya la hace el backend)
+    const allJourneys: (Journey & { areaName: string })[] = collections.flatMap(c => c.journeys)
 
     const totalStations = (j: Journey) =>
         (j.worlds ?? []).reduce((s, w) => s + (w.stations?.length ?? 0), 0)
@@ -76,7 +72,7 @@ export default function WorldsHome() {
         setCurrentIdx(Math.max(0, Math.min(idx, totalSections - 1)))
     }
 
-    // Restaura la sección guardada tras volver de un reto (por ID para sobrevivir el re-sort)
+    // Restaura la sección guardada tras volver de un viaje (por ID para sobrevivir el re-sort)
     useEffect(() => {
         if (allJourneys.length === 0) return
         const savedId = sessionStorage.getItem('worldsHomeJourneyId')
@@ -161,7 +157,7 @@ export default function WorldsHome() {
                                 </h1>
                                 {allJourneys.length > 0 && (
                                     <p className="text-xs tracking-[0.25em] uppercase" style={{ color: C.textMuted }}>
-                                        {allJourneys.length} {allJourneys.length === 1 ? 'reto disponible' : 'retos disponibles'}
+                                        {allJourneys.length} {allJourneys.length === 1 ? 'viaje disponible' : 'viajes disponibles'}
                                     </p>
                                 )}
                             </div>
@@ -169,12 +165,12 @@ export default function WorldsHome() {
                             {/* Hint inferior */}
                             <div className="relative z-10 flex flex-col items-center pb-10 gap-2">
                                 <p className="text-xs tracking-[0.2em] uppercase" style={{ color: C.textMuted }}>
-                                    Explora los retos
+                                    Explora los viajes
                                 </p>
                             </div>
                         </div>
 
-                        {/* ── Secciones 1..N: Retos ── */}
+                        {/* ── Secciones 1..N: Viajes ── */}
                         {allJourneys.map((journey, idx) => {
                             const userJourney = (journey as any).userJourneys?.[0] as UserJourneyProgress | undefined
                             const isStarted   = !!userJourney

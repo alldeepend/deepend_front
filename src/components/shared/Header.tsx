@@ -249,7 +249,7 @@ export default function Header({ dark = false }: { dark?: boolean }) {
                         style={{ color: dark ? muted : '#44403c' }}
                       >
                         <Globe size={20} />
-                        <span className="font-medium">Mundos & Retos</span>
+                        <span className="font-medium">Mundos & Viajes</span>
                       </Link>
                     </li>
                   )}
