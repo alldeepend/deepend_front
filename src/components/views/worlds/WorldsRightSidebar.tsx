@@ -1,11 +1,59 @@
-import { Award, Brain, Lock } from 'lucide-react'
+import { Award, Brain, Lock, Zap } from 'lucide-react'
 import { C } from '../../../styles/colors'
+import type { Area, Journey, UserJourneyProgress } from '../../../types/journey'
 
 const BADGE_COLORS = ['#52B788', '#5B9BF7', '#E8C547', '#B57BEE', '#818CF8', '#3FC6D8', '#F4669B']
+
+export interface SidebarBadge {
+    name: string
+    journey?: string
+    earned: boolean
+}
+
+// Insignias ganadas por el usuario, agregadas de todos sus journeys (para mode="home")
+export function earnedBadgesFromAreas(areas: Area[]): SidebarBadge[] {
+    const badges: SidebarBadge[] = []
+    for (const area of areas) {
+        for (const journey of area.journeys) {
+            const earned = journey.userJourneys?.[0]?.earnedBadges ?? []
+            for (const name of earned) {
+                badges.push({ name, journey: journey.title, earned: true })
+            }
+        }
+    }
+    return badges
+}
+
+// XP total del usuario, agregado de todos sus journeys (para mode="home")
+export function totalXpFromAreas(areas: Area[]): number {
+    let total = 0
+    for (const area of areas) {
+        for (const journey of area.journeys) {
+            total += journey.userJourneys?.[0]?.totalXpEarned ?? 0
+        }
+    }
+    return total
+}
+
+// Todas las insignias posibles de un journey (ganadas + pendientes), para mode="journey"
+export function badgesForJourney(journey: Journey, userJourney: UserJourneyProgress | null | undefined): SidebarBadge[] {
+    const earnedSet = new Set(userJourney?.earnedBadges ?? [])
+    const badges: SidebarBadge[] = []
+    for (const world of journey.worlds) {
+        for (const station of world.stations) {
+            if (station.badgeName) {
+                badges.push({ name: station.badgeName, earned: earnedSet.has(station.badgeName) })
+            }
+        }
+    }
+    return badges
+}
 
 interface Props {
     mode: 'home' | 'journey'
     journeyTitle?: string
+    badges: SidebarBadge[]
+    totalXp: number
 }
 
 const ARCHETYPE_MOCK = {
@@ -16,30 +64,35 @@ const ARCHETYPE_MOCK = {
     color: C.amber,
 }
 
-const BADGES_MOCK = [
-    { name: 'El Observador',  journey: 'Mundo Financiero',   earned: true  },
-    { name: 'Primer Paso',    journey: 'Hábitos Esenciales',  earned: true  },
-    { name: 'Mente Clara',    journey: 'Mundo Financiero',   earned: true  },
-    { name: 'Raíz Profunda',  journey: 'Hábitos Esenciales',  earned: false },
-    { name: 'Impulso Real',   journey: 'Bienestar Físico',   earned: false },
-    { name: 'El Despertar',   journey: 'Mundo Financiero',   earned: false },
-    { name: 'Constancia',     journey: 'Hábitos Esenciales',  earned: false },
-]
-
-export default function WorldsRightSidebar({ mode, journeyTitle: _journeyTitle }: Props) {
+export default function WorldsRightSidebar({ mode, journeyTitle: _journeyTitle, badges: allBadges, totalXp }: Props) {
     const badges = mode === 'journey'
-        ? BADGES_MOCK
-        : BADGES_MOCK.filter(b => b.earned)
+        ? allBadges
+        : allBadges.filter(b => b.earned)
 
     const earned  = badges.filter(b => b.earned)
     const pending = mode === 'journey' ? badges.filter(b => !b.earned) : []
 
     return (
         <aside
-            className="w-80 flex-shrink-0 hidden md:flex flex-col self-start sticky top-0 border-l overflow-y-auto"
+            className="w-80 flex-shrink-0 hidden md:flex flex-col self-start sticky top-0 border-l overflow-y-auto dark-scrollbar"
             style={{ background: C.bg, borderColor: C.border, fontFamily: 'Montserrat, sans-serif', height: '100dvh' }}
         >
             <div className="p-6 flex flex-col gap-6">
+
+                {/* XP total */}
+                <div className="rounded-2xl p-4 border flex items-center gap-3" style={{ background: C.surface1, borderColor: C.border }}>
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: C.amber + '22' }}>
+                        <Zap size={18} style={{ color: C.amber }} />
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: C.label }}>
+                            {mode === 'journey' ? 'XP de este viaje' : 'XP Total'}
+                        </p>
+                        <p className="text-lg font-bold" style={{ fontFamily: "'American Typewriter', Georgia, serif", color: C.text }}>
+                            {totalXp.toLocaleString('es')} XP
+                        </p>
+                    </div>
+                </div>
 
                 {/* Archetype */}
                 <div>

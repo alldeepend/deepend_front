@@ -4,7 +4,7 @@ import { Lock, Award } from 'lucide-react'
 import { journeyApi } from '../../../services/journey'
 import type { JourneyDetailsResponse, StationProgress } from '../../../types/journey'
 import { C } from '../../../styles/colors'
-import WorldsRightSidebar from './WorldsRightSidebar'
+import WorldsRightSidebar, { badgesForJourney } from './WorldsRightSidebar'
 import { HomeSidebar } from '../../home/HomeSidebar'
 
 function PinIcon({ color, size = 32 }: { color: string; size?: number }) {
@@ -293,7 +293,7 @@ export default function WorldsJourney() {
                 </div>
             </div>
         </div>
-        <WorldsRightSidebar mode="journey" journeyTitle={journey.title} />
+        <WorldsRightSidebar mode="journey" journeyTitle={journey.title} badges={badgesForJourney(journey, userJourney)} totalXp={userJourney?.totalXpEarned ?? 0} />
         </div>
     )
 }

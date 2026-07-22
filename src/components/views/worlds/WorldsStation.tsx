@@ -5,7 +5,7 @@ import { journeyApi } from '../../../services/journey'
 import type { Block, BlockInteractResult, JourneyDetailsResponse, Station } from '../../../types/journey'
 
 import { C } from '../../../styles/colors'
-import WorldsRightSidebar from './WorldsRightSidebar'
+import WorldsRightSidebar, { badgesForJourney } from './WorldsRightSidebar'
 import { HomeSidebar } from '../../home/HomeSidebar'
 
 
@@ -568,7 +568,7 @@ export default function WorldsStation() {
                 ) : null}
             </div>
         </div>
-        <WorldsRightSidebar mode="journey" journeyTitle={data?.journey.title} />
+        <WorldsRightSidebar mode="journey" journeyTitle={data?.journey.title} badges={data ? badgesForJourney(data.journey, data.progress.userJourney) : []} totalXp={data?.progress.userJourney?.totalXpEarned ?? 0} />
         </div>
     )
 }

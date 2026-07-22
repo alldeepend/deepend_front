@@ -5,7 +5,7 @@ import type { Area, Journey, UserJourneyProgress } from '../../../types/journey'
 import { useAuth } from '../../../store/useAuth'
 import { HomeSidebar } from '../../home/HomeSidebar'
 import { C } from '../../../styles/colors'
-import WorldsRightSidebar from './WorldsRightSidebar'
+import WorldsRightSidebar, { earnedBadgesFromAreas, totalXpFromAreas } from './WorldsRightSidebar'
 
 function parseInline(text: string): React.ReactNode[] {
     const parts = text.split(/(\*\*_[^_*]+_\*\*|_\*\*[^_*]+\*\*_|\*\*[^*]+\*\*|_[^_]+_)/g)
@@ -367,7 +367,7 @@ export default function WorldsHome() {
                         onClick={() => setDescOpenId(null)}
                     >
                         <div
-                            className="w-full max-w-lg rounded-t-2xl p-6 overflow-y-auto"
+                            className="w-full max-w-lg rounded-t-2xl p-6 overflow-y-auto dark-scrollbar"
                             style={{ maxHeight: '72vh', background: C.surface1, border: `1px solid ${C.border}` }}
                             onClick={e => e.stopPropagation()}
                         >
@@ -422,7 +422,7 @@ export default function WorldsHome() {
             </div>
 
             {/* Right sidebar (desktop only) */}
-            <WorldsRightSidebar mode="home" />
+            <WorldsRightSidebar mode="home" badges={earnedBadgesFromAreas(areas)} totalXp={totalXpFromAreas(areas)} />
 
         </div>
     )
