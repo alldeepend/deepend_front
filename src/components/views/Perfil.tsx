@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Edit2, Save, X, User as UserIcon, Calendar, MapPin, Phone, RefreshCw, Trash2, AlertTriangle, Camera, Loader2, Plus } from 'lucide-react';
+import { ArrowLeft, Edit2, Save, X, User as UserIcon, Calendar, MapPin, Phone, RefreshCw, Trash2, AlertTriangle, Camera, Loader2, Plus, Heart, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { HomeSidebar } from '../home/HomeSidebar';
 import { useAuth } from '../../store/useAuth';
@@ -27,6 +27,8 @@ interface ProfileData {
     email: string;
     username: string;
     preferredName: string;
+    estado_civil: string;
+    hobbies: string;
 }
 
 export default function Perfil() {
@@ -48,7 +50,9 @@ export default function Perfil() {
         ciudad_residencia: '',
         email: '',
         username: '',
-        preferredName: ''
+        preferredName: '',
+        estado_civil: '',
+        hobbies: ''
     });
 
     useEffect(() => {
@@ -85,7 +89,9 @@ export default function Perfil() {
                     ciudad_residencia: data.ciudad_residencia || '',
                     email: data.email || '',
                     username: data.username || '',
-                    preferredName: data.preferredName || ''
+                    preferredName: data.preferredName || '',
+                    estado_civil: data.estado_civil || '',
+                    hobbies: data.hobbies || ''
                 };
                 console.log("Setting form data:", newData); // DEBUG LOG
 
@@ -386,6 +392,22 @@ export default function Perfil() {
                                     value={formData.fecha_nacimiento}
                                     icon={Calendar}
                                     type="date"
+                                    isEditing={isEditing}
+                                    onChange={handleInputChange}
+                                />
+                                <Field
+                                    label="Estado Civil"
+                                    name="estado_civil"
+                                    value={formData.estado_civil}
+                                    icon={Heart}
+                                    isEditing={isEditing}
+                                    onChange={handleInputChange}
+                                />
+                                <Field
+                                    label="Hobbies"
+                                    name="hobbies"
+                                    value={formData.hobbies}
+                                    icon={Sparkles}
                                     isEditing={isEditing}
                                     onChange={handleInputChange}
                                 />
