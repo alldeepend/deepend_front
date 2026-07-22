@@ -2319,7 +2319,7 @@ function CelebrationScreen({
                 </p>
 
                 <img
-                    src='/Fin Estación El Observador.png'
+                    src={station.completionImageUrl ?? '/Fin Estación El Observador.png'}
                     alt=""
                     className="w-full rounded-2xl object-cover object-[center_70%]"
                     style={{ height: '280px' }}

@@ -16,6 +16,7 @@ export interface Station {
     orderIndex: number;
     xp: number;
     badgeName: string | null;
+    completionImageUrl: string | null;
     blocks: Block[];
 }
 
