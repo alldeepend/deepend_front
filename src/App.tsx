@@ -22,6 +22,7 @@ import WorldsRoute from './components/shared/WorldsRoute';
 import WorldsHome from './components/views/worlds/WorldsHome';
 import WorldsJourney from './components/views/worlds/WorldsJourney';
 import WorldsStation from './components/views/worlds/WorldsStation';
+import MaintenanceGate from './components/shared/MaintenanceGate';
 
 function App() {
     const host = window.location.hostname;
@@ -31,6 +32,7 @@ function App() {
 
     return (
         <>
+            <MaintenanceGate>
             <Routes>
                 <Route path="/" element={
                     <PublicRoute>
@@ -137,6 +139,7 @@ function App() {
 
 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+            </MaintenanceGate>
         </>
     )
 }
