@@ -1,11 +1,18 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { C } from '../../styles/colors';
 import { useQuery } from '@tanstack/react-query';
-import { Clock, ExternalLink, Calendar, ArrowRight, ChevronLeft, ChevronRight, PlusCircle } from 'lucide-react';
+import { Clock, Calendar, ArrowRight, PlusCircle, Dumbbell, Sparkles } from 'lucide-react';
 import { Link } from 'react-router';
 
 const host = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/api\/?$/, '');
+const CARDS_PER_PAGE = 3;
+
+const MOTIVATIONAL_MESSAGES = [
+    'Cada minuto cuenta — registra tu próxima actividad',
+    'Tu cuerpo también es parte del viaje',
+    '¿Ya te moviste hoy? Déjalo aquí registrado',
+];
 
 interface ActivityLog {
     id: string;
@@ -19,12 +26,48 @@ interface RecentActivitiesProps {
     onAddActivity: () => void;
 }
 
+function ActivityTile({ activity }: { activity: ActivityLog }) {
+    return (
+        <div className="rounded-xl p-3 flex flex-col gap-2" style={{ background: '#252020' }}>
+            {activity.evidenceUrl ? (
+                <img src={activity.evidenceUrl} alt={activity.activity} className="w-full h-20 rounded-lg object-cover" />
+            ) : (
+                <div className="w-full h-20 rounded-lg flex items-center justify-center" style={{ background: '#1E1A1B' }}>
+                    <Dumbbell size={24} style={{ color: '#6B6460' }} />
+                </div>
+            )}
+            <div>
+                <p className="font-bold text-xs truncate" style={{ color: '#F5F0E8' }}>{activity.activity}</p>
+                <div className="flex items-center gap-1 text-[11px] mt-1" style={{ color: '#A8A29E' }}>
+                    <Clock size={10} /> {activity.duration} min
+                </div>
+                <div className="flex items-center gap-1 text-[11px] mt-0.5" style={{ color: '#6B6460' }}>
+                    <Calendar size={10} /> {new Date(activity.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function MotivationalTile({ message, onAddActivity }: { message: string; onAddActivity: () => void }) {
+    return (
+        <button
+            onClick={onAddActivity}
+            className="rounded-xl p-3 flex flex-col items-center justify-center text-center gap-2 border-2 border-dashed transition-colors hover:opacity-80"
+            style={{ borderColor: '#333330' }}
+        >
+            <Sparkles size={20} style={{ color: C.red }} />
+            <p className="text-[11px] leading-snug" style={{ color: '#A8A29E' }}>{message}</p>
+        </button>
+    );
+}
+
 export const RecentActivities = ({ onAddActivity }: RecentActivitiesProps) => {
     const { data: activities, isLoading } = useQuery({
         queryKey: ['recent-activities'],
         queryFn: async () => {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${host}/api/activity-log?limit=3`, {
+            const res = await fetch(`${host}/api/activity-log?limit=9`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (!res.ok) throw new Error('Failed to fetch');
@@ -32,26 +75,21 @@ export const RecentActivities = ({ onAddActivity }: RecentActivitiesProps) => {
         }
     });
 
-    const [currentIndex, setCurrentIndex] = useState(0);
-
-    // Auto-play effect
-    useEffect(() => {
-        if (!activities || activities.length <= 1) return;
-
-        const interval = setInterval(() => {
-            setCurrentIndex((prev) => (prev + 1) % activities.length);
-        }, 5000); // Change slide every 5 seconds
-
-        return () => clearInterval(interval);
+    // Páginas de 3 en 3 — si hay más de 3 actividades, se rota entre páginas.
+    const pages = useMemo(() => {
+        if (!activities || activities.length === 0) return [];
+        const chunks: ActivityLog[][] = [];
+        for (let i = 0; i < activities.length; i += CARDS_PER_PAGE) chunks.push(activities.slice(i, i + CARDS_PER_PAGE));
+        return chunks;
     }, [activities]);
 
-    const nextSlide = () => {
-        if (activities) setCurrentIndex((prev) => (prev + 1) % activities.length);
-    };
+    const [page, setPage] = useState(0);
 
-    const prevSlide = () => {
-        if (activities) setCurrentIndex((prev) => (prev - 1 + activities.length) % activities.length);
-    };
+    useEffect(() => {
+        if (pages.length <= 1) return;
+        const interval = setInterval(() => setPage(p => (p + 1) % pages.length), 5000);
+        return () => clearInterval(interval);
+    }, [pages.length]);
 
     if (isLoading) return <div className="p-4 rounded-2xl shadow-sm border h-64 animate-pulse" style={{ background: '#1E1A1B', borderColor: '#333330' }}></div>;
 
@@ -70,91 +108,43 @@ export const RecentActivities = ({ onAddActivity }: RecentActivitiesProps) => {
         </div>
     );
 
-    const currentActivity = activities[currentIndex];
+    const currentPage = pages[page] ?? [];
+    const slots: (ActivityLog | null)[] = [...currentPage, ...Array(Math.max(0, CARDS_PER_PAGE - currentPage.length)).fill(null)];
 
     return (
-        <div className="rounded-2xl shadow-sm border p-6 mb-8 relative overflow-hidden group/widget" style={{ background: '#1E1A1B', borderColor: '#333330' }}>
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                <div className="flex flex-col items-center gap-4 w-full md:w-auto justify-between md:justify-start">
-                    <h3 className="text-lg font-bold" style={{ color: '#F5F0E8', fontFamily: "'American Typewriter', Georgia, serif" }}>Registro Actividad - Retos Físicos</h3>
-                    <button
-                        onClick={onAddActivity}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap"
-                        style={{ background: '#EE2A2822', color: C.red }}
-                    >
-                        <PlusCircle size={14} />
-                        Registrar Actividad
-                    </button>
-                </div>
-
+        <div className="rounded-2xl shadow-sm border p-6 mb-8" style={{ background: '#1E1A1B', borderColor: '#333330' }}>
+            <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
+                <h3 className="text-lg font-bold" style={{ color: '#F5F0E8', fontFamily: "'American Typewriter', Georgia, serif" }}>Registro Actividad - Retos Físicos</h3>
+                <button
+                    onClick={onAddActivity}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap"
+                    style={{ background: '#EE2A2822', color: C.red }}
+                >
+                    <PlusCircle size={14} />
+                    Registrar Actividad
+                </button>
             </div>
 
-            <div className="relative rounded-2xl overflow-hidden h-64 md:h-72" style={{ background: '#252020' }}>
-                {/* Navigation Buttons (visible on hover) */}
-                {activities.length > 1 && (
-                    <>
-                        <button
-                            onClick={prevSlide}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full backdrop-blur-sm opacity-0 group-hover/widget:opacity-100 transition-opacity"
-                        >
-                            <ChevronLeft size={24} />
-                        </button>
-                        <button
-                            onClick={nextSlide}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full backdrop-blur-sm opacity-0 group-hover/widget:opacity-100 transition-opacity"
-                        >
-                            <ChevronRight size={24} />
-                        </button>
-                    </>
+            <div className="grid grid-cols-3 gap-3">
+                {slots.map((activity, idx) => activity
+                    ? <ActivityTile key={activity.id} activity={activity} />
+                    : <MotivationalTile key={`filler-${idx}`} message={MOTIVATIONAL_MESSAGES[idx % MOTIVATIONAL_MESSAGES.length]} onAddActivity={onAddActivity} />
                 )}
+            </div>
 
-                {/* Slides */}
-                <div className="absolute inset-0">
-                    {currentActivity.evidenceUrl ? (
-                        <img
-                            key={currentActivity.id}
-                            src={currentActivity.evidenceUrl}
-                            alt={currentActivity.activity}
-                            className="w-full h-full object-cover transition-transform duration-700 ease-in-out"
+            {pages.length > 1 && (
+                <div className="flex justify-center gap-2 pt-4">
+                    {pages.map((_, idx) => (
+                        <button
+                            key={idx}
+                            onClick={() => setPage(idx)}
+                            className="h-1.5 rounded-full transition-all"
+                            style={{ width: idx === page ? 20 : 6, background: idx === page ? C.red : '#333330' }}
                         />
-                    ) : (
-                        <div key={currentActivity.id} className="w-full h-full flex flex-col items-center justify-center" style={{ background: '#252020', color: '#A8A29E' }}>
-                            <Clock size={48} className="mb-2" />
-                            <span className="text-3xl font-bold" style={{ color: '#A8A29E' }}>{currentActivity.duration} min</span>
-                        </div>
-                    )}
-
-                    {/* Overlay Content */}
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-6 pt-20">
-                        <div className="transform transition-all duration-500 translate-y-0 text-white">
-                            <h4 className="text-2xl font-bold mb-2">{currentActivity.activity}</h4>
-                            <div className="flex items-center gap-4 text-white/90 text-sm font-medium">
-                                <span className="flex items-center gap-1.5 bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm">
-                                    <Clock size={14} /> {currentActivity.duration} min
-                                </span>
-                                <span className="flex items-center gap-1.5">
-                                    <Calendar size={14} /> {new Date(currentActivity.createdAt).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
+                    ))}
                 </div>
+            )}
 
-
-                {/* Dots Indicator */}
-                {activities.length > 1 && (
-                    <div className="absolute bottom-4 right-4 z-20 flex gap-2">
-                        {activities.map((_, idx) => (
-                            <button
-                                key={idx}
-                                onClick={() => setCurrentIndex(idx)}
-                                className={`w-2 h-2 rounded-full transition-all ${idx === currentIndex ? 'bg-white w-6' : 'bg-white/50 hover:bg-white/80'
-                                    }`}
-                            />
-                        ))}
-                    </div>
-                )}
-            </div>
             <div className="flex justify-end pt-4">
                 <Link to="/activities" className="text-sm font-bold flex items-center gap-1 group transition-opacity hover:opacity-80" style={{ color: C.red }}>
                     Ver todas <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />

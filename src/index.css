@@ -72,6 +72,32 @@ em, i {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Scrollbar del documento: cuando lo que hace scroll es la página entera y no
+   un panel interno con .dark-scrollbar, evita que se vea el scrollbar por
+   defecto del navegador (gris claro, con flechas). */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #444441 transparent;
+}
+
+html::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+html::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb {
+  background-color: #444441;
+  border-radius: 9999px;
+}
+
+html::-webkit-scrollbar-thumb:hover {
+  background-color: #6b6460;
+}
+
 /* Scrollbar delgado y oscuro para las secciones con tema dark (dashboard, mundos, test) */
 .dark-scrollbar {
   scrollbar-width: thin;

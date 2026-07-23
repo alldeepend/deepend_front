@@ -18,6 +18,18 @@ export interface Station {
     badgeName: string | null;
     completionImageUrl: string | null;
     blocks: Block[];
+    // Progreso del usuario actual para esta estación — solo viene poblado
+    // cuando el endpoint es getAvailableJourneys (para evitar pedir el
+    // detalle completo del viaje solo para saber en qué mundo va).
+    userProgress?: { isCompleted: boolean }[];
+}
+
+export interface JourneyGateSummary {
+    title: string;
+    isActive: boolean;
+    xpPerDay: number;
+    xpBonusClose: number;
+    userGates: { activatedAt: string | null; completedAt: string | null; totalXpEarned: number }[];
 }
 
 export interface World {
@@ -41,6 +53,8 @@ export interface Journey {
     worlds: World[];
     area?: { id: string; name: string };
     userJourneys?: UserJourneyProgress[];
+    // Solo viene poblado cuando el endpoint es getAvailableJourneys.
+    gate?: JourneyGateSummary | null;
 }
 
 export interface Area {
