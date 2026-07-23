@@ -31,6 +31,19 @@ export default function WorldsJourney() {
             .finally(() => setLoading(false))
     }, [journeyId])
 
+    // Red de seguridad: si se entra directo por URL a un viaje con Puerta sin completar
+    // (sin pasar por el CTA de "Mundos y Retos", que ya maneja el modal), se regresa a la lista.
+    useEffect(() => {
+        if (!journeyId) return
+        journeyApi.getGateStatus(journeyId)
+            .then(status => {
+                if (status.hasGate && !status.completed) {
+                    navigate('/worlds', { replace: true })
+                }
+            })
+            .catch(console.error)
+    }, [journeyId])
+
     if (loading) {
         return (
             <div

@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { journeyApi } from '../../../services/journey'
-import type { Area, Collection, Journey, UserJourneyProgress } from '../../../types/journey'
+import type { Area, Collection, GateStatus, Journey, UserJourneyProgress } from '../../../types/journey'
 import { useAuth } from '../../../store/useAuth'
 import { HomeSidebar } from '../../home/HomeSidebar'
 import { C } from '../../../styles/colors'
 import WorldsRightSidebar, { earnedBadgesFromAreas, totalXpFromAreas } from './WorldsRightSidebar'
+import GateModal from './GateModal'
 
 function parseInline(text: string): React.ReactNode[] {
     const parts = text.split(/(\*\*_[^_*]+_\*\*|_\*\*[^_*]+\*\*_|\*\*[^*]+\*\*|_[^_]+_)/g)
@@ -44,6 +45,9 @@ export default function WorldsHome() {
     const [descOpenId, setDescOpenId] = useState<string | null>(null)
     const [showEntryModal, setShowEntryModal] = useState(false)
     const [pendingJourneyId, setPendingJourneyId] = useState<string | null>(null)
+    const [checkingGateId, setCheckingGateId] = useState<string | null>(null)
+    const [gateJourneyId, setGateJourneyId] = useState<string | null>(null)
+    const [gateStatus, setGateStatus] = useState<GateStatus | null>(null)
 
     useEffect(() => {
         // `areas` solo se usa para agregar insignias/XP en el sidebar (independiente de las colecciones)
@@ -82,6 +86,41 @@ export default function WorldsHome() {
             sessionStorage.removeItem('worldsHomeJourneyId')
         }
     }, [allJourneys.length])
+
+    // Navega al viaje (o abre el aviso de "antes de empezar" la primera vez) — se usa tanto
+    // al presionar el CTA directo como al terminar la Puerta desde su modal.
+    const enterJourney = (journeyId: string) => {
+        const journey = allJourneys.find(j => j.id === journeyId)
+        const userJourney = journey ? (journey as any).userJourneys?.[0] as UserJourneyProgress | undefined : undefined
+        const isCompleted = userJourney?.status === 'completado'
+
+        sessionStorage.setItem('worldsHomeJourneyId', journeyId)
+        if (!isCompleted && !localStorage.getItem('deepend_journey_entry_warned')) {
+            setPendingJourneyId(journeyId)
+            setShowEntryModal(true)
+        } else {
+            navigate(`/worlds/${journeyId}`)
+        }
+    }
+
+    // Antes de entrar a un viaje, revisa si tiene una Puerta sin completar — si la tiene,
+    // el modal se abre aquí mismo y todavía no se navega a los Mundos del viaje.
+    const handleStartClick = async (journeyId: string) => {
+        setCheckingGateId(journeyId)
+        try {
+            const status = await journeyApi.getGateStatus(journeyId)
+            if (status.hasGate && !status.completed) {
+                setGateStatus(status)
+                setGateJourneyId(journeyId)
+                return
+            }
+        } catch {
+            // si falla la consulta de la puerta, no bloquear al usuario
+        } finally {
+            setCheckingGateId(null)
+        }
+        enterJourney(journeyId)
+    }
 
     if (loading) {
         return (
@@ -285,19 +324,12 @@ export default function WorldsHome() {
 
                                         {/* CTA */}
                                         <button
-                                            onClick={() => {
-                                                sessionStorage.setItem('worldsHomeJourneyId', journey.id)
-                                                if (!isCompleted && !localStorage.getItem('deepend_journey_entry_warned')) {
-                                                    setPendingJourneyId(journey.id)
-                                                    setShowEntryModal(true)
-                                                } else {
-                                                    navigate(`/worlds/${journey.id}`)
-                                                }
-                                            }}
-                                            className="w-full py-4 rounded-full font-semibold text-sm tracking-wide transition-opacity hover:opacity-90 active:opacity-80"
+                                            onClick={() => handleStartClick(journey.id)}
+                                            disabled={checkingGateId === journey.id}
+                                            className="w-full py-4 rounded-full font-semibold text-sm tracking-wide transition-opacity hover:opacity-90 active:opacity-80 disabled:opacity-70"
                                             style={{ background: C.red, color: '#fff' }}
                                         >
-                                            {ctaLabel}
+                                            {checkingGateId === journey.id ? 'Cargando...' : ctaLabel}
                                         </button>
 
                                         <p className="text-xs text-center" style={{ color: C.textMuted }}>
@@ -350,6 +382,21 @@ export default function WorldsHome() {
                         </button>
                     </div>
                 </div>
+            )}
+
+            {/* Reto Puerta — se muestra antes de entrar al viaje, si tiene una sin completar */}
+            {gateJourneyId && gateStatus && (
+                <GateModal
+                    journeyId={gateJourneyId}
+                    initialStatus={gateStatus}
+                    onDismiss={() => { setGateJourneyId(null); setGateStatus(null) }}
+                    onFinish={() => {
+                        const journeyId = gateJourneyId
+                        setGateJourneyId(null)
+                        setGateStatus(null)
+                        enterJourney(journeyId)
+                    }}
+                />
             )}
 
             {/* Sheet: descripción completa */}
