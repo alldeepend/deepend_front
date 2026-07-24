@@ -87,28 +87,44 @@ const BENEFIT_LAYOUTS = [
 
 const testimonials = [
   {
-    name: 'Daniela',
+    name: 'Liliana Abril',
     role: 'Usuaria DeepEnd',
-    text: 'Por primera vez entendí por qué evitaba ver mis finanzas. Ahora cada mes se siente menos pesado.',
-    img: '/fin-estacion-observador.png',
-    audio: '/audio/daniela.mp3',     // reemplazar con audio real
+    text: 'Para mí, DeepEnd significa un lugar donde podemos aprender, crecer y llegar cada vez más lejos.',
+    img: '/Imagen_Testimonio.jpg',     
+    audio: '/audio/testimonials/liliana-abril.mp3',
     color: '#52B788',
   },
   {
-    name: 'Carlos',
-    role: 'Usuario DeepEnd',
-    text: 'Los retos me ayudaron a crear una rutina que sí pude mantener, sin sentirme abrumado.',
-    img: '/fin-estacion-observador.png',
-    audio: '/audio/carlos.mp3',
+    name: 'Cata Montoya',
+    role: 'Usuaria DeepEnd',
+    text: 'Después de todo este tiempo me he dado cuenta que la comunidad me ha entregado más a mí, están pendientes, te impulsan...',
+    img: '/Imagen_Testimonio.jpg',     // reemplazar con foto real
+    audio: '/audio/testimonials/cata-montoya.mp3',
     color: '#3FC6D8',
   },
   {
-    name: 'Valentina',
+    name: 'Catalina Díaz',
     role: 'Usuaria DeepEnd',
-    text: 'Es como tener un espacio seguro para hablar de dinero y de mí misma, sin juzgarme.',
-    img: '/fin-estacion-observador.png',
-    audio: '/audio/valentina.mp3',
+    text: 'Pasamos mucho tiempo en piloto automático, sobreviviendo al caos que puede generar la rutina, pero para eso está DeepEnd.',
+    img: '/Imagen_Testimonio.jpg',     // reemplazar con foto real
+    audio: '/audio/testimonials/catalina-diaz.mp3',
     color: '#B57BEE',
+  },
+  {
+    name: 'Liliana Moreno',
+    role: 'Usuaria DeepEnd',
+    text: 'Gracias a DeepEnd aprendí que lo importante no son los minutos acumulados, sino cumplir mi palabra y avanzar incluso en los días difíciles.',
+    img: '/Imagen_Testimonio.jpg',     // reemplazar con foto real
+    audio: '/audio/testimonials/liliana-moreno.mp3',
+    color: '#F4669B',
+  },
+  {
+    name: 'Susana Panqueva',
+    role: 'Usuaria DeepEnd',
+    text: 'Me parece muy bonito crecer en comunidad, con ayuda, con amor, y qué mejor que de la mano de la tribu.',
+    img: '/Imagen_Testimonio.jpg',     // reemplazar con foto real
+    audio: '/audio/testimonials/susana-panqueva.mp3',
+    color: '#5B9BF7',
   },
 ]
 
@@ -583,7 +599,7 @@ export default function Landing() {
         <h2 className="text-2xl sm:text-3xl font-bold text-center" style={heading}>
           Lo que dice nuestra comunidad
         </h2>
-        <div className="grid sm:grid-cols-3 gap-6 mt-12">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
           {testimonials.map(t => (
             <div
               key={t.name}
@@ -596,6 +612,7 @@ export default function Landing() {
                   src={t.img}
                   alt={t.name}
                   className="w-full h-full object-cover"
+                  style={{ objectPosition: 'center 37%' }}
                   onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
                 />
                 {/* Gradiente para leer el texto encima si se superpone */}
