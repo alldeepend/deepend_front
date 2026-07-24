@@ -18,6 +18,18 @@ export interface Station {
     badgeName: string | null;
     completionImageUrl: string | null;
     blocks: Block[];
+    // Progreso del usuario actual para esta estación — solo viene poblado
+    // cuando el endpoint es getAvailableJourneys (para evitar pedir el
+    // detalle completo del viaje solo para saber en qué mundo va).
+    userProgress?: { isCompleted: boolean }[];
+}
+
+export interface JourneyGateSummary {
+    title: string;
+    isActive: boolean;
+    xpPerDay: number;
+    xpBonusClose: number;
+    userGates: { activatedAt: string | null; completedAt: string | null; totalXpEarned: number }[];
 }
 
 export interface World {
@@ -41,6 +53,8 @@ export interface Journey {
     worlds: World[];
     area?: { id: string; name: string };
     userJourneys?: UserJourneyProgress[];
+    // Solo viene poblado cuando el endpoint es getAvailableJourneys.
+    gate?: JourneyGateSummary | null;
 }
 
 export interface Area {
@@ -48,6 +62,13 @@ export interface Area {
     name: string;
     description: string | null;
     journeys: Journey[];
+}
+
+export interface Collection {
+    id: string;
+    title: string;
+    description: string | null;
+    journeys: (Journey & { areaName: string })[];
 }
 
 export interface UserJourneyProgress {
@@ -96,4 +117,59 @@ export interface BlockInteractResult {
     newStreak?: number;
     badgeEarned?: string | null;
     earnedBadges?: string[];
+}
+
+export type GateEvidenceType = 'texto' | 'audio' | 'foto' | 'check';
+
+export type GateDayState = 'completed' | 'today' | 'pending' | 'tomorrow' | 'future';
+
+export interface GateDayResponse {
+    evidenceType: GateEvidenceType;
+    responseText: string | null;
+    mediaUrl: string | null;
+    secondResponse: string | null;
+}
+
+export interface GateDayStatus {
+    id: string;
+    dayNumber: number;
+    anchorLabel: string | null;
+    question: string;
+    bodyText: string | null;
+    checkOnly: boolean;
+    hasSecondQuestion: boolean;
+    secondQuestion: string | null;
+    state: GateDayState;
+    response: GateDayResponse | null;
+}
+
+export interface GateInfo {
+    id: string;
+    title: string;
+    subtitle: string | null;
+    xpPerDay: number;
+    xpBonusClose: number;
+}
+
+export interface GateStatus {
+    hasGate: boolean;
+    gate?: GateInfo;
+    activated?: boolean;
+    activatedAt?: string | null;
+    currentDay?: number;
+    totalXpEarned?: number;
+    completed?: boolean;
+    days?: GateDayStatus[];
+}
+
+export interface GateActivateResult {
+    success: boolean;
+    activatedAt: string;
+}
+
+export interface GateRespondResult {
+    success: boolean;
+    xpEarned: number;
+    totalXpEarned: number;
+    gateCompleted: boolean;
 }

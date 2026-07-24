@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router'
+import Landing from './components/views/Landing'
 import Login from './components/views/Login'
 import Register from './components/views/Register'
 import ProtectedRoute from './components/shared/ProtectedRoute'
@@ -22,6 +23,7 @@ import WorldsRoute from './components/shared/WorldsRoute';
 import WorldsHome from './components/views/worlds/WorldsHome';
 import WorldsJourney from './components/views/worlds/WorldsJourney';
 import WorldsStation from './components/views/worlds/WorldsStation';
+import ArchetypeTest from './components/views/ArchetypeTest';
 import MaintenanceGate from './components/shared/MaintenanceGate';
 
 function App() {
@@ -36,7 +38,7 @@ function App() {
             <Routes>
                 <Route path="/" element={
                     <PublicRoute>
-                        <Login />
+                        <Landing />
                     </PublicRoute>
                 } />
                 <Route path="/dashboard" element={
@@ -136,6 +138,8 @@ function App() {
                     </WorldsRoute>
                 } />
 
+
+<Route path="/test" element={<ArchetypeTest />} />
 
 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

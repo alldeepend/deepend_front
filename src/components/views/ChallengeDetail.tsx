@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Header from '../../components/shared/Header';
 import { useAuth } from '../../store/useAuth';
 import myMoneyInActionSchema from '../../data/forms/finance/my_money_in_action.json';
+import { C } from '../../styles/colors';
 
 const host = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/api\/?$/, '');
 
@@ -42,19 +43,20 @@ interface ChallengeDetail {
 const AccordionSection = ({ title, content }: { title: string, content: string }) => {
     const [isOpen, setIsOpen] = useState(false);
     return (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="rounded-2xl shadow-sm overflow-hidden" style={{ background: C.surface1, border: `1px solid ${C.border}` }}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex justify-between items-center p-6 text-left hover:bg-slate-50 transition-colors"
+                className="w-full flex justify-between items-center p-6 text-left transition-colors"
+                style={{ color: C.text }}
             >
-                <h3 className="text-md font-bold text-slate-900 uppercase tracking-wider">{title}</h3>
-                {isOpen ? <ChevronUp className="text-slate-400" /> : <ChevronDown className="text-slate-400" />}
+                <h3 className="text-md font-bold uppercase tracking-wider" style={{ color: C.text }}>{title}</h3>
+                {isOpen ? <ChevronUp style={{ color: C.label }} /> : <ChevronDown style={{ color: C.label }} />}
             </button>
             {isOpen && (
                 <div className="px-6 pb-6 animate-in slide-in-from-top-2 duration-200">
                     <div
-                        className="prose prose-slate max-w-none text-slate-600 leading-relaxed [&_h3]:text-base [&_h3]:font-normal [&_h3]:mb-3 [&_h3:empty]:mb-0 [&_h3:last-child]:mb-0"
-                        style={{ lineHeight: '1.75' }}
+                        className="prose max-w-none leading-relaxed [&_h3]:text-base [&_h3]:font-normal [&_h3]:mb-3 [&_h3:empty]:mb-0 [&_h3:last-child]:mb-0"
+                        style={{ lineHeight: '1.75', color: C.textMuted }}
                         dangerouslySetInnerHTML={{ __html: content.replaceAll('&nbsp;', ' ') }}
                     />
                 </div>
@@ -86,16 +88,16 @@ const VideoAccordionSection = ({ title, url }: { title: string, url: string }) =
     const [isOpen, setIsOpen] = useState(false);
     const embedUrl = getYouTubeEmbedUrl(url);
     return (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="rounded-2xl shadow-sm overflow-hidden" style={{ background: C.surface1, border: `1px solid ${C.border}` }}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex justify-between items-center p-6 text-left hover:bg-slate-50 transition-colors"
+                className="w-full flex justify-between items-center p-6 text-left transition-colors"
             >
-                <h3 className="text-md font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                    <Video size={16} className="text-slate-400" />
+                <h3 className="text-md font-bold uppercase tracking-wider flex items-center gap-2" style={{ color: C.text }}>
+                    <Video size={16} style={{ color: C.label }} />
                     {title}
                 </h3>
-                {isOpen ? <ChevronUp className="text-slate-400" /> : <ChevronDown className="text-slate-400" />}
+                {isOpen ? <ChevronUp style={{ color: C.label }} /> : <ChevronDown style={{ color: C.label }} />}
             </button>
             {isOpen && (
                 <div className="px-6 pb-6 animate-in slide-in-from-top-2 duration-200">
@@ -110,7 +112,7 @@ const VideoAccordionSection = ({ title, url }: { title: string, url: string }) =
                             />
                         </div>
                     ) : (
-                        <p className="text-sm text-slate-400">URL de video no válida.</p>
+                        <p className="text-sm" style={{ color: C.label }}>URL de video no válida.</p>
                     )}
                 </div>
             )}
@@ -404,41 +406,43 @@ export default function ChallengeDetail() {
     };
 
     return (
-        <div className="flex flex-col md:flex-row h-screen bg-slate-50 font-sans overflow-hidden">
+        <div className="flex flex-col md:flex-row h-screen font-sans overflow-hidden" style={{ background: C.bg }}>
             {/* Goal popup — physical challenge */}
             {showGoalPopup && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+                    <div className="rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4" style={{ background: C.surface1 }}>
                         <div className="text-center">
                             <div className="flex justify-center mb-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: C.green }}>
                                     <circle cx="12" cy="12" r="10"/>
                                     <circle cx="12" cy="12" r="6"/>
                                     <circle cx="12" cy="12" r="2"/>
                                 </svg>
                             </div>
-                            <h3 className="text-lg font-bold text-slate-800">Tu meta esta semana</h3>
-                            <p className="text-sm text-slate-500 mt-1">
+                            <h3 className="text-lg font-bold" style={{ color: C.text }}>Tu meta esta semana</h3>
+                            <p className="text-sm mt-1" style={{ color: C.textMuted }}>
                                 Semana {challengePhysical?.weekNumber} del reto — ¿la mantienes o la ajustas?
                             </p>
                         </div>
                         {!modifyingGoal ? (
                             <>
-                                <div className="bg-emerald-50 rounded-xl px-6 py-4 text-center">
-                                    <span className="text-3xl font-bold text-emerald-700">{challengePhysical?.goalMinutes}</span>
-                                    <span className="text-emerald-600 font-medium ml-1">min</span>
+                                <div className="rounded-xl px-6 py-4 text-center" style={{ background: C.forest }}>
+                                    <span className="text-3xl font-bold" style={{ color: C.green }}>{challengePhysical?.goalMinutes}</span>
+                                    <span className="font-medium ml-1" style={{ color: C.green }}>min</span>
                                 </div>
                                 <div className="flex gap-3">
                                     <button
                                         onClick={handleConfirmGoal}
                                         disabled={goalMutation.isPending}
-                                        className="flex-1 bg-emerald-600 text-white font-semibold py-2.5 rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-60"
+                                        className="flex-1 text-white font-semibold py-2.5 rounded-xl transition-colors disabled:opacity-60"
+                                        style={{ background: C.red }}
                                     >
                                         Acepto esta meta
                                     </button>
                                     <button
                                         onClick={() => setModifyingGoal(true)}
-                                        className="flex-1 border border-slate-300 text-slate-700 font-semibold py-2.5 rounded-xl hover:bg-slate-50 transition-colors"
+                                        className="flex-1 border font-semibold py-2.5 rounded-xl transition-colors"
+                                        style={{ borderColor: C.border, color: C.text, background: C.surface2 }}
                                     >
                                         Quiero cambiarla
                                     </button>
@@ -447,28 +451,31 @@ export default function ChallengeDetail() {
                         ) : (
                             <>
                                 <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Nueva meta en minutos</label>
+                                    <label className="block text-sm font-semibold mb-1.5" style={{ color: C.textMuted }}>Nueva meta en minutos</label>
                                     <input
                                         type="number"
                                         min="1"
                                         value={goalInput}
                                         onChange={e => setGoalInput(e.target.value)}
                                         placeholder="Ej: 150 (min)"
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
+                                        className="w-full px-4 py-3 rounded-xl border outline-none"
+                                        style={{ background: C.surface2, borderColor: C.border, color: C.text }}
                                     />
-                                    <p className="text-xs text-slate-400 mt-1">Este valor aplica solo para esta semana</p>
+                                    <p className="text-xs mt-1" style={{ color: C.label }}>Este valor aplica solo para esta semana</p>
                                 </div>
                                 <div className="flex gap-3">
                                     <button
                                         onClick={handleConfirmGoal}
                                         disabled={goalMutation.isPending}
-                                        className="flex-1 bg-emerald-600 text-white font-semibold py-2.5 rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-60"
+                                        className="flex-1 text-white font-semibold py-2.5 rounded-xl transition-colors disabled:opacity-60"
+                                        style={{ background: C.red }}
                                     >
                                         {goalMutation.isPending ? 'Guardando...' : 'Guardar meta'}
                                     </button>
                                     <button
                                         onClick={() => setModifyingGoal(false)}
-                                        className="flex-1 border border-slate-300 text-slate-700 font-semibold py-2.5 rounded-xl hover:bg-slate-50 transition-colors"
+                                        className="flex-1 border font-semibold py-2.5 rounded-xl transition-colors"
+                                        style={{ borderColor: C.border, color: C.text, background: C.surface2 }}
                                     >
                                         Cancelar
                                     </button>
@@ -493,14 +500,15 @@ export default function ChallengeDetail() {
                         {/* Back Button */}
                         <button
                             onClick={() => navigate('/challenges')}
-                            className="flex items-center text-slate-400 text-sm mb-6 hover:text-slate-600 transition-colors group"
+                            className="flex items-center text-sm mb-6 transition-colors group"
+                            style={{ color: C.label }}
                         >
                             <ArrowLeft size={16} className="mr-1 group-hover:-translate-x-1 transition-transform" />
                             Volver a Retos
                         </button>
 
                         {/* Hero Section */}
-                        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden mb-8">
+                        <div className="rounded-3xl shadow-sm overflow-hidden mb-8" style={{ background: C.surface1, border: `1px solid ${C.border}` }}>
                             {/* Banner Image - Dynamic based on category if available, or static fallback */}
                             <div className={`h-64 relative overflow-hidden ${challenge.category === 'Finanzas' ? 'bg-emerald-900' : 'bg-slate-900'}`}>
                                 {challengeId === 'dcf4574f-8cd3-4925-b88f-c66df26ed8cc' && (
@@ -556,12 +564,13 @@ export default function ChallengeDetail() {
                                 <div className="mt-6 mb-8">
                                     <button
                                         onClick={() => navigate('/challenges/my-money-action')}
-                                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-emerald-200 transition-all flex items-center justify-center gap-3 text-lg animate-bounce-subtle"
+                                        className="w-full text-white font-bold py-4 px-6 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-3 text-lg animate-bounce-subtle"
+                                        style={{ background: C.red }}
                                     >
                                         <Play size={24} className="fill-current" />
                                         Activa tu Reto 🎯
                                     </button>
-                                    <p className="text-center text-sm text-slate-500 mt-3 max-w-lg mx-auto">
+                                    <p className="text-center text-sm mt-3 max-w-lg mx-auto" style={{ color: C.textMuted }}>
                                         Haz clic aquí para iniciar tu plan de acción personalizado.
                                     </p>
                                 </div>
@@ -574,14 +583,15 @@ export default function ChallengeDetail() {
                                 <div className="mt-6 space-y-4">
                                     <button
                                         onClick={() => navigate(`/challenges/financial-assessment?challengeId=${challengeId}`)}
-                                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+                                        className="w-full text-white font-bold py-3 px-6 rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+                                        style={{ background: C.red }}
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
                                         {hasFinancialDraft ? 'Continuar Evaluación' : (financialSubmissions.length > 0 ? 'Nueva Evaluación' : 'Realizar Evaluación Financiera')}
                                     </button>
 
                                     <div className="text-center">
-                                        <p className="text-sm text-slate-500">
+                                        <p className="text-sm" style={{ color: C.textMuted }}>
                                             ¿No quieres registrar tus finanzas en la plataforma?{' '}
                                             <a
                                                 href={(user as any)?.level === 'medio'
@@ -590,7 +600,8 @@ export default function ChallengeDetail() {
                                                 }
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="text-emerald-600 hover:text-emerald-700 font-medium hover:underline transition-colors"
+                                                className="font-medium hover:underline transition-colors"
+                                                style={{ color: C.green }}
                                             >
                                                 Descarga la plantilla en Excel
                                             </a>
@@ -601,10 +612,10 @@ export default function ChallengeDetail() {
 
                                     {/* Financial Summary Slider */}
                                     {financialSummary && (
-                                        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 shadow-sm">
+                                        <div className="rounded-2xl p-6 shadow-sm" style={{ background: C.surface1, border: `1px solid ${C.border}` }}>
                                             <div className="flex justify-between items-center mb-4">
-                                                <h4 className="text-lg font-bold text-slate-800 flex items-center">
-                                                    <Trophy className="text-emerald-500 mr-2" size={20} />
+                                                <h4 className="text-lg font-bold flex items-center" style={{ color: C.text }}>
+                                                    <Trophy style={{ color: C.green }} className="mr-2" size={20} />
                                                     Tu Resultado Financiero
                                                 </h4>
 
@@ -613,17 +624,19 @@ export default function ChallengeDetail() {
                                                         <button
                                                             onClick={() => setCurrentFinancialIndex(prev => Math.min(prev + 1, financialSubmissions.length - 1))}
                                                             disabled={currentFinancialIndex === financialSubmissions.length - 1}
-                                                            className="p-1 rounded-full hover:bg-slate-200 disabled:opacity-30 transition-colors"
+                                                            className="p-1 rounded-full disabled:opacity-30 transition-colors"
+                                                            style={{ color: C.textMuted }}
                                                         >
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
                                                         </button>
-                                                        <span className="text-xs font-medium text-slate-500 whitespace-nowrap">
+                                                        <span className="text-xs font-medium whitespace-nowrap" style={{ color: C.textMuted }}>
                                                             {financialSubmissions.length - currentFinancialIndex} / {financialSubmissions.length}
                                                         </span>
                                                         <button
                                                             onClick={() => setCurrentFinancialIndex(prev => Math.max(prev - 1, 0))}
                                                             disabled={currentFinancialIndex === 0}
-                                                            className="p-1 rounded-full hover:bg-slate-200 disabled:opacity-30 transition-colors"
+                                                            className="p-1 rounded-full disabled:opacity-30 transition-colors"
+                                                            style={{ color: C.textMuted }}
                                                         >
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
                                                         </button>
@@ -633,43 +646,43 @@ export default function ChallengeDetail() {
 
 
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                                <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-                                                    <p className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Flujo de Caja Libre</p>
-                                                    <p className={`text-2xl font-bold ${financialSummary.flujoCaja >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                                                <div className="p-4 rounded-xl shadow-sm" style={{ background: C.surface2, border: `1px solid ${C.border}` }}>
+                                                    <p className="text-xs uppercase font-bold tracking-wider mb-1" style={{ color: C.textMuted }}>Flujo de Caja Libre</p>
+                                                    <p className="text-2xl font-bold" style={{ color: financialSummary.flujoCaja >= 0 ? C.green : C.red }}>
                                                         {formatCurrency(financialSummary.flujoCaja)}
                                                     </p>
-                                                    <p className="text-[10px] text-slate-400 mt-1">Ingresos - Gastos - Deudas - Ahorro</p>
+                                                    <p className="text-[10px] mt-1" style={{ color: C.label }}>Ingresos - Gastos - Deudas - Ahorro</p>
                                                 </div>
-                                                <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-                                                    <p className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Ratio de Ahorro</p>
-                                                    <p className={`text-2xl font-bold ${financialSummary.ratioAhorro > 0 ? 'text-emerald-600' : 'text-yellow-600'}`}>
+                                                <div className="p-4 rounded-xl shadow-sm" style={{ background: C.surface2, border: `1px solid ${C.border}` }}>
+                                                    <p className="text-xs uppercase font-bold tracking-wider mb-1" style={{ color: C.textMuted }}>Ratio de Ahorro</p>
+                                                    <p className="text-2xl font-bold" style={{ color: financialSummary.ratioAhorro > 0 ? C.green : C.amber }}>
                                                         {formatPercent(financialSummary.ratioAhorro)}
                                                     </p>
-                                                    <p className="text-[10px] text-slate-400 mt-1">Meta: &gt;20%</p>
+                                                    <p className="text-[10px] mt-1" style={{ color: C.label }}>Meta: &gt;20%</p>
                                                 </div>
                                             </div>
 
                                             <div className="grid grid-cols-2 gap-3 text-sm mb-4">
-                                                <div className="p-3 bg-white rounded-lg border border-slate-100">
-                                                    <p className="text-slate-400 text-xs mb-1">{financialSummary.ingresoNetoMensual ? 'Ingreso Neto' : 'Ingresos'}</p>
-                                                    <p className="font-bold text-slate-700">{formatCurrency(financialSummary.ingresoNetoMensual || financialSummary.totalIngresos)}</p>
+                                                <div className="p-3 rounded-lg" style={{ background: C.surface2, border: `1px solid ${C.border}` }}>
+                                                    <p className="text-xs mb-1" style={{ color: C.label }}>{financialSummary.ingresoNetoMensual ? 'Ingreso Neto' : 'Ingresos'}</p>
+                                                    <p className="font-bold" style={{ color: C.text }}>{formatCurrency(financialSummary.ingresoNetoMensual || financialSummary.totalIngresos)}</p>
                                                 </div>
-                                                <div className="p-3 bg-white rounded-lg border border-slate-100">
-                                                    <p className="text-slate-400 text-xs mb-1">{financialSummary.totalGastosOperativos ? 'Gastos Oper.' : 'Gastos'}</p>
-                                                    <p className="font-bold text-slate-700">{formatCurrency(financialSummary.totalGastosOperativos || financialSummary.totalGastos)}</p>
+                                                <div className="p-3 rounded-lg" style={{ background: C.surface2, border: `1px solid ${C.border}` }}>
+                                                    <p className="text-xs mb-1" style={{ color: C.label }}>{financialSummary.totalGastosOperativos ? 'Gastos Oper.' : 'Gastos'}</p>
+                                                    <p className="font-bold" style={{ color: C.text }}>{formatCurrency(financialSummary.totalGastosOperativos || financialSummary.totalGastos)}</p>
                                                 </div>
-                                                <div className="p-3 bg-white rounded-lg border border-slate-100">
-                                                    <p className="text-slate-400 text-xs mb-1">Deudas</p>
-                                                    <p className="font-bold text-red-500">{formatCurrency(financialSummary.totalDeudas || 0)}</p>
+                                                <div className="p-3 rounded-lg" style={{ background: C.surface2, border: `1px solid ${C.border}` }}>
+                                                    <p className="text-xs mb-1" style={{ color: C.label }}>Deudas</p>
+                                                    <p className="font-bold" style={{ color: C.red }}>{formatCurrency(financialSummary.totalDeudas || 0)}</p>
                                                 </div>
-                                                <div className="p-3 bg-white rounded-lg border border-slate-100">
-                                                    <p className="text-slate-400 text-xs mb-1">Inversión/Ahorro</p>
-                                                    <p className="font-bold text-emerald-600">{formatCurrency(financialSummary.totalAhorroInversion || 0)}</p>
+                                                <div className="p-3 rounded-lg" style={{ background: C.surface2, border: `1px solid ${C.border}` }}>
+                                                    <p className="text-xs mb-1" style={{ color: C.label }}>Inversión/Ahorro</p>
+                                                    <p className="font-bold" style={{ color: C.green }}>{formatCurrency(financialSummary.totalAhorroInversion || 0)}</p>
                                                 </div>
                                             </div>
 
                                             <div className="text-right">
-                                                <span className="text-xs text-slate-400">
+                                                <span className="text-xs" style={{ color: C.label }}>
                                                     Registrado el {new Date(currentFinancialSubmission.createdAt).toLocaleDateString()}
                                                 </span>
                                             </div>
@@ -705,17 +718,17 @@ export default function ChallengeDetail() {
 
                         {/* Left Column - Action Steps */}
                         <div className="lg:col-span-2">
-                            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 mb-8">
+                            <div className="rounded-3xl shadow-sm p-8 mb-8" style={{ background: C.surface1, border: `1px solid ${C.border}` }}>
                                 <div className="flex justify-between items-end mb-6">
-                                    <h3 className="text-xl font-bold text-slate-800">Toma acción</h3>
-                                    <span className="text-sm text-slate-400 font-medium">{completedSteps}/{steps.length} Completados</span>
+                                    <h3 className="text-xl font-bold" style={{ color: C.text }}>Toma acción</h3>
+                                    <span className="text-sm font-medium" style={{ color: C.label }}>{completedSteps}/{steps.length} Completados</span>
                                 </div>
 
                                 {/* Progress Bar */}
-                                <div className="w-full bg-slate-100 rounded-full h-2 mb-8">
+                                <div className="w-full rounded-full h-2 mb-8" style={{ background: C.surface3 }}>
                                     <div
-                                        className="bg-emerald-500 h-2 rounded-full transition-all duration-500"
-                                        style={{ width: `${progressPercentage}%` }}
+                                        className="h-2 rounded-full transition-all duration-500"
+                                        style={{ width: `${progressPercentage}%`, background: C.green }}
                                     ></div>
                                 </div>
 
@@ -741,13 +754,18 @@ export default function ChallengeDetail() {
                                             <div
                                                 key={step.id}
                                                 onClick={() => !isPending && !step.completed && handleTaskClick(step)}
-                                                className={`p-4 rounded-xl border transition-all flex items-center gap-4 ${step.completed
-                                                    ? 'bg-white border-emerald-100 shadow-none cursor-default'
-                                                    : 'bg-white border-slate-100 hover:border-emerald-200 hover:shadow-sm cursor-pointer'
-                                                    } ${isPending ? 'opacity-70 cursor-wait' : ''}`}
+                                                className={`p-4 rounded-xl border transition-all flex items-center gap-4 ${isPending ? 'opacity-70 cursor-wait' : step.completed ? 'cursor-default' : 'cursor-pointer'}`}
+                                                style={{
+                                                    background: step.completed ? C.surface1 : C.surface2,
+                                                    borderColor: step.completed ? C.forest : C.border
+                                                }}
                                             >
-                                                <div className={`flex-shrink-0 w-6 h-6 rounded flex items-center justify-center transition-colors ${step.completed ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-[#ed2629]'
-                                                    }`}>
+                                                <div
+                                                    className="flex-shrink-0 w-6 h-6 rounded flex items-center justify-center transition-colors"
+                                                    style={step.completed
+                                                        ? { background: C.forest, color: C.green }
+                                                        : { background: C.surface3, color: C.red }}
+                                                >
                                                     {isPending ? (
                                                         <Loader2 size={16} className="animate-spin" />
                                                     ) : (
@@ -755,12 +773,14 @@ export default function ChallengeDetail() {
                                                     )}
                                                 </div>
                                                 <div className="flex-1">
-                                                    <span className={`text-sm font-medium transition-colors ${step.completed ? 'text-slate-400 line-through' : 'text-slate-700'
-                                                        }`}>
+                                                    <span
+                                                        className="text-sm font-medium transition-colors"
+                                                        style={{ color: step.completed ? C.label : C.text, textDecoration: step.completed ? 'line-through' : 'none' }}
+                                                    >
                                                         {step.text}
                                                     </span>
                                                     {step.formSchema && !step.completed && (
-                                                        <span className="block text-xs text-[#ed2629] font-bold mt-1">
+                                                        <span className="block text-xs font-bold mt-1" style={{ color: C.red }}>
                                                             {challengeId === 'dcf4574f-8cd3-4925-b88f-c66df26ed8cc'
                                                                 ? 'Es importante definir tu punto de partida'
                                                                 : 'Requiere completar formulario'}
@@ -768,22 +788,22 @@ export default function ChallengeDetail() {
                                                     )}
                                                 </div>
                                                 {step.formSchema && (
-                                                    <div className="text-slate-400">
+                                                    <div style={{ color: C.label }}>
                                                         <FileText size={16} />
                                                     </div>
                                                 )}
                                             </div>
                                         );
                                     })}
-                                    {steps.length === 0 && <p className="text-slate-400 text-sm">No hay pasos definidos para este reto aún.</p>}
+                                    {steps.length === 0 && <p className="text-sm" style={{ color: C.label }}>No hay pasos definidos para este reto aún.</p>}
                                 </div>
                             </div>
 
                             {/* Submissions Section - Generic Carrousel (Hidden for Financial Challenge) */}
                             {challengeId !== 'a3ae5adc-a689-4082-a691-4338000ced3a' && genericSubmissions.length > 0 && currentGenericSubmission && (
-                                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+                                <div className="rounded-3xl shadow-sm p-8" style={{ background: C.surface1, border: `1px solid ${C.border}` }}>
                                     <div className="flex justify-between items-center mb-6">
-                                        <h3 className="text-xl font-bold text-slate-800">Tus Respuestas</h3>
+                                        <h3 className="text-xl font-bold" style={{ color: C.text }}>Tus Respuestas</h3>
 
                                         {/* Controls */}
                                         {genericSubmissions.length > 1 && (
@@ -791,17 +811,19 @@ export default function ChallengeDetail() {
                                                 <button
                                                     onClick={() => setCurrentResponseIndex(prev => Math.min(prev + 1, genericSubmissions.length - 1))}
                                                     disabled={currentResponseIndex === genericSubmissions.length - 1}
-                                                    className="p-1 rounded-full hover:bg-slate-100 disabled:opacity-30 transition-colors"
+                                                    className="p-1 rounded-full disabled:opacity-30 transition-colors"
+                                                    style={{ color: C.textMuted }}
                                                 >
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
                                                 </button>
-                                                <span className="text-xs font-medium text-slate-500">
+                                                <span className="text-xs font-medium" style={{ color: C.textMuted }}>
                                                     {currentResponseIndex + 1} / {genericSubmissions.length}
                                                 </span>
                                                 <button
                                                     onClick={() => setCurrentResponseIndex(prev => Math.max(prev - 1, 0))}
                                                     disabled={currentResponseIndex === 0}
-                                                    className="p-1 rounded-full hover:bg-slate-100 disabled:opacity-30 transition-colors"
+                                                    className="p-1 rounded-full disabled:opacity-30 transition-colors"
+                                                    style={{ color: C.textMuted }}
                                                 >
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
                                                 </button>
@@ -810,7 +832,7 @@ export default function ChallengeDetail() {
                                     </div>
 
                                     {/* Slide Content */}
-                                    <div className="p-6 bg-slate-50 rounded-xl border border-slate-100 min-h-[150px]">
+                                    <div className="p-6 rounded-xl min-h-[150px]" style={{ background: C.surface2, border: `1px solid ${C.border}` }}>
                                         {(() => {
                                             const sub = currentGenericSubmission;
                                             try {
@@ -863,9 +885,9 @@ export default function ChallengeDetail() {
                                                                 const answer = item.answer || item.value || JSON.stringify(item);
 
                                                                 return (
-                                                                    <div key={idx} className="pb-3 border-b border-slate-200 last:border-0 last:pb-0">
-                                                                        <p className="font-bold text-slate-800 text-sm mb-1">{question}</p>
-                                                                        <p className="text-slate-600 text-sm whitespace-pre-wrap">{String(answer)}</p>
+                                                                    <div key={idx} className="pb-3 last:pb-0" style={{ borderBottom: `1px solid ${C.border}` }}>
+                                                                        <p className="font-bold text-sm mb-1" style={{ color: C.text }}>{question}</p>
+                                                                        <p className="text-sm whitespace-pre-wrap" style={{ color: C.textMuted }}>{String(answer)}</p>
                                                                     </div>
                                                                 );
                                                             })}
@@ -873,16 +895,16 @@ export default function ChallengeDetail() {
                                                     );
                                                 }
 
-                                                return <div className="text-slate-500 italic">Formato de respuesta no reconocido.</div>;
+                                                return <div className="italic" style={{ color: C.textMuted }}>Formato de respuesta no reconocido.</div>;
                                             } catch (e) {
-                                                return <div className="text-slate-600">{sub.content}</div>;
+                                                return <div style={{ color: C.textMuted }}>{sub.content}</div>;
                                             }
                                         })()}
                                     </div>
 
 
-                                    <div className="mt-4 pt-4 border-t border-slate-200 text-right">
-                                        <span className="text-xs text-slate-400">
+                                    <div className="mt-4 pt-4 text-right" style={{ borderTop: `1px solid ${C.border}` }}>
+                                        <span className="text-xs" style={{ color: C.label }}>
                                             Enviado el {new Date(currentGenericSubmission.createdAt).toLocaleDateString()}
                                         </span>
                                     </div>
@@ -893,8 +915,8 @@ export default function ChallengeDetail() {
                         {/* Right Column - Resources & Badge */}
                         <div className="space-y-6">
 
-                            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
-                                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">Recursos Útiles</h3>
+                            <div className="rounded-3xl shadow-sm p-6" style={{ background: C.surface1, border: `1px solid ${C.border}` }}>
+                                <h3 className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: C.text }}>Recursos Útiles</h3>
                                 <div className="space-y-3">
                                     {challenge.resources && challenge.resources.length > 0 ? (
                                         challenge.resources.map((resource: any) => (
@@ -903,33 +925,29 @@ export default function ChallengeDetail() {
                                                 href={resource.url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="flex items-start gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer group"
+                                                className="flex items-start gap-3 p-2 rounded-lg transition-colors cursor-pointer group"
                                             >
-                                                <div className={`p-2 rounded-lg ${resource.type === 'video' ? 'bg-red-50 text-red-500' :
-                                                    resource.type === 'download' ? 'bg-green-50 text-green-500' :
-                                                        resource.type === 'link' ? 'bg-blue-50 text-blue-500' :
-                                                            'bg-slate-50 text-slate-500'
-                                                    }`}>
+                                                <div className="p-2 rounded-lg" style={{ background: C.surface2, color: C.textMuted }}>
                                                     {resource.type === 'video' ? <Video size={18} /> :
                                                         resource.type === 'download' ? <Download size={18} /> :
                                                             resource.type === 'link' ? <Link size={18} /> :
                                                                 <FileText size={18} />}
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-sm font-bold text-slate-700 group-hover:text-emerald-600 transition-colors">{resource.title}</h4>
-                                                    <p className="text-xs text-slate-400">{resource.description || resource.category}</p>
+                                                    <h4 className="text-sm font-bold transition-colors" style={{ color: C.text }}>{resource.title}</h4>
+                                                    <p className="text-xs" style={{ color: C.label }}>{resource.description || resource.category}</p>
                                                 </div>
                                             </a>
                                         ))
                                     ) : (
-                                        <p className="text-xs text-slate-400 italic">No hay recursos disponibles para este reto.</p>
+                                        <p className="text-xs italic" style={{ color: C.label }}>No hay recursos disponibles para este reto.</p>
                                     )}
                                 </div>
                             </div>
 
                             {/* Allies Section */}
-                            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
-                                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">Aliados</h3>
+                            <div className="rounded-3xl shadow-sm p-6" style={{ background: C.surface1, border: `1px solid ${C.border}` }}>
+                                <h3 className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: C.text }}>Aliados</h3>
                                 <div className="space-y-3">
                                     {challenge.allies && challenge.allies.length > 0 ? (
                                         challenge.allies.map((ally: any) => (
@@ -938,25 +956,25 @@ export default function ChallengeDetail() {
                                                 href={ally.url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer group"
+                                                className="flex items-center gap-3 p-2 rounded-lg transition-colors cursor-pointer group"
                                             >
                                                 {ally.logoUrl ? (
-                                                    <div className="w-10 h-10 rounded-lg bg-slate-50 p-1 flex items-center justify-center border border-slate-100">
+                                                    <div className="w-10 h-10 rounded-lg p-1 flex items-center justify-center" style={{ background: C.surface2, border: `1px solid ${C.border}` }}>
                                                         <img src={ally.logoUrl} alt={ally.name} className="w-full h-full object-contain" />
                                                     </div>
                                                 ) : (
-                                                    <div className="w-10 h-10 rounded-lg bg-emerald-50 p-1 flex items-center justify-center text-emerald-600 font-bold border border-emerald-100">
+                                                    <div className="w-10 h-10 rounded-lg p-1 flex items-center justify-center font-bold" style={{ background: C.forest, color: C.green, border: `1px solid ${C.forest}` }}>
                                                         {ally.name.charAt(0)}
                                                     </div>
                                                 )}
                                                 <div>
-                                                    <h4 className="text-sm font-bold text-slate-700 group-hover:text-emerald-600 transition-colors">{ally.name}</h4>
-                                                    <p className="text-xs text-slate-400">{ally.category}</p>
+                                                    <h4 className="text-sm font-bold transition-colors" style={{ color: C.text }}>{ally.name}</h4>
+                                                    <p className="text-xs" style={{ color: C.label }}>{ally.category}</p>
                                                 </div>
                                             </a>
                                         ))
                                     ) : (
-                                        <p className="text-xs text-slate-400 italic">No hay aliados asociados a este reto.</p>
+                                        <p className="text-xs italic" style={{ color: C.label }}>No hay aliados asociados a este reto.</p>
                                     )}
                                 </div>
                             </div>
@@ -982,7 +1000,7 @@ export default function ChallengeDetail() {
                 {
                     activeTaskForm && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+                            <div className="rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200" style={{ background: C.surface1 }}>
                                 <div className="p-6 md:p-8 overflow-y-auto">
                                     <DynamicForm
                                         schema={activeTaskForm.schema}
@@ -999,28 +1017,30 @@ export default function ChallengeDetail() {
                 {/* Restart Confirmation Modal */}
                 {isRestartDialogOpen && (
                     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-                        <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative">
-                            <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mb-4 mx-auto">
+                        <div className="rounded-3xl p-8 max-w-md w-full shadow-2xl relative" style={{ background: C.surface1 }}>
+                            <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4 mx-auto" style={{ background: C.surface2, color: C.amber }}>
                                 <RotateCcw size={24} />
                             </div>
-                            <h3 className="text-xl font-bold text-center text-slate-900 mb-2">
+                            <h3 className="text-xl font-bold text-center mb-2" style={{ color: C.text }}>
                                 ¿Reiniciar este reto?
                             </h3>
-                            <p className="text-slate-600 text-center mb-6">
+                            <p className="text-center mb-6" style={{ color: C.textMuted }}>
                                 Al reiniciar, volverás a tener el progreso en 0% para poder hacer todas las tareas nuevamente.
                                 Tus respuestas anteriores se guardarán en tu historial de forma segura.
                             </p>
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => setIsRestartDialogOpen(false)}
-                                    className="flex-1 py-3 px-4 rounded-xl font-bold text-slate-600 hover:bg-slate-100 transition-colors"
+                                    className="flex-1 py-3 px-4 rounded-xl font-bold transition-colors"
+                                    style={{ color: C.textMuted, background: C.surface2 }}
                                     disabled={restartChallengeMutation.isPending}
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     onClick={() => restartChallengeMutation.mutate()}
-                                    className="flex-1 py-3 px-4 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold shadow-lg shadow-orange-200 transition-all flex items-center justify-center disabled:opacity-50"
+                                    className="flex-1 py-3 px-4 text-white rounded-xl font-bold transition-all flex items-center justify-center disabled:opacity-50"
+                                    style={{ background: C.red }}
                                     disabled={restartChallengeMutation.isPending}
                                 >
                                     {restartChallengeMutation.isPending ? (

@@ -14,7 +14,10 @@ export const HomeHeader = ({ action }: HomeHeaderProps) => {
         <header className="flex justify-between items-center mb-8">
             <div className="flex items-center gap-4">
                 <Link to="/profile" className="relative group">
-                    <div className="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center text-white text-lg font-bold shadow-md shadow-emerald-200/50 ring-2 ring-white overflow-hidden transition-transform group-hover:scale-105">
+                    <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg font-bold shadow-md ring-2 overflow-hidden transition-transform group-hover:scale-105"
+                        style={{ background: '#52B788', ['--tw-ring-color' as any]: '#1E1A1B' }}
+                    >
                         {user?.avatar ? (
                             <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
                         ) : (
@@ -23,10 +26,10 @@ export const HomeHeader = ({ action }: HomeHeaderProps) => {
                     </div>
                 </Link>
                 <div>
-                    <p className="text-[10px] font-bold text-slate-400 tracking-wider uppercase mb-0.5">
+                    <p className="text-[10px] font-bold tracking-wider uppercase mb-0.5" style={{ color: '#A8A29E' }}>
                         {new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
                     </p>
-                    <h2 className="text-2xl font-light text-slate-800 leading-tight">
+                    <h2 className="text-2xl font-light leading-tight" style={{ color: '#F5F0E8', fontFamily: "'American Typewriter', Georgia, serif" }}>
                         Hola, <span className="font-bold">{displayName}</span>
                     </h2>
                 </div>

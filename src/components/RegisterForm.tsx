@@ -4,6 +4,7 @@ import { useAuth } from '../store/useAuth';
 import { useLocation, useNavigate } from 'react-router';
 import { COUNTRY_CODES } from '../utils/countryCodes';
 import { userApi } from '../services/user';
+import { C } from '../styles/colors';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -197,13 +198,13 @@ export default function RegisterForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center p-6 font-montserrat">
-      <div className="bg-white p-8 rounded-4xl shadow-xl w-full max-w-2xl border border-stone-100 relative overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="min-h-screen flex items-center justify-center p-6 font-montserrat" style={{ background: C.bg }}>
+      <div className="p-8 rounded-4xl shadow-xl w-full max-w-2xl border relative overflow-hidden flex flex-col max-h-[90vh]" style={{ background: C.surface1, borderColor: C.border }}>
         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-black to-accent-green"></div>
 
         <div className="text-center mb-6 shrink-0">
-          <h2 className="font-american text-3xl text-stone-800 font-bold">Registro - Paso {step}/{TOTAL_STEPS}</h2>
-          <p className="text-stone-500 mt-1 text-sm">Completa tu perfil para una mejor experiencia</p>
+          <h2 className="font-american text-3xl font-bold" style={{ color: C.text }}>Registro - Paso {step}/{TOTAL_STEPS}</h2>
+          <p className="mt-1 text-sm" style={{ color: C.textMuted }}>Completa tu perfil para una mejor experiencia</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1">
@@ -217,21 +218,21 @@ export default function RegisterForm() {
           {step === 1 && (
             <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="flex flex-col md:flex-row gap-4">
-                <input name="firstName" value={formData.firstName} onChange={handleChange} placeholder="Nombre(s)" required className="w-full md:w-1/2 bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
-                <input name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Apellidos" required className="w-full md:w-1/2 bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
+                <input name="firstName" value={formData.firstName} onChange={handleChange} placeholder="Nombre(s)" required className="w-full md:w-1/2 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" style={{ background: C.surface2, color: C.text }} />
+                <input name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Apellidos" required className="w-full md:w-1/2 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" style={{ background: C.surface2, color: C.text }} />
               </div>
-              <input name="preferredName" value={formData.preferredName} onChange={handleChange} placeholder="¿Cómo te gusta que te llamen?" className="w-full bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
+              <input name="preferredName" value={formData.preferredName} onChange={handleChange} placeholder="¿Cómo te gusta que te llamen?" className="w-full border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" style={{ background: C.surface2, color: C.text }} />
 
-              <input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="Correo electrónico" required className="w-full bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
+              <input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="Correo electrónico" required className="w-full border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" style={{ background: C.surface2, color: C.text }} />
 
               <div className="relative">
-                <input type={showPassword ? "text" : "password"} name="password" value={formData.password} onChange={handleChange} placeholder="Contraseña" required className="w-full bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400">{showPassword ? <EyeOff size={20} /> : <Eye size={20} />}</button>
+                <input type={showPassword ? "text" : "password"} name="password" value={formData.password} onChange={handleChange} placeholder="Contraseña" required className="w-full border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" style={{ background: C.surface2, color: C.text }} />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2" style={{ color: C.label }}>{showPassword ? <EyeOff size={20} /> : <Eye size={20} />}</button>
               </div>
 
               <div className="relative">
-                <input type={showConfirmPassword ? "text" : "password"} name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="Confirmar Contraseña" required className="w-full bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
-                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400">{showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}</button>
+                <input type={showConfirmPassword ? "text" : "password"} name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="Confirmar Contraseña" required className="w-full border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" style={{ background: C.surface2, color: C.text }} />
+                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2" style={{ color: C.label }}>{showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}</button>
               </div>
             </div>
           )}
@@ -240,106 +241,106 @@ export default function RegisterForm() {
           {step === 2 && (
             <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <select name="tipo_documento" value={formData.tipo_documento} onChange={handleChange} className="bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all">
+                <select name="tipo_documento" value={formData.tipo_documento} onChange={handleChange} className="border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" style={{ background: C.surface2, color: C.text }}>
                   {DOCUMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
-                <input name="documento_identidad" value={formData.documento_identidad} onChange={handleChange} placeholder="No. Documento" className="bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
+                <input name="documento_identidad" value={formData.documento_identidad} onChange={handleChange} placeholder="No. Documento" className="border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" style={{ background: C.surface2, color: C.text }} />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs text-stone-500 ml-2">Fecha Nacimiento</label>
-                  <input type="date" name="fecha_nacimiento" value={formData.fecha_nacimiento} onChange={handleChange} className="w-full bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
+                  <label className="text-xs ml-2" style={{ color: C.textMuted }}>Fecha Nacimiento</label>
+                  <input type="date" name="fecha_nacimiento" value={formData.fecha_nacimiento} onChange={handleChange} className="w-full border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" style={{ background: C.surface2, color: C.text }} />
                 </div>
                 <div>
-                  <label className="text-xs text-stone-500 ml-2">Género</label>
-                  <select name="genero" value={formData.genero} onChange={handleChange} className="w-full bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all">
+                  <label className="text-xs ml-2" style={{ color: C.textMuted }}>Género</label>
+                  <select name="genero" value={formData.genero} onChange={handleChange} className="w-full border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" style={{ background: C.surface2, color: C.text }}>
                     <option value="">Seleccionar...</option>
                     {GENDERS.map(g => <option key={g} value={g}>{g}</option>)}
                   </select>
                 </div>
               </div>
 
-              <select name="estado_civil" value={formData.estado_civil} onChange={handleChange} className="w-full bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all">
+              <select name="estado_civil" value={formData.estado_civil} onChange={handleChange} className="w-full border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" style={{ background: C.surface2, color: C.text }}>
                 <option value="">Estado Civil...</option>
                 {CIVIL_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
 
-              <div className="h-px bg-stone-100 my-2"></div>
+              <div className="h-px my-2" style={{ background: C.border }}></div>
 
               {/* Country & Phone */}
               <div className="flex gap-2">
                 <div className="relative w-1/3">
-                  <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)} className="w-full bg-stone-50 border-0 rounded-xl pl-2 pr-6 py-3 appearance-none focus:outline-none focus:ring-2 focus:ring-accent-green text-sm transition-all">
+                  <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)} className="w-full border-0 rounded-xl pl-2 pr-6 py-3 appearance-none focus:outline-none focus:ring-2 focus:ring-accent-green text-sm transition-all" style={{ background: C.surface2, color: C.text }}>
                     {COUNTRY_CODES.map(c => <option key={c.code} value={c.code}>{c.flag} {c.code}</option>)}
                   </select>
-                  <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+                  <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: C.label }} />
                 </div>
-                <input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))} placeholder="Teléfono / WhatsApp" className="w-2/3 bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
+                <input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))} placeholder="Teléfono / WhatsApp" className="w-2/3 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" style={{ background: C.surface2, color: C.text }} />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input name="pais_residencia" value={formData.pais_residencia} onChange={handleChange} placeholder="País" className="bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
-                <input name="estado_residencia" value={formData.estado_residencia} onChange={handleChange} placeholder="Departamento/Estado" className="bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
+                <input name="pais_residencia" value={formData.pais_residencia} onChange={handleChange} placeholder="País" className="border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" style={{ background: C.surface2, color: C.text }} />
+                <input name="estado_residencia" value={formData.estado_residencia} onChange={handleChange} placeholder="Departamento/Estado" className="border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" style={{ background: C.surface2, color: C.text }} />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input name="ciudad_residencia" value={formData.ciudad_residencia} onChange={handleChange} placeholder="Ciudad" className="bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
-                <input name="codigo_postal" value={formData.codigo_postal} onChange={handleChange} placeholder="Código Postal" className="bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
+                <input name="ciudad_residencia" value={formData.ciudad_residencia} onChange={handleChange} placeholder="Ciudad" className="border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" style={{ background: C.surface2, color: C.text }} />
+                <input name="codigo_postal" value={formData.codigo_postal} onChange={handleChange} placeholder="Código Postal" className="border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" style={{ background: C.surface2, color: C.text }} />
               </div>
-              <input name="direccion_residencia" value={formData.direccion_residencia} onChange={handleChange} placeholder="Dirección Completa" className="w-full bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
+              <input name="direccion_residencia" value={formData.direccion_residencia} onChange={handleChange} placeholder="Dirección Completa" className="w-full border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" style={{ background: C.surface2, color: C.text }} />
             </div>
           )}
 
           {/* --- STEP 3: SOCIO-ECONOMIC --- */}
           {step === 3 && (
             <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-              <select name="estatus_laboral" value={formData.estatus_laboral} onChange={handleChange} className="w-full bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all">
+              <select name="estatus_laboral" value={formData.estatus_laboral} onChange={handleChange} className="w-full border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" style={{ background: C.surface2, color: C.text }}>
                 <option value="">Estatus Laboral...</option>
                 {LABOR_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
 
-              <select name="nivel_educativo_actual" value={formData.nivel_educativo_actual} onChange={handleChange} className="w-full bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all">
+              <select name="nivel_educativo_actual" value={formData.nivel_educativo_actual} onChange={handleChange} className="w-full border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" style={{ background: C.surface2, color: C.text }}>
                 <option value="">Nivel Educativo...</option>
                 {EDUCATION_LEVELS.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
 
               <div className="grid grid-cols-3 gap-2">
                 <div className="col-span-2">
-                  <label className="text-xs text-stone-500 ml-2">Ingreso Mensual Hogar</label>
-                  <input type="number" name="ingreso_mensual_hogar" value={formData.ingreso_mensual_hogar} onChange={handleChange} placeholder="0.00" className="w-full bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" />
+                  <label className="text-xs ml-2" style={{ color: C.textMuted }}>Ingreso Mensual Hogar</label>
+                  <input type="number" name="ingreso_mensual_hogar" value={formData.ingreso_mensual_hogar} onChange={handleChange} placeholder="0.00" className="w-full border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" style={{ background: C.surface2, color: C.text }} />
                 </div>
                 <div>
-                  <label className="text-xs text-stone-500 ml-2">Moneda</label>
-                  <select name="moneda_ingreso" value={formData.moneda_ingreso} onChange={handleChange} className="w-full bg-stone-50 border-0 rounded-xl px-2 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green text-center transition-all">
+                  <label className="text-xs ml-2" style={{ color: C.textMuted }}>Moneda</label>
+                  <select name="moneda_ingreso" value={formData.moneda_ingreso} onChange={handleChange} className="w-full border-0 rounded-xl px-2 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green text-center transition-all" style={{ background: C.surface2, color: C.text }}>
                     {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
               </div>
 
-              <select name="rango_ingreso_mensual" value={formData.rango_ingreso_mensual} onChange={handleChange} className="w-full bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all">
+              <select name="rango_ingreso_mensual" value={formData.rango_ingreso_mensual} onChange={handleChange} className="w-full border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green transition-all" style={{ background: C.surface2, color: C.text }}>
                 <option value="">Rango Ingreso (Ref)...</option>
                 {INCOME_RANGES.map(r => <option key={r} value={r}>{r}</option>)}
               </select>
 
-              <div className="h-px bg-stone-100 my-2"></div>
+              <div className="h-px my-2" style={{ background: C.border }}></div>
 
               <div className="flex gap-4 items-center">
-                <label className="text-stone-600 text-sm w-1/2">Dependientes Económicos:</label>
-                <input type="number" name="dependientes_economicos" value={formData.dependientes_economicos} onChange={handleChange} min="0" className="w-20 bg-stone-50 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green text-center transition-all" />
+                <label className="text-sm w-1/2" style={{ color: C.textSec }}>Dependientes Económicos:</label>
+                <input type="number" name="dependientes_economicos" value={formData.dependientes_economicos} onChange={handleChange} min="0" className="w-20 border-0 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent-green text-center transition-all" style={{ background: C.surface2, color: C.text }} />
               </div>
 
               <div>
-                <label className="text-sm text-stone-600 block mb-2">Parentesco Dependientes (Selección Múltiple):</label>
+                <label className="text-sm block mb-2" style={{ color: C.textSec }}>Parentesco Dependientes (Selección Múltiple):</label>
                 <div className="flex flex-wrap gap-2">
                   {DEPENDENT_RELATIONSHIPS.map(rel => (
                     <button
                       key={rel}
                       type="button"
                       onClick={() => toggleParentesco(rel)}
-                      className={`px-3 py-1.5 rounded-full text-xs transition-all border ${formData.parentesco_dependientes.includes(rel)
-                        ? 'bg-bone-white border-accent-green text-accent-green font-bold shadow-xs'
-                        : 'bg-stone-50 border-stone-200 text-stone-600 hover:bg-stone-100'
-                        }`}
+                      className="px-3 py-1.5 rounded-full text-xs transition-all border"
+                      style={formData.parentesco_dependientes.includes(rel)
+                        ? { background: C.forest, borderColor: C.green, color: C.green, fontWeight: 700 }
+                        : { background: C.surface2, borderColor: C.border, color: C.textMuted }}
                     >
                       {rel}
                     </button>
@@ -353,17 +354,17 @@ export default function RegisterForm() {
           {step === 4 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
               <div>
-                <p className="text-stone-600 text-sm mb-3 font-medium">Selecciona tus Redes Sociales:</p>
+                <p className="text-sm mb-3 font-medium" style={{ color: C.textSec }}>Selecciona tus Redes Sociales:</p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {SOCIAL_PLATFORMS.map(platform => (
                     <button
                       key={platform}
                       type="button"
                       onClick={() => toggleSocialPlatform(platform)}
-                      className={`flex items-center justify-center p-3 rounded-xl border transition-all ${formData.redes_sociales.platforms?.includes(platform)
-                        ? 'bg-bone-white border-accent-green text-accent-green shadow-sm'
-                        : 'bg-white border-stone-200 text-stone-500 hover:border-accent-green/50 hover:bg-stone-50'
-                        }`}
+                      className="flex items-center justify-center p-3 rounded-xl border transition-all"
+                      style={formData.redes_sociales.platforms?.includes(platform)
+                        ? { background: C.forest, borderColor: C.green, color: C.green }
+                        : { background: C.surface1, borderColor: C.border, color: C.textMuted }}
                     >
                       <span className="text-sm font-medium">{platform}</span>
                     </button>
@@ -372,17 +373,18 @@ export default function RegisterForm() {
               </div>
 
               {formData.redes_sociales.platforms?.length > 0 && (
-                <div className="space-y-3 bg-stone-50 p-4 rounded-xl">
-                  <p className="text-xs text-stone-400 uppercase font-bold tracking-wider mb-2">Ingresa tu usuario / link</p>
+                <div className="space-y-3 p-4 rounded-xl" style={{ background: C.surface2 }}>
+                  <p className="text-xs uppercase font-bold tracking-wider mb-2" style={{ color: C.label }}>Ingresa tu usuario / link</p>
                   {formData.redes_sociales.platforms.map((platform: string) => (
                     <div key={platform} className="flex gap-2 items-center">
-                      <div className="w-24 shrink-0 text-xs font-semibold text-stone-600 truncate">{platform}</div>
+                      <div className="w-24 shrink-0 text-xs font-semibold truncate" style={{ color: C.textSec }}>{platform}</div>
                       <input
                         type="text"
                         value={formData.redes_sociales[platform] || ''}
                         onChange={(e) => handleSocialUsernameChange(platform, e.target.value)}
                         placeholder={`Usuario de ${platform}`}
-                        className="flex-1 bg-white border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-accent-green"
+                        className="flex-1 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-accent-green"
+                        style={{ background: C.surface1, borderColor: C.border, color: C.text, border: `1px solid ${C.border}` }}
                       />
                     </div>
                   ))}
@@ -394,12 +396,13 @@ export default function RegisterForm() {
         </form>
 
         {/* --- FOOTER BUTTONS --- */}
-        <div className="mt-6 pt-4 border-t border-stone-100 flex justify-between items-center shrink-0">
+        <div className="mt-6 pt-4 border-t flex justify-between items-center shrink-0" style={{ borderColor: C.border }}>
           {step > 1 ? (
             <button
               type="button"
               onClick={() => setStep(step - 1)}
-              className="text-stone-500 hover:text-stone-800 font-medium px-4 py-2 hover:bg-stone-50 rounded-lg transition-colors"
+              className="font-medium px-4 py-2 rounded-lg transition-colors"
+              style={{ color: C.textMuted }}
             >
               Atrás
             </button>
@@ -411,10 +414,10 @@ export default function RegisterForm() {
             type="submit"
             onClick={handleSubmit}
             disabled={loading || nextStepDisabled()}
-            className={`px-8 py-3 rounded-xl font-bold text-white shadow-lg shadow-accent-green/20 transition-all flex items-center gap-2
-                    ${loading || nextStepDisabled()
-                ? 'bg-stone-300 cursor-not-allowed shadow-none'
-                : 'bg-accent-green hover:bg-accent-green/90 hover:scale-[1.02] active:scale-95 cursor-pointer'}`}
+            className="px-8 py-3 rounded-xl font-bold text-white shadow-lg transition-all flex items-center gap-2"
+            style={loading || nextStepDisabled()
+              ? { background: C.disabled, cursor: 'not-allowed' }
+              : { background: 'var(--color-accent-green, #52B788)', cursor: 'pointer' }}
           >
             {loading ? <Loader2 className="animate-spin" size={20} /> : null}
             {step < TOTAL_STEPS ? 'Siguiente' : 'Finalizar Registro'}

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { LogIn, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 import { useAuth } from '../store/useAuth';
+import { C } from '../styles/colors'
 
 export default function LoginForm() {
   const navigate = useNavigate();
@@ -48,71 +49,81 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-light-white flex items-center justify-center p-6 font-montserrat">
-      <div className="bg-white p-6 md:p-8 rounded-2xl w-full shadow-xs max-w-md border border-stone-200">
-        <div className="text-center mb-8">
+    <div
+      className="p-6 md:p-8 rounded-2xl w-full max-w-md border"
+      style={{ background: C.surface1, borderColor: C.border, fontFamily: 'Montserrat, sans-serif' }}
+    >
+      <div className="text-center mb-8">
+        <h2
+          className="text-3xl font-bold"
+          style={{ fontFamily: "'American Typewriter', Georgia, serif", color: C.text }}
+        >
+          Bienvenido de nuevo
+        </h2>
+        <p className="text-base mt-2" style={{ color: C.textMuted }}>Continúa tu viaje</p>
+      </div>
 
-          <div className="w-16 h-16 bg-stone-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-            <img src="https://media.100cosasporhacer.com/pwa.png" alt="" />
-
-          </div>
-          <h2 className="font-american text-3xl text-stone-800 font-bold">Bienvenido de nuevo</h2>
-          <p className="text-stone-500 text-base mt-2">Continúa tu viaje</p>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium mb-2" style={{ color: C.textMuted }}>
+            Correo electrónico:
+          </label>
+          <input
+            type="email"
+            placeholder="tucorreo@gmail.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full rounded-xl px-4 py-4 border outline-none transition-all focus:ring-2"
+            style={{ background: C.surface2, borderColor: C.border, color: C.text, ['--tw-ring-color' as any]: C.green }}
+            required
+          />
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-
-          <div>
-            <label htmlFor="email" className="block text-stone-700 text-sm font-medium mb-2">Correo electrónico:</label>
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium my-2" style={{ color: C.textMuted }}>
+            Contraseña:
+          </label>
+          <div className="relative">
             <input
-              type="email"
-              placeholder="tucorreo@gmail.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-accent-green focus:border-transparent transition-all"
+              type={showPassword ? "text" : "password"}
+              placeholder="********"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-xl px-4 py-4 pr-12 border outline-none transition-all focus:ring-2"
+              style={{ background: C.surface2, borderColor: C.border, color: C.text, ['--tw-ring-color' as any]: C.green }}
               required
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 cursor-pointer -translate-y-1/2 focus:outline-none"
+              style={{ color: C.textMuted }}
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
           </div>
-
-          <div>
-            <label htmlFor="password" className="block text-stone-700 text-sm font-medium my-2">Contraseña:</label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="********"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-accent-green focus:border-transparent pr-12 transition-all"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 cursor-pointer -translate-y-1/2 text-stone-400 hover:text-stone-600 focus:outline-none"
-              >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
-            </div>
-            <div className="flex justify-end mt-1">
-              <Link to="/forgot-password" className="text-xs text-stone-500 hover:text-stone-800">
-                ¿Olvidaste tu contraseña?
-              </Link>
-            </div>
+          <div className="flex justify-end mt-1">
+            <Link to="/forgot-password" className="text-xs hover:underline" style={{ color: C.textMuted }}>
+              ¿Olvidaste tu contraseña?
+            </Link>
           </div>
-
-
-          {error && <p className="text-accent-red text-sm text-center">{error}</p>}
-
-          <button type="submit" className="w-full mt-8 cursor-pointer bg-accent-green text-white py-4 rounded-xl font-bold hover:brightness-110 transition-colors flex items-center justify-center font-montserrat tracking-wide">
-            {loading ? <Loader2 className="animate-spin" size={20} /> : 'Continuar'}
-          </button>
-        </form>
-
-        <div className="mt-6 text-center">
-          <Link to="/register" className="text-sm text-stone-500 hover:text-stone-800 underline">
-            ¿No tienes cuenta? Regístrate
-          </Link>
         </div>
+
+        {error && <p className="text-sm text-center" style={{ color: C.red }}>{error}</p>}
+
+        <button
+          type="submit"
+          className="w-full mt-8 cursor-pointer py-4 rounded-full font-bold transition-opacity hover:opacity-90 flex items-center justify-center tracking-wide"
+          style={{ background: C.green, color: C.bg }}
+        >
+          {loading ? <Loader2 className="animate-spin" size={20} /> : 'Continuar'}
+        </button>
+      </form>
+
+      <div className="mt-6 text-center">
+        <Link to="/register" className="text-sm hover:underline" style={{ color: C.textMuted }}>
+          ¿No tienes cuenta? Regístrate
+        </Link>
       </div>
     </div>
   );

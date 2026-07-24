@@ -7,6 +7,7 @@ import { Link } from 'react-router';
 import Header from '../shared/Header';
 import PhysicalHabitSetupModal from '../shared/PhysicalHabitSetupModal';
 import { TrendingUp } from 'lucide-react';
+import { C } from '../../styles/colors';
 
 const host = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/api\/?$/, '');
 
@@ -68,7 +69,7 @@ export default function ChallengeLogs() {
     const isLoading = activeTab === 'physical' ? loadingActivities : loadingRecognitions;
 
     return (
-        <div className="flex flex-col md:flex-row h-screen bg-slate-50 font-sans overflow-hidden">
+        <div className="flex flex-col md:flex-row h-screen font-sans overflow-hidden" style={{ background: C.bg }}>
             {/* Mobile Header */}
             <div className="md:hidden w-full">
                 <Header />
@@ -81,13 +82,13 @@ export default function ChallengeLogs() {
             <main className="flex-1 overflow-y-auto">
                 <div className="max-w-6xl mx-auto p-6 md:p-12">
                     <header className="mb-8">
-                        <Link to="/challenges" className="inline-flex items-center gap-2 text-slate-400 hover:text-slate-600 mb-4 transition-colors group">
+                        <Link to="/challenges" className="inline-flex items-center gap-2 mb-4 transition-colors group" style={{ color: C.label }}>
                             <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" /> Volver a Mis Retos
                         </Link>
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                             <div>
-                                <h1 className="text-3xl font-light text-slate-800">Registros de Retos</h1>
-                                <p className="text-slate-500 mt-2">Consulta tu historial de progreso y momentos de valor.</p>
+                                <h1 className="text-3xl font-light" style={{ color: C.text }}>Registros de Retos</h1>
+                                <p className="mt-2" style={{ color: C.textMuted }}>Consulta tu historial de progreso y momentos de valor.</p>
                             </div>
                             {/* <button
                                 onClick={() => setIsHabitModalOpen(true)}
@@ -100,13 +101,16 @@ export default function ChallengeLogs() {
                     </header>
 
                     {/* Tabs */}
-                    <div className="flex gap-4 mb-8 border-b border-slate-200">
+                    <div className="flex gap-4 mb-8 border-b" style={{ borderColor: C.border }}>
                         <button
                             onClick={() => setActiveTab('physical')}
                             className={`pb-4 px-2 text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'physical'
-                                ? 'text-emerald-600 border-b-2 border-emerald-600'
-                                : 'text-slate-400 hover:text-slate-600'
+                                ? 'border-b-2'
+                                : ''
                                 }`}
+                            style={activeTab === 'physical'
+                                ? { color: C.green, borderColor: C.green }
+                                : { color: C.label }}
                         >
                             <Activity size={18} />
                             Actividad Física
@@ -114,9 +118,12 @@ export default function ChallengeLogs() {
                         <button
                             onClick={() => setActiveTab('recognition')}
                             className={`pb-4 px-2 text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'recognition'
-                                ? 'text-emerald-600 border-b-2 border-emerald-600'
-                                : 'text-slate-400 hover:text-slate-600'
+                                ? 'border-b-2'
+                                : ''
                                 }`}
+                            style={activeTab === 'recognition'
+                                ? { color: C.green, borderColor: C.green }
+                                : { color: C.label }}
                         >
                             <Star size={18} />
                             Reconocimientos
@@ -126,20 +133,20 @@ export default function ChallengeLogs() {
                     {isLoading ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
                             {[1, 2, 3].map(i => (
-                                <div key={i} className="h-64 bg-slate-200 rounded-2xl"></div>
+                                <div key={i} className="h-64 rounded-2xl" style={{ background: C.surface3 }}></div>
                             ))}
                         </div>
                     ) : activeTab === 'physical' ? (
                         /* Physical Activities Content */
                         !activities || activities.length === 0 ? (
-                            <div className="text-center py-20 bg-white rounded-3xl border border-slate-100">
-                                <p className="text-slate-400 text-lg">Aún no has registrado actividades físicas.</p>
+                            <div className="text-center py-20 rounded-3xl border" style={{ background: C.surface1, borderColor: C.border }}>
+                                <p className="text-lg" style={{ color: C.label }}>Aún no has registrado actividades físicas.</p>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                                 {activities.map((log) => (
-                                    <div key={log.id} className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-all group">
-                                        <div className="aspect-[4/3] relative overflow-hidden bg-slate-100">
+                                    <div key={log.id} className="rounded-2xl border overflow-hidden shadow-sm hover:shadow-md transition-all group" style={{ background: C.surface1, borderColor: C.border }}>
+                                        <div className="aspect-[4/3] relative overflow-hidden" style={{ background: C.surface2 }}>
                                             {log.evidenceUrl ? (
                                                 <img
                                                     src={log.evidenceUrl}
@@ -147,9 +154,9 @@ export default function ChallengeLogs() {
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                                 />
                                             ) : (
-                                                <div className="w-full h-full bg-slate-200 flex flex-col items-center justify-center text-slate-400">
+                                                <div className="w-full h-full flex flex-col items-center justify-center" style={{ background: C.surface3, color: C.label }}>
                                                     <Clock size={32} className="mb-2" />
-                                                    <span className="text-xl font-bold text-slate-500">{log.duration} min</span>
+                                                    <span className="text-xl font-bold" style={{ color: C.textMuted }}>{log.duration} min</span>
                                                 </div>
                                             )}
                                             <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
@@ -157,11 +164,11 @@ export default function ChallengeLogs() {
                                             </div>
                                         </div>
                                         <div className="p-5">
-                                            <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">
+                                            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider mb-2" style={{ color: C.label }}>
                                                 <Calendar size={14} />
                                                 {new Date(log.createdAt).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                                             </div>
-                                            <h3 className="text-lg font-bold text-slate-800 leading-tight">{log.activity}</h3>
+                                            <h3 className="text-lg font-bold leading-tight" style={{ color: C.text }}>{log.activity}</h3>
                                         </div>
                                     </div>
                                 ))}
@@ -170,31 +177,31 @@ export default function ChallengeLogs() {
                     ) : (
                         /* Recognition History Content */
                         !recognitions || recognitions.length === 0 ? (
-                            <div className="text-center py-20 bg-white rounded-3xl border border-slate-100">
-                                <p className="text-slate-400 text-lg">Aún no tienes registros en tu cofre de reconocimiento.</p>
+                            <div className="text-center py-20 rounded-3xl border" style={{ background: C.surface1, borderColor: C.border }}>
+                                <p className="text-lg" style={{ color: C.label }}>Aún no tienes registros en tu cofre de reconocimiento.</p>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {recognitions.map((rec) => (
-                                    <div key={rec.id} className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm hover:shadow-md transition-all">
-                                        <div className="flex items-center justify-between mb-4 pb-4 border-b border-slate-50">
-                                            <div className="flex items-center gap-2 text-emerald-600">
-                                                <Heart size={18} className="fill-emerald-600" />
+                                    <div key={rec.id} className="rounded-2xl border p-6 shadow-sm hover:shadow-md transition-all" style={{ background: C.surface1, borderColor: C.border }}>
+                                        <div className="flex items-center justify-between mb-4 pb-4 border-b" style={{ borderColor: C.border }}>
+                                            <div className="flex items-center gap-2" style={{ color: C.green }}>
+                                                <Heart size={18} style={{ fill: C.green }} />
                                                 <span className="font-bold text-sm uppercase tracking-wider">Cofre de Valor</span>
                                             </div>
-                                            <div className="text-slate-400 text-xs font-medium">
+                                            <div className="text-xs font-medium" style={{ color: C.label }}>
                                                 {new Date(rec.createdAt).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
                                             </div>
                                         </div>
 
                                         <div className="space-y-4">
                                             <div>
-                                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-tight mb-1">Merezco ser reconocido por:</h4>
-                                                <p className="text-slate-700 text-sm leading-relaxed">{rec.question1}</p>
+                                                <h4 className="text-xs font-bold uppercase tracking-tight mb-1" style={{ color: C.label }}>Merezco ser reconocido por:</h4>
+                                                <p className="text-sm leading-relaxed" style={{ color: C.textSec }}>{rec.question1}</p>
                                             </div>
                                             <div>
-                                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-tight mb-1">Me recordó que mi vida tiene valor:</h4>
-                                                <p className="text-slate-700 text-sm leading-relaxed">{rec.question2}</p>
+                                                <h4 className="text-xs font-bold uppercase tracking-tight mb-1" style={{ color: C.label }}>Me recordó que mi vida tiene valor:</h4>
+                                                <p className="text-sm leading-relaxed" style={{ color: C.textSec }}>{rec.question2}</p>
                                             </div>
                                         </div>
                                     </div>

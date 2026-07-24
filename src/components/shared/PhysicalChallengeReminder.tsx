@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router';
 import { useAuth } from '../../store/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { X, Dumbbell, ArrowRight } from 'lucide-react';
+import { C } from '../../styles/colors';
 
 const host = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/api\/?$/, '');
 
@@ -56,30 +57,32 @@ export default function PhysicalChallengeReminder() {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative animate-in zoom-in-95 duration-300 border border-slate-100">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+            <div className="rounded-2xl shadow-2xl max-w-md w-full p-6 relative animate-in zoom-in-95 duration-300 border" style={{ background: C.surface1, borderColor: C.border }}>
                 <button
                     onClick={handleClose}
-                    className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
+                    className="absolute top-4 right-4 transition-colors hover:opacity-70"
+                    style={{ color: C.label }}
                 >
                     <X size={20} />
                 </button>
 
                 <div className="flex flex-col items-center text-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-emerald-200">
+                    <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6 shadow-lg" style={{ background: C.red }}>
                         <Dumbbell className="text-white w-8 h-8" />
                     </div>
 
-                    <h3 className="text-2xl font-bold text-slate-800 mb-2">
+                    <h3 className="text-2xl font-bold mb-2" style={{ color: C.text }}>
                         ¡Marca tu punto de partida!
                     </h3>
-                    <p className="text-slate-600 mb-8 leading-relaxed">
-                        Elige un movimiento posible hoy y empieza tus 8 semanas <span className="font-bold text-slate-800">desde aquí</span>.
+                    <p className="mb-8 leading-relaxed" style={{ color: C.textMuted }}>
+                        Elige un movimiento posible hoy y empieza tus 8 semanas <span className="font-bold" style={{ color: C.text }}>desde aquí</span>.
                     </p>
 
                     <button
                         onClick={handleGoToChallenge}
-                        className="w-full bg-slate-900 text-white py-3.5 px-6 rounded-xl font-medium hover:bg-slate-800 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group"
+                        className="w-full text-white py-3.5 px-6 rounded-xl font-medium transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group hover:opacity-90"
+                        style={{ background: C.red }}
                     >
                         <span>Ir al Reto Ahora</span>
                         <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
@@ -87,7 +90,8 @@ export default function PhysicalChallengeReminder() {
 
                     <button
                         onClick={handleClose}
-                        className="mt-4 text-slate-400 text-sm hover:text-slate-600"
+                        className="mt-4 text-sm hover:opacity-70 transition-opacity"
+                        style={{ color: C.label }}
                     >
                         Lo haré más tarde
                     </button>

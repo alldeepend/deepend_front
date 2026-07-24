@@ -4,6 +4,7 @@ import { HomeSidebar } from '../../home/HomeSidebar';
 import Header from '../../shared/Header';
 import { ArrowLeft, CheckCircle2, ShieldCheck, Share2, AlertTriangle, BookOpen, Bell, MessageCircle } from 'lucide-react';
 import { useAuth } from '../../../store/useAuth';
+import { C } from '../../../styles/colors';
 
 // Step Types
 type StepId =
@@ -404,14 +405,15 @@ export default function MyMoneyInAction() {
             case 'START':
                 return (
                     <div className="text-center max-w-2xl mx-auto py-12">
-                        <h1 className="text-4xl font-bold text-slate-800 mb-6">Activa tu Reto: <br /> <span className="text-emerald-600">My Money in Action</span> 🎯</h1>
-                        <p className="text-lg text-slate-600 mb-8 leading-relaxed">
+                        <h1 className="text-4xl font-bold mb-6" style={{ color: C.text }}>Activa tu Reto: <br /> <span style={{ color: C.green }}>My Money in Action</span> 🎯</h1>
+                        <p className="text-lg mb-8 leading-relaxed" style={{ color: C.textMuted }}>
                             La claridad financiera es fundamental, pero empieza cuando tú decides hacerlo.
                             <br />Este formulario te guiará paso a paso para tomar la mejor decisión según tu situación actual.
                         </p>
                         <button
                             onClick={() => goToStep('P1_DECISION')}
-                            className="bg-emerald-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200"
+                            className="text-white px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-lg"
+                            style={{ background: C.red }}
                         >
                             Comenzar Ahora
                         </button>
@@ -422,9 +424,9 @@ export default function MyMoneyInAction() {
                 return (
                     <div className="max-w-xl mx-auto">
                         <div className="mb-8">
-                            <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Paso 1</span>
-                            <h2 className="text-2xl font-bold text-slate-800 mt-2 mb-4">¿Decides participar en el reto MY MONEY IN ACTION este mes?</h2>
-                            <p className="text-slate-500 italic">La claridad financiera empieza cuando tú decides hacerlo.</p>
+                            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: C.green }}>Paso 1</span>
+                            <h2 className="text-2xl font-bold mt-2 mb-4" style={{ color: C.text }}>¿Decides participar en el reto MY MONEY IN ACTION este mes?</h2>
+                            <p className="italic" style={{ color: C.textMuted }}>La claridad financiera empieza cuando tú decides hacerlo.</p>
                         </div>
 
                         <div className="grid gap-4">
@@ -433,9 +435,10 @@ export default function MyMoneyInAction() {
                                     handleAnswer('p1_decision', 'yes');
                                     goToStep('P2_OPTION');
                                 }}
-                                className="p-6 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 transition-all text-left group"
+                                className="p-6 rounded-xl border transition-all text-left"
+                                style={{ borderColor: C.border, background: C.surface1, color: C.text }}
                             >
-                                <div className="flex items-center gap-3 font-bold text-slate-700 group-hover:text-emerald-700 text-lg">
+                                <div className="flex items-center gap-3 font-bold text-lg">
                                     <span className="text-2xl">✅</span> Sí, acepto el reto
                                 </div>
                             </button>
@@ -445,9 +448,10 @@ export default function MyMoneyInAction() {
                                     handleAnswer('p1_decision', 'no');
                                     goToStep('CLOSING_FEEDBACK');
                                 }}
-                                className="p-6 rounded-xl border border-slate-200 hover:border-slate-400 hover:bg-slate-50 transition-all text-left"
+                                className="p-6 rounded-xl border transition-all text-left"
+                                style={{ borderColor: C.border, background: C.surface1, color: C.text }}
                             >
-                                <div className="flex items-center gap-3 font-bold text-slate-700 text-lg">
+                                <div className="flex items-center gap-3 font-bold text-lg">
                                     <span className="text-2xl">❌</span> No, por ahora no
                                 </div>
                             </button>
@@ -459,9 +463,9 @@ export default function MyMoneyInAction() {
                 return (
                     <div className="max-w-xl mx-auto">
                         <div className="mb-8">
-                            <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Paso 2</span>
-                            <h2 className="text-2xl font-bold text-slate-800 mt-2 mb-4">¿Para cuál de las opciones estás list@?</h2>
-                            <p className="text-slate-500 mb-4">Como todo DeepEnd, tod@s partimos de puntos diferentes. Elige tu ruta:</p>
+                            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: C.green }}>Paso 2</span>
+                            <h2 className="text-2xl font-bold mt-2 mb-4" style={{ color: C.text }}>¿Para cuál de las opciones estás list@?</h2>
+                            <p className="mb-4" style={{ color: C.textMuted }}>Como todo DeepEnd, tod@s partimos de puntos diferentes. Elige tu ruta:</p>
                         </div>
 
                         <div className="grid gap-4">
@@ -470,10 +474,11 @@ export default function MyMoneyInAction() {
                                     handleAnswer('p2_option', 'liquidity');
                                     goToStep('L_DATE_SELECTION');
                                 }}
-                                className="p-6 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 transition-all text-left group"
+                                className="p-6 rounded-xl border transition-all text-left"
+                                style={{ borderColor: C.border, background: C.surface1, color: C.text }}
                             >
-                                <h3 className="font-bold text-slate-800 text-lg mb-2 group-hover:text-emerald-700">a. Opción 1: Tengo liquidez</h3>
-                                <p className="text-slate-600 text-sm">Tengo liquidez hoy (desde $5 USD) y estoy list@ para que mi dinero rente.</p>
+                                <h3 className="font-bold text-lg mb-2">a. Opción 1: Tengo liquidez</h3>
+                                <p className="text-sm" style={{ color: C.textMuted }}>Tengo liquidez hoy (desde $5 USD) y estoy list@ para que mi dinero rente.</p>
                             </button>
 
                             <button
@@ -483,10 +488,11 @@ export default function MyMoneyInAction() {
                                         navigate('/challenges/gasto-hormiga');
                                     }
                                 }}
-                                className="p-6 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition-all text-left group"
+                                className="p-6 rounded-xl border transition-all text-left"
+                                style={{ borderColor: C.border, background: C.surface1, color: C.text }}
                             >
-                                <h3 className="font-bold text-slate-800 text-lg mb-2 group-hover:text-blue-700">b. Opción 2: No tengo excedente</h3>
-                                <p className="text-slate-600 text-sm">Quiero crearlo. (Ir a Gasto Hormiga)</p>
+                                <h3 className="font-bold text-lg mb-2">b. Opción 2: No tengo excedente</h3>
+                                <p className="text-sm" style={{ color: C.textMuted }}>Quiero crearlo. (Ir a Gasto Hormiga)</p>
                             </button>
                         </div>
                     </div>
@@ -498,30 +504,34 @@ export default function MyMoneyInAction() {
                 return (
                     <div className="max-w-xl mx-auto">
                         <div className="mb-8">
-                            <h2 className="text-2xl font-bold text-slate-800 mb-2">Tu cita para tomar Acción 📅</h2>
-                            <p className="text-slate-600">El éxito ama la preparación. Elige cuándo tomarás acción.</p>
+                            <h2 className="text-2xl font-bold mb-2" style={{ color: C.text }}>Tu cita para tomar Acción 📅</h2>
+                            <p style={{ color: C.textMuted }}>El éxito ama la preparación. Elige cuándo tomarás acción.</p>
                         </div>
 
                         <div className="space-y-6">
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-2">¿Qué día vas a hacer tu acción? (Próximos 7 días)</label>
+                                <label className="block text-sm font-bold mb-2" style={{ color: C.textMuted }}>¿Qué día vas a hacer tu acción? (Próximos 7 días)</label>
                                 <input
                                     type="date"
                                     min={new Date().toISOString().split('T')[0]}
                                     max={next7Days[6]}
                                     value={answers.action_date || ''}
-                                    className="w-full p-3 rounded-xl border border-slate-200"
+                                    className="w-full p-3 rounded-xl border"
+                                    style={{ background: C.surface2, borderColor: C.border, color: C.text }}
                                     onChange={(e) => handleAnswer('action_date', e.target.value)}
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-2">¿En qué momento del día te queda mejor?</label>
+                                <label className="block text-sm font-bold mb-2" style={{ color: C.textMuted }}>¿En qué momento del día te queda mejor?</label>
                                 <div className="grid grid-cols-3 gap-3">
                                     {['Mañana', 'Tarde', 'Noche'].map(time => (
                                         <button
                                             key={time}
                                             onClick={() => handleAnswer('action_time', time)}
-                                            className={`p-3 rounded-lg border ${answers.action_time === time ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white border-slate-200 hover:bg-slate-50'}`}
+                                            className="p-3 rounded-lg border transition-colors"
+                                            style={answers.action_time === time
+                                                ? { background: C.forest, color: C.green, borderColor: C.forest }
+                                                : { background: C.surface2, borderColor: C.border, color: C.text }}
                                         >
                                             {time}
                                         </button>
@@ -529,12 +539,13 @@ export default function MyMoneyInAction() {
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-2">Si ese día se complica, ¿qué fecha sería tu Plan B?</label>
+                                <label className="block text-sm font-bold mb-2" style={{ color: C.textMuted }}>Si ese día se complica, ¿qué fecha sería tu Plan B?</label>
                                 <input
                                     type="date"
                                     min={new Date().toISOString().split('T')[0]}
                                     value={answers.plan_b_date || ''}
-                                    className="w-full p-3 rounded-xl border border-slate-200"
+                                    className="w-full p-3 rounded-xl border"
+                                    style={{ background: C.surface2, borderColor: C.border, color: C.text }}
                                     onChange={(e) => handleAnswer('plan_b_date', e.target.value)}
                                 />
                             </div>
@@ -542,7 +553,8 @@ export default function MyMoneyInAction() {
                             <button
                                 disabled={!answers.action_date || !answers.action_time || !answers.plan_b_date}
                                 onClick={() => goToStep('L_AMOUNT_RANGE')}
-                                className="w-full bg-slate-800 text-white py-4 rounded-xl font-bold disabled:opacity-50 hover:bg-slate-900 transition-colors"
+                                className="w-full text-white py-4 rounded-xl font-bold disabled:opacity-50 transition-colors"
+                                style={{ background: C.red }}
                             >
                                 Siguiente
                             </button>
@@ -553,8 +565,8 @@ export default function MyMoneyInAction() {
             case 'L_AMOUNT_RANGE':
                 return (
                     <div className="max-w-xl mx-auto">
-                        <h2 className="text-2xl font-bold text-slate-800 mb-3 font-center">Paso 3: Tu punto de partida</h2>
-                        <p className="text-slate-600 text-sm mb-6">Pensando en el monto que estás dispuesto a mover en este reto, ¿En qué rango se encuentra ese valor?</p>
+                        <h2 className="text-2xl font-bold mb-3 font-center" style={{ color: C.text }}>Paso 3: Tu punto de partida</h2>
+                        <p className="text-sm mb-6" style={{ color: C.textMuted }}>Pensando en el monto que estás dispuesto a mover en este reto, ¿En qué rango se encuentra ese valor?</p>
 
                         <div className="grid gap-4">
                             <button
@@ -562,20 +574,22 @@ export default function MyMoneyInAction() {
                                     handleAnswer('amount_range', 'less_200');
                                     goToStep('INSIGHTS_INTRO');
                                 }}
-                                className="p-6 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 transition-all text-left"
+                                className="p-6 rounded-xl border transition-all text-left"
+                                style={{ borderColor: C.border, background: C.surface1, color: C.text }}
                             >
-                                <span className="font-bold text-lg text-slate-700 block mb-1">💵 Menos de 200 USD</span>
-                                <span className="text-xs text-slate-500">Ruta A</span>
+                                <span className="font-bold text-lg block mb-1">💵 Menos de 200 USD</span>
+                                <span className="text-xs" style={{ color: C.textMuted }}>Ruta A</span>
                             </button>
                             <button
                                 onClick={() => {
                                     handleAnswer('amount_range', 'more_200');
                                     goToStep('HIGH_AMOUNT_INTRO');
                                 }}
-                                className="p-6 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 transition-all text-left"
+                                className="p-6 rounded-xl border transition-all text-left"
+                                style={{ borderColor: C.border, background: C.surface1, color: C.text }}
                             >
-                                <span className="font-bold text-lg text-slate-700 block mb-1">💰 200 USD o más</span>
-                                <span className="text-xs text-slate-500">Ruta B</span>
+                                <span className="font-bold text-lg block mb-1">💰 200 USD o más</span>
+                                <span className="text-xs" style={{ color: C.textMuted }}>Ruta B</span>
                             </button>
                         </div>
                     </div>
@@ -592,71 +606,71 @@ export default function MyMoneyInAction() {
             case 'INSIGHTS_INTRO':
                 return (
                     <div className="max-w-xl mx-auto">
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                            <div className="w-16 h-16 bg-blue-50 rounded-xl flex items-center justify-center mb-4 text-blue-600">
+                        <div className="p-6 rounded-2xl shadow-sm border" style={{ background: C.surface1, borderColor: C.border }}>
+                            <div className="w-16 h-16 rounded-xl flex items-center justify-center mb-4" style={{ background: C.surface2, color: C.textMuted }}>
                                 <ShieldCheck size={32} />
                             </div>
-                            <h2 className="text-2xl font-bold text-slate-800 mb-4">Tarjeta – Mi Efectivo Rentable (Insights WM)</h2>
+                            <h2 className="text-2xl font-bold mb-4" style={{ color: C.text }}>Tarjeta – Mi Efectivo Rentable (Insights WM)</h2>
 
-                            <div className="text-sm text-slate-600 space-y-4 mb-6">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">¿Qué es?</span>
+                            <div className="text-sm space-y-4 mb-6" style={{ color: C.textMuted }}>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>¿Qué es?</span>
                                     <div className="md:col-span-2">
                                         Mi Efectivo Rentable es un "bolsillo" en dólares dentro de tu cuenta de Insights que, al activarlo, pone automáticamente tu saldo de efectivo en el mercado monetario de muy corto plazo. Cada día genera intereses y los acredita al cierre de mes; puedes entrar o salir cuando quieras sin plazos de permanencia.
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Tipo de producto</span>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Tipo de producto</span>
                                     <div className="md:col-span-2">"Bolsillo" de inversión en USD, similar a un fondo monetario de muy corto plazo.</div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Horizonte temporal</span>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Horizonte temporal</span>
                                     <div className="md:col-span-2">Corto, mediano y largo plazo.</div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Activos subyacentes</span>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Activos subyacentes</span>
                                     <div className="md:col-span-2">ETFs / UCITs expuestos a tasas de interés de corto plazo de EE. UU. (por ej. letras del Tesoro y otros instrumentos money-market)</div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Liquidez</span>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Liquidez</span>
                                     <div className="md:col-span-2">
                                         "A la vista": Puedes añadir o retirar dinero en cualquier momento desde la app, sin plazos de permanencia.
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Rentabilidad</span>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Rentabilidad</span>
                                     <div className="md:col-span-2">Variable, referenciada a la Tasa Fed. Se acumula a diario y se abona mensualmente en el mismo bolsillo (re-inversión automática).</div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Comisión</span>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Comisión</span>
                                     <div className="md:col-span-2">0,10 % anual sobre saldo promedio mensual (se descuenta mensualmente). Sin comisión de compra/venta. Retiros ACH: USD 5–25</div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Inversión mínima</span>
-                                    <div className="md:col-span-2 font-bold text-emerald-600">2 USD</div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Inversión mínima</span>
+                                    <div className="md:col-span-2 font-bold" style={{ color: C.green }}>2 USD</div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Perfil de riesgo</span>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Perfil de riesgo</span>
                                     <div className="md:col-span-2">Conservador; ideal para colchón de efectivo o metas de corto y mediano plazo.</div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Protección patrimonial</span>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Protección patrimonial</span>
                                     <div className="md:col-span-2">
                                         SIPC: Valores segregados a nombre del cliente; cobertura hasta USD 500 000 (USD 250 000 en efectivo)
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                                    <span className="font-bold text-slate-700">Custodia & regulación</span>
+                                    <span className="font-bold" style={{ color: C.text }}>Custodia & regulación</span>
                                     <div className="md:col-span-2">
                                         RIA: Registered Investment Advisor. <br />
                                         SEC: Securities and Exchange Commission. <br />
@@ -667,7 +681,8 @@ export default function MyMoneyInAction() {
                             </div>
                             <button
                                 onClick={() => goToStep('INSIGHTS_TEST')}
-                                className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700"
+                                className="w-full text-white py-3 rounded-xl font-bold"
+                                style={{ background: C.red }}
                             >
                                 Entendido, Validar Conocimiento (Paso A1)
                             </button>
@@ -678,82 +693,68 @@ export default function MyMoneyInAction() {
             case 'INSIGHTS_TEST':
                 return (
                     <div className="max-w-xl mx-auto">
-                        <h2 className="text-xl font-bold text-slate-800 mb-6">Paso A1: Evaluación 🧠</h2>
+                        <h2 className="text-xl font-bold mb-6" style={{ color: C.text }}>Paso A1: Evaluación 🧠</h2>
                         <div className="space-y-6">
 
                             {/* Q1 */}
-                            <div className="p-4 bg-slate-50 rounded-xl">
-                                <p className="font-bold text-slate-800 mb-3 text-sm">1. ¿Qué organismo controla principalmente las tasas de interés de corto plazo en Estados Unidos?</p>
+                            <div className="p-4 rounded-xl" style={{ background: C.surface2 }}>
+                                <p className="font-bold mb-3 text-sm" style={{ color: C.text }}>1. ¿Qué organismo controla principalmente las tasas de interés de corto plazo en Estados Unidos?</p>
                                 <div className="space-y-2">
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
-                                        <input type="radio" name="q1" value="a" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q1: e.target.value })} />
-                                        <span className="text-sm">La Superintendencia Financiera en Colombia</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
-                                        <input type="radio" name="q1" value="b" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q1: e.target.value })} />
-                                        <span className="text-sm">El Sistema de la Reserva Federal (FED) de Estados Unidos</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
-                                        <input type="radio" name="q1" value="c" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q1: e.target.value })} />
-                                        <span className="text-sm">A y B son ciertas</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
-                                        <input type="radio" name="q1" value="d" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q1: e.target.value })} />
-                                        <span className="text-sm">La plataforma de inversión</span>
-                                    </label>
+                                    {[
+                                        { v: 'a', l: 'La Superintendencia Financiera en Colombia' },
+                                        { v: 'b', l: 'El Sistema de la Reserva Federal (FED) de Estados Unidos' },
+                                        { v: 'c', l: 'A y B son ciertas' },
+                                        { v: 'd', l: 'La plataforma de inversión' },
+                                    ].map(opt => (
+                                        <label key={opt.v} className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer" style={{ background: C.surface1, borderColor: C.border, color: C.text }}>
+                                            <input type="radio" name="q1" value={opt.v} onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q1: e.target.value })} />
+                                            <span className="text-sm">{opt.l}</span>
+                                        </label>
+                                    ))}
                                 </div>
                             </div>
 
                             {/* Q2 */}
-                            <div className="p-4 bg-slate-50 rounded-xl">
-                                <p className="font-bold text-slate-800 mb-3 text-sm">2. Si tienes $1,000 USD en "Mi Efectivo Rentable" y el dólar se devalúa 10% frente al peso...</p>
+                            <div className="p-4 rounded-xl" style={{ background: C.surface2 }}>
+                                <p className="font-bold mb-3 text-sm" style={{ color: C.text }}>2. Si tienes $1,000 USD en "Mi Efectivo Rentable" y el dólar se devalúa 10% frente al peso...</p>
                                 <div className="space-y-2">
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
-                                        <input type="radio" name="q2" value="a" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q2: e.target.value })} />
-                                        <span className="text-sm">Vale 10% menos en pesos colombianos, aunque mantienes los mismos $1,000 USD.</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
-                                        <input type="radio" name="q2" value="b" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q2: e.target.value })} />
-                                        <span className="text-sm">Vale 10% más en pesos colombianos y 10% menos en dolares</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
-                                        <input type="radio" name="q2" value="c" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q2: e.target.value })} />
-                                        <span className="text-sm">Vale lo mismo en pesos Colombianos</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
-                                        <input type="radio" name="q2" value="d" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q2: e.target.value })} />
-                                        <span className="text-sm">Mi inversión no se ve afectada</span>
-                                    </label>
+                                    {[
+                                        { v: 'a', l: 'Vale 10% menos en pesos colombianos, aunque mantienes los mismos $1,000 USD.' },
+                                        { v: 'b', l: 'Vale 10% más en pesos colombianos y 10% menos en dolares' },
+                                        { v: 'c', l: 'Vale lo mismo en pesos Colombianos' },
+                                        { v: 'd', l: 'Mi inversión no se ve afectada' },
+                                    ].map(opt => (
+                                        <label key={opt.v} className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer" style={{ background: C.surface1, borderColor: C.border, color: C.text }}>
+                                            <input type="radio" name="q2" value={opt.v} onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q2: e.target.value })} />
+                                            <span className="text-sm">{opt.l}</span>
+                                        </label>
+                                    ))}
                                 </div>
                             </div>
 
                             {/* Q3 */}
-                            <div className="p-4 bg-slate-50 rounded-xl">
-                                <p className="font-bold text-slate-800 mb-3 text-sm">3. ¿Qué significa que el producto financiero tenga regulación dual?</p>
+                            <div className="p-4 rounded-xl" style={{ background: C.surface2 }}>
+                                <p className="font-bold mb-3 text-sm" style={{ color: C.text }}>3. ¿Qué significa que el producto financiero tenga regulación dual?</p>
                                 <div className="space-y-2">
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
-                                        <input type="radio" name="q3" value="a" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q3: e.target.value })} />
-                                        <span className="text-sm">Que es un activo regulado solo en Colombia.</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
-                                        <input type="radio" name="q3" value="b" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q3: e.target.value })} />
-                                        <span className="text-sm">Que está supervisado tanto por la SEC en Estados Unidos (donde operan los activos) como aprobado por la Superfinanciera en Colombia (donde se promociona).</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
-                                        <input type="radio" name="q3" value="c" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q3: e.target.value })} />
-                                        <span className="text-sm">Que es un activo seguro.</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
-                                        <input type="radio" name="q3" value="d" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q3: e.target.value })} />
-                                        <span className="text-sm">Ninguna de las anteriores.</span>
-                                    </label>
+                                    {[
+                                        { v: 'a', l: 'Que es un activo regulado solo en Colombia.' },
+                                        { v: 'b', l: 'Que está supervisado tanto por la SEC en Estados Unidos (donde operan los activos) como aprobado por la Superfinanciera en Colombia (donde se promociona).' },
+                                        { v: 'c', l: 'Que es un activo seguro.' },
+                                        { v: 'd', l: 'Ninguna de las anteriores.' },
+                                    ].map(opt => (
+                                        <label key={opt.v} className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer" style={{ background: C.surface1, borderColor: C.border, color: C.text }}>
+                                            <input type="radio" name="q3" value={opt.v} onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q3: e.target.value })} />
+                                            <span className="text-sm">{opt.l}</span>
+                                        </label>
+                                    ))}
                                 </div>
                             </div>
 
                             <button
                                 disabled={Object.keys(currentTestAnswers).length < 3}
                                 onClick={validateInsightsTest}
-                                className="w-full bg-slate-800 text-white py-3 rounded-xl font-bold disabled:opacity-50"
+                                className="w-full text-white py-3 rounded-xl font-bold disabled:opacity-50"
+                                style={{ background: C.red }}
                             >
                                 Enviar Respuestas
                             </button>
@@ -764,21 +765,21 @@ export default function MyMoneyInAction() {
             case 'INSIGHTS_RESOURCE':
                 return (
                     <div className="max-w-xl mx-auto">
-                        <div className="border border-yellow-200 bg-yellow-50 p-6 rounded-2xl mb-6">
-                            <div className="flex items-center gap-3 mb-4 text-yellow-800">
+                        <div className="border p-6 rounded-2xl mb-6" style={{ borderColor: C.amber, background: C.surface2 }}>
+                            <div className="flex items-center gap-3 mb-4" style={{ color: C.amber }}>
                                 <AlertTriangle />
                                 <h3 className="font-bold text-lg">Parece que hay conceptos por reforzar</h3>
                             </div>
-                            <p className="text-slate-700 mb-4 text-sm">
+                            <p className="mb-4 text-sm" style={{ color: C.textMuted }}>
                                 Es crucial entender el producto antes de invertir. ¡No te preocupes!
                             </p>
-                            <p className="text-slate-700 mb-4 text-sm">
-                                Vamos a presentarte algunos conceptos para que los estudies y cuando finalices estarás list@ para intentar nuevamente. Haz clic aquí 👉 <a href="https://drive.google.com/file/d/1KPtExJXGokKayCA6-qXmhusehyLdLkYt/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="font-bold text-slate-700 underline hover:text-emerald-600">Conceptos Básicos</a>
+                            <p className="mb-4 text-sm" style={{ color: C.textMuted }}>
+                                Vamos a presentarte algunos conceptos para que los estudies y cuando finalices estarás list@ para intentar nuevamente. Haz clic aquí 👉 <a href="https://drive.google.com/file/d/1KPtExJXGokKayCA6-qXmhusehyLdLkYt/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="font-bold underline" style={{ color: C.green }}>Conceptos Básicos</a>
                             </p>
 
                             <label className="flex items-center gap-3 mb-6 cursor-pointer">
-                                <input type="checkbox" className="w-5 h-5 text-emerald-600 rounded" onChange={(e) => { if (e.target.checked) goToStep('INSIGHTS_TEST') }} />
-                                <span className="font-bold text-slate-700">Ya leí los conceptos, quiero reintentar.</span>
+                                <input type="checkbox" className="w-5 h-5 rounded" onChange={(e) => { if (e.target.checked) goToStep('INSIGHTS_TEST') }} />
+                                <span className="font-bold" style={{ color: C.text }}>Ya leí los conceptos, quiero reintentar.</span>
                             </label>
                         </div>
                     </div>
@@ -787,11 +788,12 @@ export default function MyMoneyInAction() {
             case 'SMART_OBJECTIVE':
                 return (
                     <div className="max-w-xl mx-auto">
-                        <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Paso A3: Definir Objetivo</span>
-                        <h2 className="text-xl font-bold text-slate-800 mb-2 mt-2">Tu Objetivo SMART 🎯</h2>
-                        <p className="text-slate-500 mb-6 text-sm">Antes de entrar en acción, pongámosle un objetivo claro a esa inversión. (Específico, Medible, Alcanzable, Relevante, Temporal)</p>
+                        <span className="text-xs font-bold uppercase tracking-wider" style={{ color: C.green }}>Paso A3: Definir Objetivo</span>
+                        <h2 className="text-xl font-bold mb-2 mt-2" style={{ color: C.text }}>Tu Objetivo SMART 🎯</h2>
+                        <p className="mb-6 text-sm" style={{ color: C.textMuted }}>Antes de entrar en acción, pongámosle un objetivo claro a esa inversión. (Específico, Medible, Alcanzable, Relevante, Temporal)</p>
                         <textarea
-                            className="w-full p-4 rounded-xl border border-slate-200 h-32 mb-6"
+                            className="w-full p-4 rounded-xl border h-32 mb-6"
+                            style={{ background: C.surface2, borderColor: C.border, color: C.text }}
                             placeholder="Ej: Ahorrar $500 para mi fondo de emergencia en 3 meses..."
                             value={answers.smart_objective || ''}
                             onChange={(e) => handleAnswer('smart_objective', e.target.value)}
@@ -799,7 +801,8 @@ export default function MyMoneyInAction() {
                         <button
                             disabled={!answers.smart_objective}
                             onClick={() => goToStep('ACTION_DECISION_INS')}
-                            className="w-full bg-slate-800 text-white py-3 rounded-xl font-bold disabled:opacity-50"
+                            className="w-full text-white py-3 rounded-xl font-bold disabled:opacity-50"
+                            style={{ background: C.red }}
                         >
                             Continuar
                         </button>
@@ -809,15 +812,16 @@ export default function MyMoneyInAction() {
             case 'ACTION_DECISION_INS':
                 return (
                     <div className="max-w-xl mx-auto">
-                        <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Paso A4: Decisión</span>
-                        <h2 className="text-2xl font-bold text-slate-800 mb-6 text-center mt-2">¿List@ para tomar Acción? 🚀</h2>
+                        <span className="text-xs font-bold uppercase tracking-wider" style={{ color: C.green }}>Paso A4: Decisión</span>
+                        <h2 className="text-2xl font-bold mb-6 text-center mt-2" style={{ color: C.text }}>¿List@ para tomar Acción? 🚀</h2>
                         <div className="grid gap-3">
                             <button
                                 onClick={() => {
                                     handleAnswer('decision_initial_offer', 'Insights WM');
                                     goToStep('LINK_INSIGHTS');
                                 }}
-                                className="p-4 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 text-left"
+                                className="p-4 text-white rounded-xl font-bold text-left"
+                                style={{ background: C.red }}
                             >
                                 a. Sí, quiero hacerlo con el producto presentado (Insights WM)
                             </button>
@@ -826,7 +830,8 @@ export default function MyMoneyInAction() {
                                     handleAnswer('decision_initial_offer', 'Otro Producto');
                                     goToStep('OTHER_PLATFORM_INS');
                                 }}
-                                className="p-4 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-50 text-left"
+                                className="p-4 border rounded-xl font-bold text-left"
+                                style={{ background: C.surface1, borderColor: C.border, color: C.text }}
                             >
                                 b. Sí, pero usaré otro producto
                             </button>
@@ -835,7 +840,8 @@ export default function MyMoneyInAction() {
                                     handleAnswer('decision_initial_offer', 'No interesa');
                                     goToStep('ALTERNATIVE_OFFER');
                                 }}
-                                className="p-4 bg-slate-100 text-slate-500 text-sm hover:text-slate-700 rounded-xl text-left"
+                                className="p-4 text-sm rounded-xl text-left"
+                                style={{ background: C.surface2, color: C.textMuted }}
                             >
                                 c. No, no me interesa esta opción
                             </button>
@@ -846,42 +852,43 @@ export default function MyMoneyInAction() {
             case 'OTHER_PLATFORM_INS':
                 return (
                     <div className="max-w-xl mx-auto">
-                        <h2 className="text-xl font-bold text-slate-800 mb-4">¿Qué plataforma usarás?</h2>
-                        <p className="text-sm text-yellow-600 bg-yellow-50 p-3 rounded-lg mb-6">⚠️ Importante: Asegúrate de hacer tu debida diligencia sobre riesgos y regulaciones.</p>
+                        <h2 className="text-xl font-bold mb-4" style={{ color: C.text }}>¿Qué plataforma usarás?</h2>
+                        <p className="text-sm p-3 rounded-lg mb-6" style={{ color: C.amber, background: C.surface2 }}>⚠️ Importante: Asegúrate de hacer tu debida diligencia sobre riesgos y regulaciones.</p>
                         <input
-                            className="w-full p-3 rounded-xl border border-slate-200 mb-6"
+                            className="w-full p-3 rounded-xl border mb-6"
+                            style={{ background: C.surface2, borderColor: C.border, color: C.text }}
                             placeholder="Nombre de la plataforma..."
                             value={answers.other_platform_name || ''}
                             onChange={(e) => handleAnswer('other_platform_name', e.target.value)}
                         />
-                        <button onClick={() => goToStep('SHARE_ACCOUNTABILITY')} className="w-full bg-slate-800 text-white py-3 rounded-xl font-bold">Continuar</button>
+                        <button onClick={() => goToStep('SHARE_ACCOUNTABILITY')} className="w-full text-white py-3 rounded-xl font-bold" style={{ background: C.red }}>Continuar</button>
                     </div>
                 );
 
             case 'ALTERNATIVE_OFFER':
                 return (
                     <div className="max-w-xl mx-auto">
-                        <h2 className="text-xl font-bold text-slate-800 mb-6">Otras Opciones</h2>
+                        <h2 className="text-xl font-bold mb-6" style={{ color: C.text }}>Otras Opciones</h2>
                         <div className="grid gap-4">
                             <button onClick={() => {
                                 handleAnswer('alternative_choice', 'Global 66');
                                 goToStep('GLOBAL66_INTRO');
-                            }} className="p-4 border rounded-xl text-left hover:bg-slate-50">
-                                <span className="font-bold block text-slate-800">Ver otra opción de inversión (Global 66)</span>
-                                <span className="text-xs text-slate-500">Cuenta en dólares para proteger patrimonio.</span>
+                            }} className="p-4 border rounded-xl text-left" style={{ borderColor: C.border, background: C.surface1, color: C.text }}>
+                                <span className="font-bold block">Ver otra opción de inversión (Global 66)</span>
+                                <span className="text-xs" style={{ color: C.textMuted }}>Cuenta en dólares para proteger patrimonio.</span>
                             </button>
                             <button onClick={() => {
                                 if (window.confirm("¿Estás seguro de que deseas ir al reto Gasto Hormiga?")) {
                                     handleAnswer('alternative_choice', 'Gasto Hormiga');
                                     navigate('/challenges/gasto-hormiga');
                                 }
-                            }} className="p-4 border rounded-xl text-left hover:bg-slate-50">
-                                <span className="font-bold block text-slate-800">Ver opción sin inversión (Gasto Hormiga)</span>
+                            }} className="p-4 border rounded-xl text-left" style={{ borderColor: C.border, background: C.surface1, color: C.text }}>
+                                <span className="font-bold block">Ver opción sin inversión (Gasto Hormiga)</span>
                             </button>
                             <button onClick={() => {
                                 handleAnswer('alternative_choice', 'Ninguna');
                                 goToStep('CLOSING_FEEDBACK');
-                            }} className="p-4 text-slate-500 text-sm text-center">
+                            }} className="p-4 text-sm text-center" style={{ color: C.textMuted }}>
                                 No quiero ninguna opción
                             </button>
                         </div>
@@ -893,80 +900,80 @@ export default function MyMoneyInAction() {
             case 'HIGH_AMOUNT_INTRO':
                 return (
                     <div className="max-w-xl mx-auto">
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                            <div className="w-16 h-16 bg-blue-50 rounded-xl flex items-center justify-center mb-4 text-blue-600">
+                        <div className="p-6 rounded-2xl shadow-sm border" style={{ background: C.surface1, borderColor: C.border }}>
+                            <div className="w-16 h-16 rounded-xl flex items-center justify-center mb-4" style={{ background: C.surface2, color: C.textMuted }}>
                                 <ShieldCheck size={32} />
                             </div>
-                            <h2 className="text-2xl font-bold text-slate-800 mb-4">Tarjeta – Portafolios Gestionados (Insights WM)</h2>
+                            <h2 className="text-2xl font-bold mb-4" style={{ color: C.text }}>Tarjeta – Portafolios Gestionados (Insights WM)</h2>
 
-                            <div className="text-sm text-slate-600 space-y-4 mb-6">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">¿Qué es?</span>
+                            <div className="text-sm space-y-4 mb-6" style={{ color: C.textMuted }}>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>¿Qué es?</span>
                                     <div className="md:col-span-2">
                                         Son <strong>portafolios</strong> conformados a partir de <strong>ETFs</strong> que cubren una amplia gama de clases de activo, sectores y geografías. Son gestionados por algoritmos que seleccionan tu portafolio a partir de un conjunto de más de <strong>55 ETFs</strong> altamente liquidos y administrados por los <em>asset managers</em> más importantes del mundo, dentro de los que se encuentran <strong>BlackRock, Vanguard y State Street Global Advisors e Invesco</strong>.
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Tipo de producto</span>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Tipo de producto</span>
                                     <div className="md:col-span-2">Portafolio de inversión en USD</div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Horizonte temporal</span>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Horizonte temporal</span>
                                     <div className="md:col-span-2">
                                         Protección contra <strong>inflación</strong> y crecimiento a corto, mediano y largo plazo.
-                                        <p className="mt-2 text-xs text-slate-500 italic">
+                                        <p className="mt-2 text-xs italic" style={{ color: C.label }}>
                                             NOTA: Si necesitas el dinero en un periodo de tiempo menor a 3 meses sugerimos portafolios de bajo riesgo (1 y 2) y si no es así y el dinero puede estar en un producto financiero más de 6 meses e incluso años, los portafolios con mayor riesgo pero mayor retorno de inversión, pueden ser una mejor opción.
                                         </p>
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Activos subyacentes</span>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Activos subyacentes</span>
                                     <div className="md:col-span-2"><strong>ETFs, Bonos</strong> como los emitidos por el Tesoro americano o por empresas Estadounidenses, Acciones en compañías de EEUU, Europa y de economías emergentes (<em>como Asia y Latinoamérica</em>).</div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Liquidez</span>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Liquidez</span>
                                     <div className="md:col-span-2">
                                         "<strong>A la vista</strong>": Puedes añadir o retirar dinero en cualquier momento desde la app, sin plazos de permanencia.
-                                        <p className="mt-1 text-xs text-slate-500">**Tener en cuenta la volatilidad del mercado</p>
+                                        <p className="mt-1 text-xs" style={{ color: C.label }}>**Tener en cuenta la volatilidad del mercado</p>
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Rentabilidad</span>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Rentabilidad</span>
                                     <div className="md:col-span-2">Variable de acuerdo al <strong>Portafolio</strong> seleccionado. Puedes escoger entre <strong>10 niveles de riesgo</strong>, del <strong>1</strong> (más bajo 3,2% Anual aprox.) al <strong>10</strong> (más alto), según tu perfil de riesgo.</div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Comisión</span>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Comisión</span>
                                     <div className="md:col-span-2">
                                         <strong>1%</strong> Anual de los AUM promedios (<em>activos bajo administración, por sus siglas en ingles</em>) y se cobra de manera mensual calculandose así: el <strong>1%</strong> del balance promedio de tus <em>Portafolios Gestionados</em> durante el mes, dividido en 12.
                                         <br />Retiros ACH: USD 5–25
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Inversión mínima</span>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Inversión mínima</span>
                                     <div className="md:col-span-2">200 USD (<em>Cada vez que quieras agregar dinero al portafolio debe ser a partir de 200 USD</em>).</div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Perfil de riesgo</span>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Perfil de riesgo</span>
                                     <div className="md:col-span-2">Puedes escoger entre <strong>10 niveles</strong> de riesgo de conservadores a agresivos.</div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Protección patrimonial</span>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Protección patrimonial</span>
                                     <div className="md:col-span-2">
                                         <strong>SIPC</strong>: Valores segregados a nombre del cliente; <strong>cobertura</strong> hasta USD 500.000 (USD 250.000 en efectivo)
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                                    <span className="font-bold text-slate-700">Custodia & regulación</span>
+                                    <span className="font-bold" style={{ color: C.text }}>Custodia & regulación</span>
                                     <div className="md:col-span-2">
                                         RIA: Registered Investment Advisor. <br />
                                         SEC: Securities and Exchange Commission. <br />
@@ -977,7 +984,8 @@ export default function MyMoneyInAction() {
                             </div>
                             <button
                                 onClick={() => goToStep('HIGH_AMOUNT_TEST')}
-                                className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700"
+                                className="w-full text-white py-3 rounded-xl font-bold"
+                                style={{ background: C.red }}
                             >
                                 Entendido, Validar Conocimiento (Paso B1)
                             </button>
@@ -988,82 +996,68 @@ export default function MyMoneyInAction() {
             case 'HIGH_AMOUNT_TEST':
                 return (
                     <div className="max-w-xl mx-auto">
-                        <h2 className="text-xl font-bold text-slate-800 mb-6">Paso B1: Evaluación 🧠</h2>
+                        <h2 className="text-xl font-bold mb-6" style={{ color: C.text }}>Paso B1: Evaluación 🧠</h2>
                         <div className="space-y-6">
 
                             {/* Q1 */}
-                            <div className="p-4 bg-slate-50 rounded-xl">
-                                <p className="font-bold text-slate-800 mb-3 text-sm">1. Un portafolio gestionado significa que:</p>
+                            <div className="p-4 rounded-xl" style={{ background: C.surface2 }}>
+                                <p className="font-bold mb-3 text-sm" style={{ color: C.text }}>1. Un portafolio gestionado significa que:</p>
                                 <div className="space-y-2">
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
-                                        <input type="radio" name="bq1" value="a" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q1: e.target.value })} />
-                                        <span className="text-sm">El inversionista debe elegir manualmente cada acción o activo.</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
-                                        <input type="radio" name="bq1" value="b" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q1: e.target.value })} />
-                                        <span className="text-sm">Un equipo profesional administra y rebalancea la inversión según una estrategia definida.</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
-                                        <input type="radio" name="bq1" value="c" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q1: e.target.value })} />
-                                        <span className="text-sm">El dinero permanece en efectivo sin invertirse.</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
-                                        <input type="radio" name="bq1" value="d" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q1: e.target.value })} />
-                                        <span className="text-sm">No existe diversificación porque todo se invierte en un solo activo.</span>
-                                    </label>
+                                    {[
+                                        { v: 'a', l: 'El inversionista debe elegir manualmente cada acción o activo.' },
+                                        { v: 'b', l: 'Un equipo profesional administra y rebalancea la inversión según una estrategia definida.' },
+                                        { v: 'c', l: 'El dinero permanece en efectivo sin invertirse.' },
+                                        { v: 'd', l: 'No existe diversificación porque todo se invierte en un solo activo.' },
+                                    ].map(opt => (
+                                        <label key={opt.v} className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer" style={{ background: C.surface1, borderColor: C.border, color: C.text }}>
+                                            <input type="radio" name="bq1" value={opt.v} onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q1: e.target.value })} />
+                                            <span className="text-sm">{opt.l}</span>
+                                        </label>
+                                    ))}
                                 </div>
                             </div>
 
                             {/* Q2 */}
-                            <div className="p-4 bg-slate-50 rounded-xl">
-                                <p className="font-bold text-slate-800 mb-3 text-sm">2. Si un portafolio tiene nivel de riesgo 10, es probable que:</p>
+                            <div className="p-4 rounded-xl" style={{ background: C.surface2 }}>
+                                <p className="font-bold mb-3 text-sm" style={{ color: C.text }}>2. Si un portafolio tiene nivel de riesgo 10, es probable que:</p>
                                 <div className="space-y-2">
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
-                                        <input type="radio" name="bq2" value="a" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q2: e.target.value })} />
-                                        <span className="text-sm">Tenga mayor potencial de retorno, pero también mayor posibilidad de fluctuaciones en el corto plazo.</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
-                                        <input type="radio" name="bq2" value="b" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q2: e.target.value })} />
-                                        <span className="text-sm">No pueda tener pérdidas porque está diversificado.</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
-                                        <input type="radio" name="bq2" value="c" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q2: e.target.value })} />
-                                        <span className="text-sm">Tenga rendimientos fijos y garantizados cada mes.</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
-                                        <input type="radio" name="bq2" value="d" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q2: e.target.value })} />
-                                        <span className="text-sm">b y c son ciertas.</span>
-                                    </label>
+                                    {[
+                                        { v: 'a', l: 'Tenga mayor potencial de retorno, pero también mayor posibilidad de fluctuaciones en el corto plazo.' },
+                                        { v: 'b', l: 'No pueda tener pérdidas porque está diversificado.' },
+                                        { v: 'c', l: 'Tenga rendimientos fijos y garantizados cada mes.' },
+                                        { v: 'd', l: 'b y c son ciertas.' },
+                                    ].map(opt => (
+                                        <label key={opt.v} className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer" style={{ background: C.surface1, borderColor: C.border, color: C.text }}>
+                                            <input type="radio" name="bq2" value={opt.v} onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q2: e.target.value })} />
+                                            <span className="text-sm">{opt.l}</span>
+                                        </label>
+                                    ))}
                                 </div>
                             </div>
 
                             {/* Q3 */}
-                            <div className="p-4 bg-slate-50 rounded-xl">
-                                <p className="font-bold text-slate-800 mb-3 text-sm">3. Si tu portafolio cae -4% en un mes, lo más adecuado es:</p>
+                            <div className="p-4 rounded-xl" style={{ background: C.surface2 }}>
+                                <p className="font-bold mb-3 text-sm" style={{ color: C.text }}>3. Si tu portafolio cae -4% en un mes, lo más adecuado es:</p>
                                 <div className="space-y-2">
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
-                                        <input type="radio" name="bq3" value="a" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q3: e.target.value })} />
-                                        <span className="text-sm">Retirar inmediatamente porque significa que el portafolio falló.</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
-                                        <input type="radio" name="bq3" value="b" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q3: e.target.value })} />
-                                        <span className="text-sm">Entender que las fluctuaciones son parte normal del mercado y evaluar según tu horizonte de inversión.</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
-                                        <input type="radio" name="bq3" value="c" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q3: e.target.value })} />
-                                        <span className="text-sm">Asumir que el dinero se perdió definitivamente.</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-blue-500">
-                                        <input type="radio" name="bq3" value="d" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q3: e.target.value })} />
-                                        <span className="text-sm">EPedir que te cambien a un portafolio sin riesgo ni variación.</span>
-                                    </label>
+                                    {[
+                                        { v: 'a', l: 'Retirar inmediatamente porque significa que el portafolio falló.' },
+                                        { v: 'b', l: 'Entender que las fluctuaciones son parte normal del mercado y evaluar según tu horizonte de inversión.' },
+                                        { v: 'c', l: 'Asumir que el dinero se perdió definitivamente.' },
+                                        { v: 'd', l: 'EPedir que te cambien a un portafolio sin riesgo ni variación.' },
+                                    ].map(opt => (
+                                        <label key={opt.v} className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer" style={{ background: C.surface1, borderColor: C.border, color: C.text }}>
+                                            <input type="radio" name="bq3" value={opt.v} onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q3: e.target.value })} />
+                                            <span className="text-sm">{opt.l}</span>
+                                        </label>
+                                    ))}
                                 </div>
                             </div>
 
                             <button
                                 disabled={Object.keys(currentTestAnswers).length < 3}
                                 onClick={validateHighAmountTest}
-                                className="w-full bg-slate-800 text-white py-3 rounded-xl font-bold disabled:opacity-50"
+                                className="w-full text-white py-3 rounded-xl font-bold disabled:opacity-50"
+                                style={{ background: C.red }}
                             >
                                 Enviar Respuestas
                             </button>
@@ -1074,21 +1068,21 @@ export default function MyMoneyInAction() {
             case 'HIGH_AMOUNT_RESOURCE':
                 return (
                     <div className="max-w-xl mx-auto">
-                        <div className="border border-yellow-200 bg-yellow-50 p-6 rounded-2xl mb-6">
-                            <div className="flex items-center gap-3 mb-4 text-yellow-800">
+                        <div className="border p-6 rounded-2xl mb-6" style={{ borderColor: C.amber, background: C.surface2 }}>
+                            <div className="flex items-center gap-3 mb-4" style={{ color: C.amber }}>
                                 <AlertTriangle />
                                 <h3 className="font-bold text-lg">Conceptos Básicos</h3>
                             </div>
-                            <p className="text-slate-700 mb-4 text-sm">
+                            <p className="mb-4 text-sm" style={{ color: C.textMuted }}>
                                 Es crucial entender el producto antes de invertir. ¡No te preocupes!
                             </p>
-                            <p className="text-slate-700 mb-4 text-sm">
-                                Vamos a presentarte algunos conceptos para que los estudies y cuando finalices estarás list@ para intentar nuevamente. Haz clic aquí 👉 <a href="https://drive.google.com/file/d/1ipQRIbIuBV05d4sm0KBKIQzBY7Yq0NTO/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="font-bold text-slate-700 underline hover:text-emerald-600">Conceptos Básicos</a>
+                            <p className="mb-4 text-sm" style={{ color: C.textMuted }}>
+                                Vamos a presentarte algunos conceptos para que los estudies y cuando finalices estarás list@ para intentar nuevamente. Haz clic aquí 👉 <a href="https://drive.google.com/file/d/1ipQRIbIuBV05d4sm0KBKIQzBY7Yq0NTO/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="font-bold underline" style={{ color: C.green }}>Conceptos Básicos</a>
                             </p>
 
                             <label className="flex items-center gap-3 mb-6 cursor-pointer">
-                                <input type="checkbox" className="w-5 h-5 text-emerald-600 rounded" onChange={(e) => { if (e.target.checked) goToStep('HIGH_AMOUNT_TEST') }} />
-                                <span className="font-bold text-slate-700">Ya leí los conceptos, intentar nuevamente.</span>
+                                <input type="checkbox" className="w-5 h-5 rounded" onChange={(e) => { if (e.target.checked) goToStep('HIGH_AMOUNT_TEST') }} />
+                                <span className="font-bold" style={{ color: C.text }}>Ya leí los conceptos, intentar nuevamente.</span>
                             </label>
                         </div>
                     </div>
@@ -1097,11 +1091,12 @@ export default function MyMoneyInAction() {
             case 'HIGH_AMOUNT_OBJECTIVE':
                 return (
                     <div className="max-w-xl mx-auto">
-                        <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Paso B3: Definir Objetivo</span>
-                        <h2 className="text-xl font-bold text-slate-800 mb-2 mt-2">Tu Objetivo SMART (Ruta B) 🎯</h2>
-                        <p className="text-slate-500 mb-6 text-sm">Define tu meta para este portafolio (Específico, Medible, Alcanzable, Relevante, Temporal).</p>
+                        <span className="text-xs font-bold uppercase tracking-wider" style={{ color: C.green }}>Paso B3: Definir Objetivo</span>
+                        <h2 className="text-xl font-bold mb-2 mt-2" style={{ color: C.text }}>Tu Objetivo SMART (Ruta B) 🎯</h2>
+                        <p className="mb-6 text-sm" style={{ color: C.textMuted }}>Define tu meta para este portafolio (Específico, Medible, Alcanzable, Relevante, Temporal).</p>
                         <textarea
-                            className="w-full p-4 rounded-xl border border-slate-200 h-32 mb-6"
+                            className="w-full p-4 rounded-xl border h-32 mb-6"
+                            style={{ background: C.surface2, borderColor: C.border, color: C.text }}
                             placeholder="Ej: Invertir $200 para retiro en 10 años..."
                             value={answers.smart_objective_high || ''}
                             onChange={(e) => handleAnswer('smart_objective_high', e.target.value)}
@@ -1109,7 +1104,8 @@ export default function MyMoneyInAction() {
                         <button
                             disabled={!answers.smart_objective_high}
                             onClick={() => goToStep('HIGH_AMOUNT_DECISION')}
-                            className="w-full bg-slate-800 text-white py-3 rounded-xl font-bold disabled:opacity-50"
+                            className="w-full text-white py-3 rounded-xl font-bold disabled:opacity-50"
+                            style={{ background: C.red }}
                         >
                             Continuar
                         </button>
@@ -1119,15 +1115,16 @@ export default function MyMoneyInAction() {
             case 'HIGH_AMOUNT_DECISION':
                 return (
                     <div className="max-w-xl mx-auto">
-                        <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Paso B4: Decisión</span>
-                        <h2 className="text-2xl font-bold text-slate-800 mb-6 text-center mt-2">¿List@ para tomar Acción? 🚀</h2>
+                        <span className="text-xs font-bold uppercase tracking-wider" style={{ color: C.green }}>Paso B4: Decisión</span>
+                        <h2 className="text-2xl font-bold mb-6 text-center mt-2" style={{ color: C.text }}>¿List@ para tomar Acción? 🚀</h2>
                         <div className="grid gap-3">
                             <button
                                 onClick={() => {
                                     handleAnswer('decision_initial_offer_high', 'Insights WM');
                                     goToStep('LINK_INSIGHTS');
                                 }}
-                                className="p-4 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 text-left"
+                                className="p-4 text-white rounded-xl font-bold text-left"
+                                style={{ background: C.red }}
                             >
                                 a. Sí, quiero hacerlo con Portafolios Gestionados (Insights WM)
                             </button>
@@ -1136,7 +1133,8 @@ export default function MyMoneyInAction() {
                                     handleAnswer('decision_initial_offer_high', 'Otro Producto');
                                     goToStep('HIGH_AMOUNT_OTHER_PLATFORM');
                                 }}
-                                className="p-4 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-50 text-left"
+                                className="p-4 border rounded-xl font-bold text-left"
+                                style={{ background: C.surface2, borderColor: C.border, color: C.text }}
                             >
                                 b. Sí, pero usaré otro producto
                             </button>
@@ -1145,7 +1143,8 @@ export default function MyMoneyInAction() {
                                     handleAnswer('decision_initial_offer_high', 'No interesa');
                                     goToStep('HIGH_AMOUNT_FINAL_DECISION');
                                 }}
-                                className="p-4 bg-slate-100 text-slate-500 text-sm hover:text-slate-700 rounded-xl text-left"
+                                className="p-4 text-sm rounded-xl text-left"
+                                style={{ background: C.surface1, color: C.textMuted }}
                             >
                                 c. No, no me interesa esta opción
                             </button>
@@ -1156,42 +1155,43 @@ export default function MyMoneyInAction() {
             case 'HIGH_AMOUNT_OTHER_PLATFORM':
                 return (
                     <div className="max-w-xl mx-auto">
-                        <h2 className="text-xl font-bold text-slate-800 mb-4">¿Qué plataforma usarás?</h2>
-                        <p className="text-sm text-yellow-600 bg-yellow-50 p-3 rounded-lg mb-6">⚠️ Importante: Asegúrate de hacer tu debida diligencia sobre riesgos y regulaciones.</p>
+                        <h2 className="text-xl font-bold mb-4" style={{ color: C.text }}>¿Qué plataforma usarás?</h2>
+                        <p className="text-sm p-3 rounded-lg mb-6" style={{ color: C.amber, background: C.surface2 }}>⚠️ Importante: Asegúrate de hacer tu debida diligencia sobre riesgos y regulaciones.</p>
                         <input
-                            className="w-full p-3 rounded-xl border border-slate-200 mb-6"
+                            className="w-full p-3 rounded-xl border mb-6"
+                            style={{ background: C.surface2, borderColor: C.border, color: C.text }}
                             placeholder="Nombre de la plataforma..."
                             value={answers.other_platform_name_high || ''}
                             onChange={(e) => handleAnswer('other_platform_name_high', e.target.value)}
                         />
-                        <button onClick={() => goToStep('SHARE_ACCOUNTABILITY')} className="w-full bg-slate-800 text-white py-3 rounded-xl font-bold">Continuar</button>
+                        <button onClick={() => goToStep('SHARE_ACCOUNTABILITY')} className="w-full text-white py-3 rounded-xl font-bold" style={{ background: C.red }}>Continuar</button>
                     </div>
                 );
 
             case 'HIGH_AMOUNT_FINAL_DECISION':
                 return (
                     <div className="max-w-xl mx-auto">
-                        <h2 className="text-xl font-bold text-slate-800 mb-6">¿Qué prefieres hacer?</h2>
+                        <h2 className="text-xl font-bold mb-6" style={{ color: C.text }}>¿Qué prefieres hacer?</h2>
                         <div className="grid gap-3">
                             <button onClick={() => {
                                 handleAnswer('alternative_choice_high', 'Global 66');
                                 goToStep('GLOBAL66_INTRO');
-                            }} className="p-4 border rounded-xl text-left hover:bg-slate-50">
-                                <span className="font-bold text-slate-800 block">a. Ver otra opción de inversión (Global 66)</span>
+                            }} className="p-4 border rounded-xl text-left" style={{ borderColor: C.border, background: C.surface1, color: C.text }}>
+                                <span className="font-bold block">a. Ver otra opción de inversión (Global 66)</span>
                             </button>
                             <button onClick={() => {
                                 if (window.confirm("¿Estás seguro de que deseas ir al reto Gasto Hormiga?")) {
                                     handleAnswer('alternative_choice_high', 'Gasto Hormiga');
                                     navigate('/challenges/gasto-hormiga');
                                 }
-                            }} className="p-4 border rounded-xl text-left hover:bg-slate-50">
-                                <span className="font-bold text-slate-800 block">b. Ver una opción que no implique invertir</span>
-                                <span className="text-xs text-slate-500">Ir a Reto Gasto Hormiga</span>
+                            }} className="p-4 border rounded-xl text-left" style={{ borderColor: C.border, background: C.surface1, color: C.text }}>
+                                <span className="font-bold block">b. Ver una opción que no implique invertir</span>
+                                <span className="text-xs" style={{ color: C.textMuted }}>Ir a Reto Gasto Hormiga</span>
                             </button>
                             <button onClick={() => {
                                 handleAnswer('alternative_choice_high', 'Ninguna');
                                 goToStep('CLOSING_FEEDBACK');
-                            }} className="p-4 text-slate-500 text-center text-sm">
+                            }} className="p-4 text-center text-sm" style={{ color: C.textMuted }}>
                                 c. No quiero ninguna opción
                             </button>
                         </div>
@@ -1203,77 +1203,77 @@ export default function MyMoneyInAction() {
             case 'GLOBAL66_INTRO':
                 return (
                     <div className="max-w-xl mx-auto">
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                            <h2 className="text-2xl font-bold text-slate-800 mb-4">Tarjeta – Cuenta en Dólares Global 66</h2>
+                        <div className="p-6 rounded-2xl shadow-sm border" style={{ background: C.surface1, borderColor: C.border }}>
+                            <h2 className="text-2xl font-bold mb-4" style={{ color: C.text }}>Tarjeta – Cuenta en Dólares Global 66</h2>
 
-                            <div className="text-sm text-slate-600 space-y-4 mb-6">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">¿Qué es?</span>
+                            <div className="text-sm space-y-4 mb-6" style={{ color: C.textMuted }}>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>¿Qué es?</span>
                                     <div className="md:col-span-2">
                                         La <strong>Cuenta en Dólares</strong> de <em>Global66</em> es un <strong>producto digital</strong> que permite mantener saldo en <strong>USD</strong> y generar un rendimiento anual sobre ese dinero, mientras sigues teniendo disponibilidad para transferir o convertirlo cuando lo necesites.
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Tipo de producto</span>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Tipo de producto</span>
                                     <div className="md:col-span-2">Es un <strong>producto financiero de inversión</strong> o colocación de liquidez en USD, estructurado dentro de una <strong>plataforma fintech</strong>.</div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Horizonte temporal</span>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Horizonte temporal</span>
                                     <div className="md:col-span-2">Corto, mediano y largo plazo</div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Activos subyacentes</span>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Activos subyacentes</span>
                                     <div className="md:col-span-2"><strong>Global66</strong> no reporta información sobre esto*</div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Liquidez</span>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Liquidez</span>
                                     <div className="md:col-span-2">
                                         <em>Global66</em> no publica de manera detallada y explícita en sus sitios cómo invierte los fondos de la cuenta remunerada para generar el rendimiento, es decir, no describe los activos subyacentes específicos dentro de la documentación pública general.
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Rentabilidad</span>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Rentabilidad</span>
                                     <div className="md:col-span-2">Hasta <strong>6% de rentabilidad E.A</strong> en dólares. (<em>La tasa puede cambiar según condiciones del mercado</em>).</div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Comisión</span>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Comisión</span>
                                     <div className="md:col-span-2">
                                         <strong>Comisión:</strong> No cobra cuota fija; la rentabilidad puede cambiar y los costos están implícitos en la estructura del producto y en el tipo de cambio.
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Inversión mínima</span>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Inversión mínima</span>
                                     <div className="md:col-span-2">Desde 1 Dólar</div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Perfil de riesgo</span>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Perfil de riesgo</span>
                                     <div className="md:col-span-2"><strong>Conservador*</strong>; Está orientada a preservar capital en dólares</div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3">
-                                    <span className="font-bold text-slate-700">Protección patrimonial</span>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-3" style={{ borderColor: C.border }}>
+                                    <span className="font-bold" style={{ color: C.text }}>Protección patrimonial</span>
                                     <div className="md:col-span-2">
                                         Cuenta con el <strong>respaldo del seguro de depósitos Fogafin</strong>. Este seguro garantiza la protección de los ahorros de sus clientes hasta un monto de <strong>COP $50.000.000</strong>, ofreciendo así una salvaguarda financiera sólida y confiable. (<em>En el caso de Colombia</em>)
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                                    <span className="font-bold text-slate-700">Regulación</span>
+                                    <span className="font-bold" style={{ color: C.text }}>Regulación</span>
                                     <div className="md:col-span-2">
                                         <strong>SFC:</strong> Superfinanciera Financiera de Colombia<br />
                                         En Colombia Global opera como una <strong>SEDPE:</strong> Sociedad Especializada en Depósitos y Pagos Electrónicos.
                                     </div>
                                 </div>
                             </div>
-                            <button onClick={() => goToStep('GLOBAL66_TEST')} className="w-full bg-purple-600 text-white py-3 rounded-xl font-bold">Validar Conocimiento</button>
+                            <button onClick={() => goToStep('GLOBAL66_TEST')} className="w-full text-white py-3 rounded-xl font-bold" style={{ background: C.red }}>Validar Conocimiento</button>
                         </div>
                     </div>
                 );
@@ -1281,99 +1281,84 @@ export default function MyMoneyInAction() {
             case 'GLOBAL66_TEST':
                 return (
                     <div className="max-w-xl mx-auto">
-                        <h2 className="text-xl font-bold text-slate-800 mb-6">Validación Global 66 🧠</h2>
+                        <h2 className="text-xl font-bold mb-6" style={{ color: C.text }}>Validación Global 66 🧠</h2>
                         <div className="space-y-6">
                             {/* Q1 */}
-                            <div className="p-4 bg-slate-50 rounded-xl">
-                                <p className="font-bold text-slate-800 mb-3 text-sm">1. Si decido tener parte de mi dinero en dólares o euros, el objetivo principal suele ser:</p>
+                            <div className="p-4 rounded-xl" style={{ background: C.surface2 }}>
+                                <p className="font-bold mb-3 text-sm" style={{ color: C.text }}>1. Si decido tener parte de mi dinero en dólares o euros, el objetivo principal suele ser:</p>
                                 <div className="space-y-2">
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-purple-500">
-                                        <input type="radio" name="gq1" value="a" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q1: e.target.value })} />
-                                        <span className="text-sm">Garantizar que nunca perderé poder adquisitivo.</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-purple-500">
-                                        <input type="radio" name="gq1" value="b" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q1: e.target.value })} />
-                                        <span className="text-sm">Diversificar moneda y reducir exposición a una sola economía.</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-purple-500">
-                                        <input type="radio" name="gq1" value="c" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q1: e.target.value })} />
-                                        <span className="text-sm">Obtener rentabilidad fija automática.</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-purple-500">
-                                        <input type="radio" name="gq1" value="d" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q1: e.target.value })} />
-                                        <span className="text-sm">Evitar cualquier tipo de riesgo financiero.</span>
-                                    </label>
+                                    {[
+                                        { v: 'a', l: 'Garantizar que nunca perderé poder adquisitivo.' },
+                                        { v: 'b', l: 'Diversificar moneda y reducir exposición a una sola economía.' },
+                                        { v: 'c', l: 'Obtener rentabilidad fija automática.' },
+                                        { v: 'd', l: 'Evitar cualquier tipo de riesgo financiero.' },
+                                    ].map(opt => (
+                                        <label key={opt.v} className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer" style={{ background: C.surface1, borderColor: C.border, color: C.text }}>
+                                            <input type="radio" name="gq1" value={opt.v} onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q1: e.target.value })} />
+                                            <span className="text-sm">{opt.l}</span>
+                                        </label>
+                                    ))}
                                 </div>
                             </div>
 
                             {/* Q2 */}
-                            <div className="p-4 bg-slate-50 rounded-xl">
-                                <p className="font-bold text-slate-800 mb-3 text-sm">2. Cuando usas una plataforma para enviar o recibir dinero internacionalmente, debo tener en cuenta que:</p>
+                            <div className="p-4 rounded-xl" style={{ background: C.surface2 }}>
+                                <p className="font-bold mb-3 text-sm" style={{ color: C.text }}>2. Cuando usas una plataforma para enviar o recibir dinero internacionalmente, debo tener en cuenta que:</p>
                                 <div className="space-y-2">
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-purple-500">
-                                        <input type="radio" name="gq2" value="a" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q2: e.target.value })} />
-                                        <span className="text-sm">El tipo de cambio puede afectar el valor final que recibo.</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-purple-500">
-                                        <input type="radio" name="gq2" value="b" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q2: e.target.value })} />
-                                        <span className="text-sm">El valor en otra moneda siempre es exacto al que envía.</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-purple-500">
-                                        <input type="radio" name="gq2" value="c" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q2: e.target.value })} />
-                                        <span className="text-sm">Las monedas no fluctúan entre sí.</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-purple-500">
-                                        <input type="radio" name="gq2" value="d" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q2: e.target.value })} />
-                                        <span className="text-sm">No existe impacto del mercado cambiario.</span>
-                                    </label>
+                                    {[
+                                        { v: 'a', l: 'El tipo de cambio puede afectar el valor final que recibo.' },
+                                        { v: 'b', l: 'El valor en otra moneda siempre es exacto al que envía.' },
+                                        { v: 'c', l: 'Las monedas no fluctúan entre sí.' },
+                                        { v: 'd', l: 'No existe impacto del mercado cambiario.' },
+                                    ].map(opt => (
+                                        <label key={opt.v} className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer" style={{ background: C.surface1, borderColor: C.border, color: C.text }}>
+                                            <input type="radio" name="gq2" value={opt.v} onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q2: e.target.value })} />
+                                            <span className="text-sm">{opt.l}</span>
+                                        </label>
+                                    ))}
                                 </div>
                             </div>
 
                             {/* Q3 */}
-                            <div className="p-4 bg-slate-50 rounded-xl">
-                                <p className="font-bold text-slate-800 mb-3 text-sm">3. Al invertir mi dinero en una cuenta en dólares que genera rentabilidad, es importante entender que:</p>
+                            <div className="p-4 rounded-xl" style={{ background: C.surface2 }}>
+                                <p className="font-bold mb-3 text-sm" style={{ color: C.text }}>3. Al invertir mi dinero en una cuenta en dólares que genera rentabilidad, es importante entender que:</p>
                                 <div className="space-y-2">
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-purple-500">
-                                        <input type="radio" name="gq3" value="a" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q3: e.target.value })} />
-                                        <span className="text-sm">No existe ningún riesgo ni condición asociada.</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-purple-500">
-                                        <input type="radio" name="gq3" value="b" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q3: e.target.value })} />
-                                        <span className="text-sm">Puede generar rendimiento, pero no es un producto bancario tradicional ni necesariamente tiene tasa fija garantizada como un CDT.</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-purple-500">
-                                        <input type="radio" name="gq3" value="c" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q3: e.target.value })} />
-                                        <span className="text-sm">Que es un activo seguro.</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 bg-white rounded-lg border cursor-pointer hover:border-purple-500">
-                                        <input type="radio" name="gq3" value="d" onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q3: e.target.value })} />
-                                        <span className="text-sm">Está protegida por el mismo seguro de depósitos que un banco colombiano.</span>
-                                    </label>
+                                    {[
+                                        { v: 'a', l: 'No existe ningún riesgo ni condición asociada.' },
+                                        { v: 'b', l: 'Puede generar rendimiento, pero no es un producto bancario tradicional ni necesariamente tiene tasa fija garantizada como un CDT.' },
+                                        { v: 'c', l: 'Que es un activo seguro.' },
+                                        { v: 'd', l: 'Está protegida por el mismo seguro de depósitos que un banco colombiano.' },
+                                    ].map(opt => (
+                                        <label key={opt.v} className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer" style={{ background: C.surface1, borderColor: C.border, color: C.text }}>
+                                            <input type="radio" name="gq3" value={opt.v} onChange={(e) => setCurrentTestAnswers({ ...currentTestAnswers, q3: e.target.value })} />
+                                            <span className="text-sm">{opt.l}</span>
+                                        </label>
+                                    ))}
                                 </div>
                             </div>
 
-                            <button onClick={validateGlobal66Test} className="w-full bg-slate-800 text-white py-3 rounded-xl font-bold">Enviar Respuestas</button>
+                            <button onClick={validateGlobal66Test} className="w-full text-white py-3 rounded-xl font-bold" style={{ background: C.red }}>Enviar Respuestas</button>
                         </div>
                     </div>
                 );
 
             case 'GLOBAL66_RESOURCE':
                 return (
-                    <div className="max-w-xl mx-auto text-center border p-8 rounded-2xl border-yellow-100 bg-yellow-50">
-                        <div className="flex items-center justify-center gap-2 mb-4 text-yellow-700">
+                    <div className="max-w-xl mx-auto text-center border p-8 rounded-2xl" style={{ borderColor: C.amber, background: C.surface2 }}>
+                        <div className="flex items-center justify-center gap-2 mb-4" style={{ color: C.amber }}>
                             <BookOpen />
                             <h3 className="font-bold">Repasemos conceptos</h3>
                         </div>
-                        <p className="text-slate-700 mb-4 text-sm">
+                        <p className="mb-4 text-sm" style={{ color: C.textMuted }}>
                             Es crucial entender el producto antes de invertir. ¡No te preocupes!
                         </p>
-                        <p className="text-slate-700 mb-4 text-sm">
-                            Vamos a presentarte algunos conceptos para que los estudies y cuando finalices estarás list@ para intentar nuevamente. Haz clic aquí 👉 <a href="https://drive.google.com/file/d/1IEbWSrHC9V39fJ2CxyjT353crlU3OiJU/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="font-bold text-slate-700 underline hover:text-emerald-600">Conceptos Básicos</a>
+                        <p className="mb-4 text-sm" style={{ color: C.textMuted }}>
+                            Vamos a presentarte algunos conceptos para que los estudies y cuando finalices estarás list@ para intentar nuevamente. Haz clic aquí 👉 <a href="https://drive.google.com/file/d/1IEbWSrHC9V39fJ2CxyjT353crlU3OiJU/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="font-bold underline" style={{ color: C.green }}>Conceptos Básicos</a>
                         </p>
 
                         <label className="flex items-center gap-3 mb-6 cursor-pointer justify-center">
-                            <input type="checkbox" className="w-5 h-5 text-emerald-600 rounded" onChange={(e) => { if (e.target.checked) goToStep('GLOBAL66_TEST') }} />
-                            <span className="font-bold text-slate-700">Ya leí los conceptos, intentar nuevamente.</span>
+                            <input type="checkbox" className="w-5 h-5 rounded" onChange={(e) => { if (e.target.checked) goToStep('GLOBAL66_TEST') }} />
+                            <span className="font-bold" style={{ color: C.text }}>Ya leí los conceptos, intentar nuevamente.</span>
                         </label>
                     </div>
                 );
@@ -1381,11 +1366,11 @@ export default function MyMoneyInAction() {
             case 'ACTION_DECISION_G66':
                 return (
                     <div className="max-w-xl mx-auto">
-                        <h2 className="text-2xl font-bold text-slate-800 mb-6 text-center">¿List@ para tomar Acción con Global 66? 🚀</h2>
+                        <h2 className="text-2xl font-bold mb-6 text-center" style={{ color: C.text }}>¿List@ para tomar Acción con Global 66? 🚀</h2>
                         <div className="grid gap-3">
-                            <button onClick={() => goToStep('LINK_GLOBAL66')} className="p-4 bg-purple-600 text-white rounded-xl font-bold">Sí, quiero hacerlo con el producto presentado</button>
-                            <button onClick={() => goToStep('OTHER_PLATFORM_INS')} className="p-4 border rounded-xl hover:bg-slate-50">Sí, quiero hacerlo pero usaré otro producto</button>
-                            <button onClick={() => goToStep('CLOSING_FEEDBACK')} className="p-4 text-slate-500 text-sm">No me interesa</button>
+                            <button onClick={() => goToStep('LINK_GLOBAL66')} className="p-4 text-white rounded-xl font-bold" style={{ background: C.red }}>Sí, quiero hacerlo con el producto presentado</button>
+                            <button onClick={() => goToStep('OTHER_PLATFORM_INS')} className="p-4 border rounded-xl" style={{ borderColor: C.border, background: C.surface2, color: C.text }}>Sí, quiero hacerlo pero usaré otro producto</button>
+                            <button onClick={() => goToStep('CLOSING_FEEDBACK')} className="p-4 text-sm" style={{ color: C.textMuted }}>No me interesa</button>
                         </div>
                     </div>
                 );
@@ -1394,38 +1379,38 @@ export default function MyMoneyInAction() {
             case 'LINK_INSIGHTS':
                 return (
                     <div className="max-w-xl mx-auto text-center">
-                        <div className="mb-6 p-4 bg-blue-50 rounded-xl text-blue-800 text-sm">
-                            <p className="font-bold mb-2">Paso E: Tomar Acción</p>
+                        <div className="mb-6 p-4 rounded-xl text-sm" style={{ background: C.surface2, color: C.textMuted }}>
+                            <p className="font-bold mb-2" style={{ color: C.text }}>Paso E: Tomar Acción</p>
                             <p>Abre YA tu cuenta gratis en Insights WM. Si te pide algún código, solo debes escribir <strong>DEEPEND</strong>.</p>
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-800 mb-4">Abre tu cuenta en Insights WM 🔗</h2>
-                        <a href="https://insightswm.com" target="_blank" className="block w-full bg-blue-600 text-white py-4 rounded-xl font-bold mb-4">Ir a Insights WM</a>
-                        <button onClick={() => goToStep('SHARE_ACCOUNTABILITY')} className="text-slate-500 underline font-medium">Ya abrí la cuenta, Continuar</button>
+                        <h2 className="text-2xl font-bold mb-4" style={{ color: C.text }}>Abre tu cuenta en Insights WM 🔗</h2>
+                        <a href="https://insightswm.com" target="_blank" className="block w-full text-white py-4 rounded-xl font-bold mb-4" style={{ background: C.red }}>Ir a Insights WM</a>
+                        <button onClick={() => goToStep('SHARE_ACCOUNTABILITY')} className="underline font-medium" style={{ color: C.textMuted }}>Ya abrí la cuenta, Continuar</button>
                     </div>
                 );
             case 'LINK_GLOBAL66':
                 return (
                     <div className="max-w-xl mx-auto text-center">
-                        <div className="mb-6 p-4 bg-purple-50 rounded-xl text-purple-800 text-sm">
-                            <p className="font-bold mb-2">Paso E: Tomar Acción</p>
+                        <div className="mb-6 p-4 rounded-xl text-sm" style={{ background: C.surface2, color: C.textMuted }}>
+                            <p className="font-bold mb-2" style={{ color: C.text }}>Paso E: Tomar Acción</p>
                             <p>Abre YA tu cuenta gratis en Global66.</p>
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-800 mb-4">Abre tu cuenta en Global 66 🔗</h2>
-                        <a href="https://share.global66.com/KARCEL411" target="_blank" className="block w-full bg-purple-600 text-white py-4 rounded-xl font-bold mb-4">Ir a Global 66</a>
-                        <button onClick={() => goToStep('SHARE_ACCOUNTABILITY')} className="text-slate-500 underline font-medium">Ya abrí la cuenta, Continuar</button>
+                        <h2 className="text-2xl font-bold mb-4" style={{ color: C.text }}>Abre tu cuenta en Global 66 🔗</h2>
+                        <a href="https://share.global66.com/KARCEL411" target="_blank" className="block w-full text-white py-4 rounded-xl font-bold mb-4" style={{ background: C.red }}>Ir a Global 66</a>
+                        <button onClick={() => goToStep('SHARE_ACCOUNTABILITY')} className="underline font-medium" style={{ color: C.textMuted }}>Ya abrí la cuenta, Continuar</button>
                     </div>
                 );
 
             case 'SHARE_ACCOUNTABILITY':
                 return (
                     <div className="max-w-xl mx-auto text-center">
-                        <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4"><Share2 /></div>
-                        <h2 className="text-2xl font-bold text-slate-800 mb-4">¡Compártelo con tu Tribu! 🗣️</h2>
-                        <p className="text-slate-600 mb-6">Comparte el registro y tus avances. Tus acciones pueden ser inspiración para otras personas.</p>
-                        <div className="p-4 bg-slate-50 rounded-xl mb-6 italic text-slate-500">
+                        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: C.forest, color: C.green }}><Share2 /></div>
+                        <h2 className="text-2xl font-bold mb-4" style={{ color: C.text }}>¡Compártelo con tu Tribu! 🗣️</h2>
+                        <p className="mb-6" style={{ color: C.textMuted }}>Comparte el registro y tus avances. Tus acciones pueden ser inspiración para otras personas.</p>
+                        <div className="p-4 rounded-xl mb-6 italic" style={{ background: C.surface2, color: C.textMuted }}>
                             "Hoy abrí mi cuenta y/o hice mi primera inversión para la universidad de mi hij@ 🎓"
                         </div>
-                        <button onClick={() => goToStep('REMINDERS')} className="w-full bg-slate-800 text-white py-3 rounded-xl font-bold">Listo, Siguiente</button>
+                        <button onClick={() => goToStep('REMINDERS')} className="w-full text-white py-3 rounded-xl font-bold" style={{ background: C.red }}>Listo, Siguiente</button>
                     </div>
                 );
 
@@ -1433,15 +1418,15 @@ export default function MyMoneyInAction() {
                 return (
                     <div className="max-w-xl mx-auto">
                         <div className="text-center mb-8">
-                            <div className="inline-flex justify-center items-center w-12 h-12 bg-blue-100 text-blue-600 rounded-full mb-4">
+                            <div className="inline-flex justify-center items-center w-12 h-12 rounded-full mb-4" style={{ background: C.surface2, color: C.textMuted }}>
                                 <Bell size={24} />
                             </div>
-                            <h2 className="text-2xl font-bold text-slate-800 mb-2">¿Activamos Recordatorios? 🔔</h2>
-                            <p className="text-slate-500">¿Deseas activar los recordatorios por parte de DeepEnd? Solo serán en tus fechas programadas.</p>
+                            <h2 className="text-2xl font-bold mb-2" style={{ color: C.text }}>¿Activamos Recordatorios? 🔔</h2>
+                            <p style={{ color: C.textMuted }}>¿Deseas activar los recordatorios por parte de DeepEnd? Solo serán en tus fechas programadas.</p>
                         </div>
                         <div className="grid gap-3">
-                            <button onClick={() => { handleAnswer('reminders', true); goToStep('REMINDER_DATE_SELECTION'); }} className="p-4 bg-emerald-600 text-white rounded-xl font-bold">Sí, quiero recordatorios</button>
-                            <button onClick={() => { handleAnswer('reminders', false); saveReminders(); saveSubmission(); goToStep('SUBMISSION_SUCCESS'); }} className="p-4 border rounded-xl hover:bg-slate-50">No, gracias</button>
+                            <button onClick={() => { handleAnswer('reminders', true); goToStep('REMINDER_DATE_SELECTION'); }} className="p-4 text-white rounded-xl font-bold" style={{ background: C.red }}>Sí, quiero recordatorios</button>
+                            <button onClick={() => { handleAnswer('reminders', false); saveReminders(); saveSubmission(); goToStep('SUBMISSION_SUCCESS'); }} className="p-4 border rounded-xl" style={{ borderColor: C.border, background: C.surface2, color: C.text }}>No, gracias</button>
                         </div>
                     </div>
                 );
@@ -1449,11 +1434,12 @@ export default function MyMoneyInAction() {
             case 'REMINDER_DATE_SELECTION':
                 return (
                     <div className="max-w-xl mx-auto">
-                        <h2 className="text-xl font-bold text-slate-800 mb-4">¿Qué día del mes quieres recibir los recordatorios?</h2>
-                        <p className="text-slate-600 mb-6">Selecciona un día (1-31) para que te enviemos el recordatorio mensual.</p>
+                        <h2 className="text-xl font-bold mb-4" style={{ color: C.text }}>¿Qué día del mes quieres recibir los recordatorios?</h2>
+                        <p className="mb-6" style={{ color: C.textMuted }}>Selecciona un día (1-31) para que te enviemos el recordatorio mensual.</p>
 
                         <select
-                            className="w-full p-4 rounded-xl border border-slate-200 mb-6 bg-white"
+                            className="w-full p-4 rounded-xl border mb-6"
+                            style={{ background: C.surface2, borderColor: C.border, color: C.text }}
                             value={answers.reminder_day || ''}
                             onChange={(e) => handleAnswer('reminder_day', e.target.value)}
                         >
@@ -1470,7 +1456,8 @@ export default function MyMoneyInAction() {
                                 saveSubmission();
                                 goToStep('SUBMISSION_SUCCESS');
                             }}
-                            className="w-full bg-slate-800 text-white py-3 rounded-xl font-bold disabled:opacity-50"
+                            className="w-full text-white py-3 rounded-xl font-bold disabled:opacity-50"
+                            style={{ background: C.red }}
                         >
                             Continuar
                         </button>
@@ -1480,12 +1467,12 @@ export default function MyMoneyInAction() {
             case 'SUBMISSION_SUCCESS':
                 return (
                     <div className="max-w-xl mx-auto text-center py-12">
-                        <div className="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+                        <div className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce" style={{ background: C.forest, color: C.green }}>
                             <CheckCircle2 size={48} />
                         </div>
-                        <h2 className="text-3xl font-bold text-slate-800 mb-4">¡Gracias! 🚀</h2>
-                        <p className="text-slate-600 mb-8">Recuerda: El Activo más importante eres TÚ 🟢</p>
-                        <button onClick={() => navigate('/challenges')} className="bg-slate-800 text-white px-8 py-3 rounded-xl font-bold">Volver a mis Retos</button>
+                        <h2 className="text-3xl font-bold mb-4" style={{ color: C.text }}>¡Gracias! 🚀</h2>
+                        <p className="mb-8" style={{ color: C.textMuted }}>Recuerda: El Activo más importante eres TÚ 🟢</p>
+                        <button onClick={() => navigate('/challenges')} className="text-white px-8 py-3 rounded-xl font-bold" style={{ background: C.red }}>Volver a mis Retos</button>
                     </div>
                 );
 
@@ -1493,17 +1480,18 @@ export default function MyMoneyInAction() {
                 return (
                     <div className="max-w-xl mx-auto text-center">
                         <div className="mb-8">
-                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-600 mb-4">
+                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4" style={{ background: C.surface2, color: C.textMuted }}>
                                 <span className="text-3xl">🔄</span>
                             </div>
-                            <h2 className="text-2xl font-bold text-slate-800 mb-2">¡Muy bien! Vamos a generar liquidez.</h2>
-                            <p className="text-slate-600">
+                            <h2 className="text-2xl font-bold mb-2" style={{ color: C.text }}>¡Muy bien! Vamos a generar liquidez.</h2>
+                            <p style={{ color: C.textMuted }}>
                                 Para esta ruta, te recomendamos ir al reto de <strong>"Gasto Hormiga"</strong>. Allí encontrarás las herramientas para liberar flujo de caja.
                             </p>
                         </div>
                         <button
                             onClick={() => navigate('/challenges')} // Or specific ID if known
-                            className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors"
+                            className="text-white px-8 py-3 rounded-xl font-bold transition-colors"
+                            style={{ background: C.red }}
                         >
                             Ir a Retos
                         </button>
@@ -1512,37 +1500,39 @@ export default function MyMoneyInAction() {
 
             case 'CLOSING_FEEDBACK':
                 return (
-                    <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 mb-6 space-y-6">
-                        <div className="bg-emerald-100 p-4 rounded-lg border border-emerald-200 mb-6">
-                            <h3 className="font-bold text-emerald-800 text-lg mb-1">¡Entendido!</h3>
-                            <p className="text-emerald-700 text-sm">
+                    <div className="p-6 rounded-xl border mb-6 space-y-6" style={{ background: C.surface1, borderColor: C.border }}>
+                        <div className="p-4 rounded-lg border mb-6" style={{ background: C.forest, borderColor: C.green }}>
+                            <h3 className="font-bold text-lg mb-1" style={{ color: C.green }}>¡Entendido!</h3>
+                            <p className="text-sm" style={{ color: C.green }}>
                                 Consideramos muy valioso entender tu <strong>por qué</strong> ❓. Nos ayuda a mejorar y a ofrecer recursos que puedan aportarte más valor y a también a otros usuarios.
                             </p>
                         </div>
 
-                        <div className="bg-emerald-500 text-white p-2 rounded-lg text-center font-bold mb-6">
+                        <div className="p-2 rounded-lg text-center font-bold mb-6" style={{ background: C.green, color: C.bg }}>
                             Un par de preguntas más y ¡terminamos! Lo hiciste increíble 🟢
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-2">
+                            <label className="block text-sm font-bold mb-2" style={{ color: C.text }}>
                                 ¡Cuéntanos!: ¿Qué te impide dar el paso ahora? 🚫
                             </label>
-                            <p className="text-xs text-slate-500 mb-2 italic">La respuesta que resuene más contigo, nos ayudará mucho para seguir avanzando ↓</p>
+                            <p className="text-xs mb-2 italic" style={{ color: C.label }}>La respuesta que resuene más contigo, nos ayudará mucho para seguir avanzando ↓</p>
                             <textarea
-                                className="w-full p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-200 outline-none transition-all h-24 resize-none"
+                                className="w-full p-3 rounded-lg border outline-none transition-all h-24 resize-none"
+                                style={{ background: C.surface2, borderColor: C.border, color: C.text }}
                                 placeholder="Escribe tu respuesta aquí..."
                                 onChange={(e) => handleAnswer('feedback_impediment', e.target.value)}
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-2">
+                            <label className="block text-sm font-bold mb-2" style={{ color: C.text }}>
                                 ✍️ ¿Hay algo que podamos aclarar, simplificar o compartir para que te resulte útil en el futuro?
                             </label>
-                            <p className="text-xs text-slate-500 mb-2 italic">La respuesta que resuene más contigo, nos ayudará mucho para seguir avanzando</p>
+                            <p className="text-xs mb-2 italic" style={{ color: C.label }}>La respuesta que resuene más contigo, nos ayudará mucho para seguir avanzando</p>
                             <textarea
-                                className="w-full p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-200 outline-none transition-all h-24 resize-none"
+                                className="w-full p-3 rounded-lg border outline-none transition-all h-24 resize-none"
+                                style={{ background: C.surface2, borderColor: C.border, color: C.text }}
                                 placeholder="Escribe tu respuesta aquí..."
                                 onChange={(e) => handleAnswer('feedback_improvement', e.target.value)}
                             />
@@ -1552,7 +1542,8 @@ export default function MyMoneyInAction() {
                                 await saveSubmission();
                                 navigate('/challenges');
                             }}
-                            className="w-full bg-slate-800 text-white py-3 rounded-xl font-bold mt-6"
+                            className="w-full text-white py-3 rounded-xl font-bold mt-6"
+                            style={{ background: C.red }}
                         >
                             Enviar y Salir
                         </button>
@@ -1565,7 +1556,7 @@ export default function MyMoneyInAction() {
     };
 
     return (
-        <div className="flex flex-col md:flex-row h-screen bg-slate-50 font-sans overflow-hidden">
+        <div className="flex flex-col md:flex-row h-screen font-sans overflow-hidden" style={{ background: C.bg }}>
             <div className="md:hidden w-full">
                 <Header />
             </div>
@@ -1577,12 +1568,13 @@ export default function MyMoneyInAction() {
                     <div className="flex justify-between items-center mb-12">
                         <button
                             onClick={goBack}
-                            className="flex items-center text-slate-400 hover:text-slate-600 transition-colors"
+                            className="flex items-center transition-colors"
+                            style={{ color: C.label }}
                         >
                             <ArrowLeft size={20} className="mr-2" />
                             {history.length > 0 ? 'Volver' : 'Cancelar'}
                         </button>
-                        <div className="text-sm font-bold text-slate-300">MY MONEY IN ACTION</div>
+                        <div className="text-sm font-bold" style={{ color: C.label }}>MY MONEY IN ACTION</div>
                     </div>
 
                     {/* Content Area */}
@@ -1597,7 +1589,8 @@ export default function MyMoneyInAction() {
                 href="https://wa.me/+573173772122"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="fixed bottom-6 right-6 bg-emerald-500 text-white p-4 rounded-full shadow-lg hover:bg-emerald-600 transition-all z-50 flex items-center justify-center hover:scale-110"
+                className="fixed bottom-6 right-6 text-white p-4 rounded-full shadow-lg transition-all z-50 flex items-center justify-center hover:scale-110"
+                style={{ background: C.green }}
                 title="Ayuda por WhatsApp"
             >
                 <MessageCircle size={28} />  ¿Necesitas ayuda?

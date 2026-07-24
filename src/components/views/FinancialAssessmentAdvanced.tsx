@@ -6,6 +6,7 @@ import { DollarSign, Home, Zap, ShoppingCart, Car, Coffee, HeartPulse, HelpCircl
 import { useAuth } from '../../store/useAuth';
 // @ts-ignore
 import canvasConfetti from 'canvas-confetti';
+import { C } from '../../styles/colors';
 
 // Types
 interface NamedValue {
@@ -302,7 +303,7 @@ export default function FinancialAssessment() {
 
 
     return (
-        <div className="flex flex-col md:flex-row h-screen bg-slate-50 font-sans overflow-hidden">
+        <div className="flex flex-col md:flex-row h-screen font-sans overflow-hidden" style={{ background: C.bg }}>
             <div className="md:hidden w-full">
                 <Header />
             </div>
@@ -320,14 +321,14 @@ export default function FinancialAssessment() {
                 >
                     <div className="flex justify-between items-start mb-8">
                         <div>
-                            <h1 className="text-3xl font-bold text-slate-800 mb-2">Show me the Money</h1>
-                            <p className="text-slate-500">Aquí no importa si son muchos o pocos, lo que importa es que lo que registres sea real.</p>
-                            {saveStatus === 'saved' && <span className="text-xs text-emerald-500 flex items-center mt-2"><CheckCircle size={12} className="mr-1" /> Guardado en borrador</span>}
+                            <h1 className="text-3xl font-bold mb-2" style={{ color: C.text }}>Show me the Money</h1>
+                            <p style={{ color: C.textMuted }}>Aquí no importa si son muchos o pocos, lo que importa es que lo que registres sea real.</p>
+                            {saveStatus === 'saved' && <span className="text-xs flex items-center mt-2" style={{ color: C.green }}><CheckCircle size={12} className="mr-1" /> Guardado en borrador</span>}
                         </div>
                         <button
                             onClick={handleSubmit}
                             disabled={isSubmitting}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg hover:shadow-emerald-200 disabled:opacity-50 flex items-center"
+                            className="text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg disabled:opacity-50 flex items-center" style={{ background: C.green }}
                         >
                             {isSubmitting ? 'Guardando...' : <><Save size={18} className="mr-2" /> Guardar Resultados</>}
                         </button>
@@ -336,15 +337,15 @@ export default function FinancialAssessment() {
                     <div className="space-y-8">
 
                         {/* 1. INGRESOS */}
-                        <SectionCard title="INGRESOS" icon={<DollarSign className="mr-2" />} color="text-emerald-600" borderColor="border-emerald-100">
+                        <SectionCard title="INGRESOS" icon={<DollarSign className="mr-2" />} titleStyle={{ color: C.green }} borderColor={C.topo}>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                 <InputGroup label="Salario / Ingreso principal" subLabel="(Lo que entra a tu cuenta)" value={ingresos.principal} onChange={(v) => handleIngresoChange('principal', v)} />
                                 <InputGroup label="Ingresos adicionales" subLabel="(Freelance, rentas)" value={ingresos.adicionales} onChange={(v) => handleIngresoChange('adicionales', v)} />
                                 <InputGroup label="Ingresos ocasionales" subLabel="(Promedio mensual)" value={ingresos.ocasionales} onChange={(v) => handleIngresoChange('ocasionales', v)} />
                             </div>
 
-                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                <h3 className="text-sm font-bold text-slate-700 mb-4 uppercase tracking-wider">Descuentos de Nómina / Impuestos</h3>
+                            <div className="p-4 rounded-xl" style={{ background: C.surface2, borderWidth: 1, borderStyle: 'solid', borderColor: C.border }}>
+                                <h3 className="text-sm font-bold mb-4 uppercase tracking-wider" style={{ color: C.textSec }}>Descuentos de Nómina / Impuestos</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
                                     <InputGroup label="Seguridad Social / Salud" value={ingresos.seguridad_social} onChange={(v) => handleIngresoChange('seguridad_social', v)} />
                                     <InputGroup label="Pensión" value={ingresos.pension} onChange={(v) => handleIngresoChange('pension', v)} />
@@ -361,7 +362,7 @@ export default function FinancialAssessment() {
                         </SectionCard>
 
                         {/* 2. AHORRO E INVERSION */}
-                        <SectionCard title="AHORRO E INVERSIONES" icon={<TrendingUp className="mr-2" />} color="text-blue-600">
+                        <SectionCard title="AHORRO E INVERSIONES" icon={<TrendingUp className="mr-2" />} titleStyle={{ color: C.red }}>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                 <InputGroup label="Ahorro Programado" subLabel="(Débito automático/manual)" value={ahorros.programado} onChange={(v) => handleAhorrosChange('programado', v)} />
                                 <InputGroup label="Inversión Automática" subLabel="(CDT, Fondos, Acciones)" value={ahorros.inversion_automatica} onChange={(v) => handleAhorrosChange('inversion_automatica', v)} />
@@ -377,7 +378,7 @@ export default function FinancialAssessment() {
                         </SectionCard>
 
                         {/* 3. DEUDAS */}
-                        <SectionCard title="DEUDAS" icon={<CreditCard className="mr-2" />} color="text-red-500">
+                        <SectionCard title="DEUDAS" icon={<CreditCard className="mr-2" />} titleStyle={{ color: C.red }}>
                             <div className="mb-6">
                                 <label className="flex items-center space-x-3 cursor-pointer">
                                     <input
@@ -386,7 +387,7 @@ export default function FinancialAssessment() {
                                         checked={deudas.pagaste_deudas}
                                         onChange={(e) => setDeudas((p: any) => ({ ...p, pagaste_deudas: e.target.checked }))}
                                     />
-                                    <span className="text-slate-700 font-medium">¿Pagaste deudas este mes?</span>
+                                    <span className="font-medium" style={{ color: C.textSec }}>¿Pagaste deudas este mes?</span>
                                 </label>
                             </div>
 
@@ -431,12 +432,12 @@ export default function FinancialAssessment() {
                             </div>
                             <SummaryRow label="GASTO ALIMENTACIÓN" value={totalAlimentacion} percent={pctAlimentacion} formatCurrency={formatCurrency} formatPercent={formatPercent} />
 
-                            <div className="mt-4 pt-4 border-t border-slate-200 bg-orange-50 p-4 rounded-xl">
-                                <div className="flex justify-between items-center text-orange-900">
+                            <div className="mt-4 pt-4 p-4 rounded-xl" style={{ borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.border, background: C.surface2 }}>
+                                <div className="flex justify-between items-center" style={{ color: C.text }}>
                                     <span className="font-bold text-sm uppercase">SUBTOTAL GASTOS BÁSICOS (Vivienda + Servicios + Alim)</span>
                                     <span className="font-bold text-lg">{formatCurrency(subtotalGastosBasicos)}</span>
                                 </div>
-                                <div className="text-right text-xs text-orange-700 mt-1">{formatPercent(pctGastosBasicos)} del ingreso neto</div>
+                                <div className="text-right text-xs mt-1" style={{ color: C.textMuted }}>{formatPercent(pctGastosBasicos)} del ingreso neto</div>
                             </div>
                         </SectionCard>
 
@@ -485,10 +486,10 @@ export default function FinancialAssessment() {
                         </SectionCard>
 
                         {/* RESULTADOS Y BALANCE */}
-                        <section className="bg-slate-900 rounded-3xl shadow-xl p-8 text-white mt-8">
-                            <h2 className="text-2xl font-bold mb-8 text-center text-emerald-400">Balance y Resultados</h2>
+                        <section className="rounded-3xl shadow-xl p-8 text-white mt-8" style={{ background: C.bgDeep }}>
+                            <h2 className="text-2xl font-bold mb-8 text-center" style={{ color: C.green }}>Balance y Resultados</h2>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8 border-b border-slate-700 pb-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8 pb-8" style={{ borderBottomWidth: 1, borderBottomStyle: 'solid', borderBottomColor: C.border }}>
                                 <StatBox label="Ingreso Neto" value={formatCurrency(ingresoNetoMensual)} sub="Disponible" />
                                 <StatBox label="Egresos Totales" value={formatCurrency(egresosTotales)} sub="Gastos + Deuda + Ahorro" color="text-red-400" />
                                 <StatBox label="Flujo de Caja Libre" value={formatCurrency(flujoDeCajaLibre)} sub="Final del mes" color={flujoDeCajaLibre >= 0 ? "text-emerald-400" : "text-red-500"} />
@@ -514,10 +515,10 @@ export default function FinancialAssessment() {
 
 // --- SUBCOMPONENTS ---
 
-function SectionCard({ title, icon, children, color = "text-slate-700", borderColor = "border-slate-200" }: { title: string, icon: React.ReactNode, children: React.ReactNode, color?: string, borderColor?: string }) {
+function SectionCard({ title, icon, children, color, titleStyle, borderColor }: { title: string, icon: React.ReactNode, children: React.ReactNode, color?: string, titleStyle?: React.CSSProperties, borderColor?: string }) {
     return (
-        <section className={`bg-white rounded-2xl shadow-sm border ${borderColor} p-6`}>
-            <h2 className={`flex items-center text-xl font-bold ${color} mb-6 border-b border-slate-100 pb-2`}>
+        <section className="rounded-2xl shadow-sm p-6" style={{ background: C.surface1, borderWidth: 1, borderStyle: 'solid', borderColor: borderColor || C.border }}>
+            <h2 className={`flex items-center text-xl font-bold mb-6 pb-2${color ? ' ' + color : ''}`} style={{ borderBottomWidth: 1, borderBottomStyle: 'solid', borderBottomColor: C.border, color: !titleStyle ? C.textSec : undefined, ...titleStyle }}>
                 {icon} {title}
             </h2>
             {children}
@@ -528,36 +529,37 @@ function SectionCard({ title, icon, children, color = "text-slate-700", borderCo
 function InputGroup({ label, subLabel, value, onChange, tooltip }: { label: string, subLabel?: string, value: number, onChange: (val: number) => void, tooltip?: string }) {
     return (
         <div className="flex flex-col">
-            <label className="text-sm font-medium text-slate-700 mb-1">
+            <label className="text-sm font-medium mb-1" style={{ color: C.textSec }}>
                 {label}
-                {subLabel && <span className="text-slate-400 font-normal ml-1">{subLabel}</span>}
+                {subLabel && <span className="font-normal ml-1" style={{ color: C.label }}>{subLabel}</span>}
             </label>
             <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: C.label }}>$</span>
                 <input
                     type="number"
                     min="0"
                     value={value || ''}
                     onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-                    className="w-full pl-7 pr-4 py-2 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                    className="w-full pl-7 pr-4 py-2 rounded-xl outline-none transition-all"
+                    style={{ background: C.surface2, borderWidth: 1, borderStyle: 'solid', borderColor: C.border, color: C.text }}
                     placeholder="0"
                 />
             </div>
-            {tooltip && <p className="text-xs text-slate-400 mt-1">{tooltip}</p>}
+            {tooltip && <p className="text-xs mt-1" style={{ color: C.label }}>{tooltip}</p>}
         </div>
     );
 }
 
 function SummaryRow({ label, value, percent, formatCurrency, formatPercent }: { label: string, value: number, percent: number, formatCurrency: (v: number) => string, formatPercent: (v: number) => string }) {
     return (
-        <div className="mt-6 p-4 bg-slate-50 rounded-xl flex justify-between items-center text-slate-700 font-medium">
+        <div className="mt-6 p-4 rounded-xl flex justify-between items-center font-medium" style={{ background: C.surface2, color: C.textSec }}>
             <div className="flex flex-col">
-                <span className="uppercase text-xs font-bold text-slate-400 tracking-wider">Subtotal</span>
+                <span className="uppercase text-xs font-bold tracking-wider" style={{ color: C.label }}>Subtotal</span>
                 <span>{label}</span>
             </div>
             <div className="text-right">
                 <div className="text-lg font-bold">{formatCurrency(value)}</div>
-                <div className="text-xs text-slate-400">{formatPercent(percent)} de ingreso neto</div>
+                <div className="text-xs" style={{ color: C.label }}>{formatPercent(percent)} de ingreso neto</div>
             </div>
         </div>
     );
@@ -565,10 +567,10 @@ function SummaryRow({ label, value, percent, formatCurrency, formatPercent }: { 
 
 function SimpleSummary({ label, value, note, formatCurrency }: { label: string, value: number, note?: string, formatCurrency: (v: number) => string }) {
     return (
-        <div className="mt-6 p-4 bg-emerald-50 rounded-xl flex justify-between items-center text-emerald-900 border border-emerald-100">
+        <div className="mt-6 p-4 rounded-xl flex justify-between items-center" style={{ background: C.forest, borderWidth: 1, borderStyle: 'solid', borderColor: C.topo, color: C.green }}>
             <div className="flex flex-col">
                 <span className="font-bold text-sm tracking-wide">{label}</span>
-                {note && <span className="text-xs text-emerald-600 mt-1">{note}</span>}
+                {note && <span className="text-xs mt-1" style={{ color: C.textSec }}>{note}</span>}
             </div>
             <span className="text-xl font-bold">{formatCurrency(value)}</span>
         </div>
@@ -578,19 +580,19 @@ function SimpleSummary({ label, value, note, formatCurrency }: { label: string, 
 function StatBox({ label, value, sub, color = "text-white" }: { label: string, value: string, sub?: string, color?: string }) {
     return (
         <div className="text-center">
-            <h3 className="text-slate-400 text-sm uppercase tracking-wider mb-2">{label}</h3>
+            <h3 className="text-sm uppercase tracking-wider mb-2" style={{ color: C.label }}>{label}</h3>
             <p className={`text-3xl font-bold ${color}`}>{value}</p>
-            {sub && <p className="text-sm text-slate-500">{sub}</p>}
+            {sub && <p className="text-sm" style={{ color: C.textMuted }}>{sub}</p>}
         </div>
     );
 }
 
 function ResultCard({ label, value, subtext, color = "text-white" }: { label: string, value: string, subtext?: string, color?: string }) {
     return (
-        <div className="bg-slate-800 p-4 rounded-2xl border border-slate-700">
-            <h4 className="text-slate-400 text-xs uppercase tracking-wider mb-2">{label}</h4>
+        <div className="p-4 rounded-2xl" style={{ background: C.surface1, borderWidth: 1, borderStyle: 'solid', borderColor: C.border }}>
+            <h4 className="text-xs uppercase tracking-wider mb-2" style={{ color: C.label }}>{label}</h4>
             <div className={`text-xl font-bold ${color} mb-1`}>{value}</div>
-            {subtext && <p className="text-xs text-slate-500">{subtext}</p>}
+            {subtext && <p className="text-xs" style={{ color: C.textMuted }}>{subtext}</p>}
         </div>
     );
 }
@@ -609,10 +611,10 @@ function DynamicList({ title, items, onChange }: { title: string, items: NamedVa
     };
 
     return (
-        <div className="border-t border-slate-100 pt-4 mt-4">
+        <div className="pt-4 mt-4" style={{ borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.border }}>
             <div className="flex justify-between items-center mb-3">
-                <h4 className="text-sm font-bold text-slate-700">{title}</h4>
-                <button onClick={addItem} className="text-emerald-600 text-xs font-bold hover:text-emerald-700 flex items-center">
+                <h4 className="text-sm font-bold" style={{ color: C.textSec }}>{title}</h4>
+                <button onClick={addItem} className="text-xs font-bold flex items-center" style={{ color: C.green }}>
                     <Plus size={14} className="mr-1" /> Agregar
                 </button>
             </div>
@@ -621,26 +623,28 @@ function DynamicList({ title, items, onChange }: { title: string, items: NamedVa
                     <div key={item.id} className="flex gap-2 items-center">
                         <input
                             placeholder="Nombre / Concepto"
-                            className="flex-1 text-sm p-2 border border-slate-200 rounded-lg outline-none focus:border-emerald-500"
+                            className="flex-1 text-sm p-2 rounded-lg outline-none"
+                            style={{ background: C.surface2, borderWidth: 1, borderStyle: 'solid', borderColor: C.border, color: C.text }}
                             value={item.label}
                             onChange={(e) => updateItem(item.id, 'label', e.target.value)}
                         />
                         <div className="relative w-32">
-                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-xs">$</span>
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs" style={{ color: C.label }}>$</span>
                             <input
                                 type="number"
                                 placeholder="0"
-                                className="w-full pl-5 p-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-emerald-500"
+                                className="w-full pl-5 p-2 text-sm rounded-lg outline-none"
+                                style={{ background: C.surface2, borderWidth: 1, borderStyle: 'solid', borderColor: C.border, color: C.text }}
                                 value={item.value || ''}
                                 onChange={(e) => updateItem(item.id, 'value', parseFloat(e.target.value) || 0)}
                             />
                         </div>
-                        <button onClick={() => removeItem(item.id)} className="text-red-400 hover:text-red-600 p-1">
+                        <button onClick={() => removeItem(item.id)} className="p-1" style={{ color: C.red }}>
                             <Trash2 size={16} />
                         </button>
                     </div>
                 ))}
-                {items.length === 0 && <p className="text-xs text-slate-400 italic">No hay items agregados.</p>}
+                {items.length === 0 && <p className="text-xs italic" style={{ color: C.label }}>No hay items agregados.</p>}
             </div>
         </div>
     );

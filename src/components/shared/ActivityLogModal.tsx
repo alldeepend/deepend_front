@@ -175,14 +175,14 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
     return (
         <>
             {/* Main modal */}
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-                <div className="bg-white rounded-2xl shadow-xl w-full max-w-md flex flex-col max-h-[80vh] [max-height:85svh] animate-fade-in-up">
-                    <div className="flex justify-between items-center p-4 border-b border-slate-100 shrink-0">
-                        <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-                            <Activity className="text-emerald-500" size={20} />
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: '#000000b3', backdropFilter: 'blur(4px)' }}>
+                <div className="rounded-2xl shadow-xl w-full max-w-md flex flex-col max-h-[80vh] [max-height:85svh] animate-fade-in-up border" style={{ background: '#1E1A1B', borderColor: '#333330' }}>
+                    <div className="flex justify-between items-center p-4 border-b shrink-0" style={{ borderColor: '#333330' }}>
+                        <h3 className="font-bold text-lg flex items-center gap-2" style={{ color: '#F5F0E8', fontFamily: "'American Typewriter', Georgia, serif" }}>
+                            <Activity style={{ color: '#52B788' }} size={20} />
                             Registrar Actividad Fisica
                         </h3>
-                        <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+                        <button onClick={onClose} className="transition-colors" style={{ color: '#A8A29E' }}>
                             <X size={24} />
                         </button>
                     </div>
@@ -190,19 +190,18 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
                     <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto">
                         {/* Check-in semanal — participantes que aún no han respondido esta semana */}
                         {showCheckin && (
-                            <div className={`bg-slate-50 rounded-xl p-4 border ${formError && !checkinResponse ? 'border-red-400' : 'border-slate-200'}`}>
-                                <p className="text-sm font-bold text-slate-700 mb-3">¿Cómo va tu semana?</p>
+                            <div className="rounded-xl p-4 border" style={{ background: '#252020', borderColor: formError && !checkinResponse ? '#EE2A28' : '#333330' }}>
+                                <p className="text-sm font-bold mb-3" style={{ color: '#F5F0E8' }}>¿Cómo va tu semana?</p>
                                 <div className="space-y-2">
                                     {CHECKIN_OPTIONS.map(opt => (
                                         <button
                                             key={opt.value}
                                             type="button"
                                             onClick={() => setCheckinResponse(opt.value)}
-                                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg border text-sm font-medium transition-all ${
-                                                checkinResponse === opt.value
-                                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
-                                                    : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                                            }`}
+                                            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg border text-sm font-medium transition-all"
+                                            style={checkinResponse === opt.value
+                                                ? { borderColor: '#52B788', background: '#52B78822', color: '#52B788' }
+                                                : { borderColor: '#333330', background: '#1E1A1B', color: '#F5F0E8' }}
                                         >
                                             <span>{opt.emoji}</span>
                                             <span>{opt.label}</span>
@@ -213,23 +212,24 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
                         )}
 
                         {formError && !checkinResponse && (
-                            <p className="text-red-500 text-sm -mt-4 mb-2">Por favor indica cómo va tu semana.</p>
+                            <p className="text-sm -mt-4 mb-2" style={{ color: '#EE2A28' }}>Por favor indica cómo va tu semana.</p>
                         )}
 
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-2">Actividad Realizada</label>
+                            <label className="block text-sm font-bold mb-2" style={{ color: '#F5F0E8' }}>Actividad Realizada</label>
                             <input
                                 type="text"
                                 value={activity}
                                 onChange={(e) => setActivity(e.target.value)}
                                 placeholder="Ej: Correr, Yoga"
-                                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                                className="w-full px-4 py-3 rounded-xl border outline-none transition-all focus:ring-2"
+                                style={{ background: '#252020', borderColor: '#333330', color: '#F5F0E8', ['--tw-ring-color' as any]: '#52B788' }}
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
-                                <Clock size={16} className="text-slate-400" /> Tiempo / Duración (minutos)
+                            <label className="block text-sm font-bold mb-2 flex items-center gap-2" style={{ color: '#F5F0E8' }}>
+                                <Clock size={16} style={{ color: '#A8A29E' }} /> Tiempo / Duración (minutos)
                             </label>
                             <input
                                 type="number"
@@ -237,15 +237,17 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
                                 value={duration}
                                 onChange={(e) => setDuration(e.target.value)}
                                 placeholder="Ej: 30"
-                                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                                className="w-full px-4 py-3 rounded-xl border outline-none transition-all focus:ring-2"
+                                style={{ background: '#252020', borderColor: '#333330', color: '#F5F0E8', ['--tw-ring-color' as any]: '#52B788' }}
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-2">Evidencia (Foto - Opcional)</label>
+                            <label className="block text-sm font-bold mb-2" style={{ color: '#F5F0E8' }}>Evidencia (Foto - Opcional)</label>
                             <div
                                 onClick={() => fileInputRef.current?.click()}
-                                className="border-2 border-dashed border-slate-300 rounded-xl p-6 flex flex-col items-center justify-center text-slate-500 cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all"
+                                className="border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all"
+                                style={{ borderColor: '#333330', color: '#A8A29E' }}
                             >
                                 {previewUrl ? (
                                     <div className="relative w-full h-48 rounded-lg overflow-hidden">
@@ -256,9 +258,9 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
                                     </div>
                                 ) : (
                                     <>
-                                        <Upload size={32} className="mb-2 text-slate-400" />
+                                        <Upload size={32} className="mb-2" style={{ color: '#A8A29E' }} />
                                         <p className="text-sm font-medium">Click para subir foto (Opcional)</p>
-                                        <p className="text-xs text-slate-400 mt-1">JPG, PNG, WebP (Max 10MB)</p>
+                                        <p className="text-xs mt-1" style={{ color: '#666' }}>JPG, PNG, WebP (Max 10MB)</p>
                                     </>
                                 )}
                                 <input
@@ -274,7 +276,8 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
                         <button
                             type="submit"
                             disabled={logMutation.isPending}
-                            className="w-full bg-emerald-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                            className="w-full text-white font-bold py-3.5 rounded-xl shadow-lg transition-opacity hover:opacity-90 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                            style={{ background: '#52B788' }}
                         >
                             {logMutation.isPending ? (
                                 <><Loader2 size={20} className="animate-spin" /> Subiendo...</>

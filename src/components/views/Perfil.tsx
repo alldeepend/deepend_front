@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Edit2, Save, X, User as UserIcon, Calendar, MapPin, Phone, RefreshCw, Trash2, AlertTriangle, Camera, Loader2, Plus } from 'lucide-react';
+import { ArrowLeft, Edit2, Save, X, User as UserIcon, Calendar, MapPin, Phone, RefreshCw, Trash2, AlertTriangle, Camera, Loader2, Plus, Heart, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { HomeSidebar } from '../home/HomeSidebar';
 import { useAuth } from '../../store/useAuth';
 import Header from '../../components/shared/Header';
+import { C } from '../../styles/colors';
 
 // Helper to get API URL
 const getApiUrl = () => {
@@ -26,6 +27,8 @@ interface ProfileData {
     email: string;
     username: string;
     preferredName: string;
+    estado_civil: string;
+    hobbies: string;
 }
 
 export default function Perfil() {
@@ -47,7 +50,9 @@ export default function Perfil() {
         ciudad_residencia: '',
         email: '',
         username: '',
-        preferredName: ''
+        preferredName: '',
+        estado_civil: '',
+        hobbies: ''
     });
 
     useEffect(() => {
@@ -84,7 +89,9 @@ export default function Perfil() {
                     ciudad_residencia: data.ciudad_residencia || '',
                     email: data.email || '',
                     username: data.username || '',
-                    preferredName: data.preferredName || ''
+                    preferredName: data.preferredName || '',
+                    estado_civil: data.estado_civil || '',
+                    hobbies: data.hobbies || ''
                 };
                 console.log("Setting form data:", newData); // DEBUG LOG
 
@@ -216,7 +223,7 @@ export default function Perfil() {
     };
 
     return (
-        <div className="flex flex-col md:flex-row h-screen bg-white font-sans overflow-hidden">
+        <div className="flex flex-col md:flex-row h-screen font-sans overflow-hidden" style={{ background: C.bg }}>
             <div className="md:hidden w-full">
                 <Header />
             </div>
@@ -231,18 +238,18 @@ export default function Perfil() {
                         <div>
                             <button
                                 onClick={() => navigate('/dashboard')}
-                                className="flex items-center text-slate-400 text-sm mb-2 hover:text-slate-600 transition-colors group"
+                                className="flex items-center text-sm mb-2 transition-colors group" style={{ color: C.label }}
                             >
                                 <ArrowLeft size={16} className="mr-1 group-hover:-translate-x-1 transition-transform" />
                                 Dashboard
                             </button>
-                            <h2 className="text-3xl font-light text-slate-800">Mi Perfil</h2>
+                            <h2 className="text-3xl font-light" style={{ color: C.text }}>Mi Perfil</h2>
                         </div>
 
                         {!isEditing ? (
                             <button
                                 onClick={() => setIsEditing(true)}
-                                className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-full text-sm font-medium hover:bg-slate-800 transition-colors shadow-sm hover:shadow active:scale-95"
+                                className="flex items-center gap-2 px-4 py-2 text-white rounded-full text-sm font-medium transition-colors shadow-sm hover:shadow active:scale-95" style={{ background: C.red }}
                             >
                                 <Edit2 size={14} />
                                 Editar Perfil
@@ -251,7 +258,7 @@ export default function Perfil() {
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={handleCancel}
-                                    className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-full text-sm font-medium hover:bg-slate-50 transition-colors"
+                                    className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors" style={{ background: C.surface2, borderWidth: 1, borderStyle: 'solid', borderColor: C.border, color: C.textMuted }}
                                     disabled={saving}
                                 >
                                     <X size={14} />
@@ -259,7 +266,7 @@ export default function Perfil() {
                                 </button>
                                 <button
                                     onClick={handleSave}
-                                    className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-full text-sm font-medium hover:bg-emerald-600 transition-colors shadow-sm hover:shadow-emerald-500/25 active:scale-95 disabled:opacity-70"
+                                    className="flex items-center gap-2 px-4 py-2 text-white rounded-full text-sm font-medium transition-colors shadow-sm active:scale-95 disabled:opacity-70" style={{ background: C.green }}
                                     disabled={saving}
                                 >
                                     <Save size={14} />
@@ -271,19 +278,19 @@ export default function Perfil() {
 
                     {loading ? (
                         <div className="flex items-center justify-center h-64">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: C.text }}></div>
                         </div>
                     ) : (
                         <div className="animate-in fade-in slide-in-from-bottom-8 duration-500">
                             {/* Avatar & Main Info */}
-                            <div className="bg-slate-900 rounded-3xl p-8 mb-8 text-white relative overflow-hidden">
+                            <div className="rounded-3xl p-8 mb-8 text-white relative overflow-hidden" style={{ background: C.bgDeep }}>
                                 <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
 
                                 <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
                                     <div className="relative">
                                         <div
                                             onClick={isEditing ? triggerFileSelect : undefined}
-                                            className={`relative w-24 h-24 rounded-full bg-emerald-500 flex items-center justify-center text-3xl font-bold shadow-lg ring-4 ring-white/10 ${isEditing ? 'cursor-pointer group overflow-hidden' : ''}`}
+                                            className={`relative w-24 h-24 rounded-full flex items-center justify-center text-3xl font-bold shadow-lg ring-4 ring-white/10 ${isEditing ? 'cursor-pointer group overflow-hidden' : ''}`} style={{ background: C.green }}
                                         >
                                             {uploadingAvatar ? (
                                                 <Loader2 size={32} className="animate-spin text-white" />
@@ -304,9 +311,9 @@ export default function Perfil() {
                                         {isEditing && (
                                             <div
                                                 onClick={triggerFileSelect}
-                                                className="absolute -bottom-1 -right-1 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg border-2 border-slate-900 z-30 cursor-pointer"
+                                                className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center shadow-lg border-2 z-30 cursor-pointer" style={{ background: C.surface2, borderColor: C.bgDeep }}
                                             >
-                                                <Plus size={20} className="text-slate-900" />
+                                                <Plus size={20} style={{ color: C.text }} />
                                             </div>
                                         )}
 
@@ -324,7 +331,7 @@ export default function Perfil() {
                                                 ? `${formData.firstName} ${formData.lastName}`
                                                 : formData.username || 'Usuario')}
                                         </h3>
-                                        <p className="text-emerald-400 font-medium text-sm mb-4">{user?.email}</p>
+                                        <p className="font-medium text-sm mb-4" style={{ color: C.textMuted }}>{user?.email}</p>
                                         <div className="flex flex-wrap justify-center md:justify-start gap-2">
                                             {/* <span className="px-3 py-1 rounded-full bg-white/10 text-xs font-medium backdrop-blur-sm border border-white/10">
                                                 Viajero
@@ -343,7 +350,7 @@ export default function Perfil() {
                             {/* Form Grid */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="md:col-span-2">
-                                    <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 pl-1">Información Personal</h4>
+                                    <h4 className="text-sm font-bold uppercase tracking-wider mb-4 pl-1" style={{ color: C.text }}>Información Personal</h4>
                                 </div>
                                 <Field
                                     label="¿Cómo te gusta que te llamen?"
@@ -388,9 +395,25 @@ export default function Perfil() {
                                     isEditing={isEditing}
                                     onChange={handleInputChange}
                                 />
+                                <Field
+                                    label="Estado Civil"
+                                    name="estado_civil"
+                                    value={formData.estado_civil}
+                                    icon={Heart}
+                                    isEditing={isEditing}
+                                    onChange={handleInputChange}
+                                />
+                                <Field
+                                    label="Hobbies"
+                                    name="hobbies"
+                                    value={formData.hobbies}
+                                    icon={Sparkles}
+                                    isEditing={isEditing}
+                                    onChange={handleInputChange}
+                                />
 
                                 <div className="md:col-span-2 mt-4">
-                                    <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 pl-1">Ubicación</h4>
+                                    <h4 className="text-sm font-bold uppercase tracking-wider mb-4 pl-1" style={{ color: C.text }}>Ubicación</h4>
                                 </div>
 
                                 <Field
@@ -412,22 +435,22 @@ export default function Perfil() {
                             </div>
 
                             {/* Advanced Settings / Cache Clearing */}
-                            <div className="mt-12 pt-8 border-t border-slate-100 mb-20">
-                                <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 pl-1">Ajustes Avanzados</h4>
-                                <div className="bg-amber-50 rounded-2xl p-6 border border-amber-100">
+                            <div className="mt-12 pt-8 mb-20" style={{ borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.border }}>
+                                <h4 className="text-sm font-bold uppercase tracking-wider mb-4 pl-1" style={{ color: C.text }}>Ajustes Avanzados</h4>
+                                <div className="rounded-2xl p-6" style={{ background: C.surface1, borderWidth: 1, borderStyle: 'solid', borderColor: C.topo }}>
                                     <div className="flex flex-col md:flex-row items-center gap-6">
-                                        <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-amber-500 shadow-sm shrink-0">
+                                        <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm shrink-0" style={{ background: C.surface2, color: C.amber }}>
                                             <AlertTriangle size={24} />
                                         </div>
                                         <div className="flex-1 text-center md:text-left">
-                                            <h5 className="text-slate-800 font-bold mb-1">Mantenimiento de la aplicación</h5>
-                                            <p className="text-slate-500 text-xs leading-relaxed">
+                                            <h5 className="font-bold mb-1" style={{ color: C.text }}>Mantenimiento de la aplicación</h5>
+                                            <p className="text-xs leading-relaxed" style={{ color: C.textMuted }}>
                                                 Si experimentas problemas visuales o de carga, puedes limpiar los datos técnicos guardados en tu navegador (Cache, Service Workers y Almacenamiento local). Se cerrará tu sesión actual.
                                             </p>
                                         </div>
                                         <button
                                             onClick={handleClearData}
-                                            className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-red-500 rounded-xl text-sm font-bold hover:bg-red-50 hover:border-red-100 hover:text-red-600 transition-all shadow-sm active:scale-95 whitespace-nowrap"
+                                            className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all shadow-sm active:scale-95 whitespace-nowrap" style={{ background: C.surface2, borderWidth: 1, borderStyle: 'solid', borderColor: C.border, color: C.red }}
                                         >
                                             <RefreshCw size={16} />
                                             Limpiar Cache y Datos
@@ -461,13 +484,13 @@ const Field = ({
     isEditing: boolean,
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
 }) => (
-    <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 transition-all hover:border-slate-200">
+    <div className="rounded-xl p-4 transition-all" style={{ background: C.surface1, borderWidth: 1, borderStyle: 'solid', borderColor: C.border }}>
         <div className="flex items-start gap-4">
-            <div className="p-2 bg-white rounded-lg shadow-sm text-slate-400">
+            <div className="p-2 rounded-lg shadow-sm" style={{ background: C.surface2, color: C.label }}>
                 <Icon size={20} />
             </div>
             <div className="flex-1">
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold uppercase tracking-wider mb-1" style={{ color: C.label }}>
                     {label}
                 </label>
                 {isEditing ? (
@@ -476,12 +499,13 @@ const Field = ({
                         name={name}
                         value={value}
                         onChange={onChange}
-                        className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                        className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none transition-all"
+                        style={{ background: C.surface2, borderWidth: 1, borderStyle: 'solid', borderColor: C.border, color: C.text }}
                         placeholder={`Ingresa tu ${label.toLowerCase()}`}
                     />
                 ) : (
-                    <p className="text-slate-800 font-medium text-sm min-h-[24px] flex items-center">
-                        {value || <span className="text-slate-300 italic">No especificado</span>}
+                    <p className="font-medium text-sm min-h-[24px] flex items-center" style={{ color: C.text }}>
+                        {value || <span className="italic" style={{ color: C.disabled }}>No especificado</span>}
                     </p>
                 )}
             </div>

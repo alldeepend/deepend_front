@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { X, CheckCircle2, Loader2, Calendar, Clock, Target, Timer } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { C } from '../../styles/colors';
 
 interface PhysicalHabitSetupModalProps {
     isOpen: boolean;
@@ -110,27 +111,27 @@ export default function PhysicalHabitSetupModal({ isOpen, onClose, initialData }
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
-            <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-300 flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-md" style={{ background: '#000000b3' }}>
+            <div className="rounded-[2rem] shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-300 flex flex-col max-h-[90vh]" style={{ background: C.surface1 }}>
                 {/* Header */}
                 <div className="relative p-8 pb-4 flex justify-between items-start shrink-0">
                     <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                            <span className="bg-emerald-100 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">Configuración de Reto</span>
+                            <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest" style={{ background: C.forest, color: C.green }}>Configuración de Reto</span>
                             <div className="flex gap-1.5">
                                 {[1, 2, 3].map(i => (
-                                    <div key={i} className={`h-1 w-6 rounded-full transition-all duration-500 ${i <= step ? 'bg-emerald-500' : 'bg-slate-100'}`} />
+                                    <div key={i} className="h-1 w-6 rounded-full transition-all duration-500" style={{ background: i <= step ? C.green : C.surface3 }} />
                                 ))}
                             </div>
                         </div>
-                        <h2 className="text-3xl font-bold text-slate-800 leading-tight">
+                        <h2 className="text-3xl font-bold leading-tight" style={{ color: C.text }}>
                             {step === 1 && "¿Cuál es tu punto de partida?"}
                             {step === 2 && "¿Cómo es tu actividad física?"}
                             {step === 3 && "¿Cómo quieres organizarte?"}
                         </h2>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-50 rounded-full transition-colors">
-                        <X size={24} className="text-slate-400" />
+                    <button onClick={onClose} className="p-2 rounded-full transition-colors" style={{ background: 'transparent' }}>
+                        <X size={24} style={{ color: C.label }} />
                     </button>
                 </div>
 
@@ -145,14 +146,13 @@ export default function PhysicalHabitSetupModal({ isOpen, onClose, initialData }
                                         setFormData({ ...formData, startingPoint: option.id });
                                         setStep(2);
                                     }}
-                                    className={`w-full text-left p-5 rounded-2xl border-2 transition-all duration-300 flex items-start gap-4 ${
-                                        formData.startingPoint === option.id
-                                            ? 'border-emerald-500 bg-emerald-50/50 shadow-sm'
-                                            : 'border-slate-50 hover:border-emerald-200 hover:bg-slate-50'
-                                    }`}
+                                    className="w-full text-left p-5 rounded-2xl border-2 transition-all duration-300 flex items-start gap-4"
+                                    style={formData.startingPoint === option.id
+                                        ? { borderColor: C.green, background: `${C.green}18` }
+                                        : { borderColor: C.border, background: C.surface2 }}
                                 >
                                     <span className="text-xl shrink-0 mt-0.5">{option.icon}</span>
-                                    <span className={`text-sm font-semibold leading-relaxed ${formData.startingPoint === option.id ? 'text-emerald-900' : 'text-slate-600'}`}>
+                                    <span className="text-sm font-semibold leading-relaxed" style={{ color: formData.startingPoint === option.id ? C.text : C.textMuted }}>
                                         {option.label}
                                     </span>
                                 </button>
@@ -162,31 +162,33 @@ export default function PhysicalHabitSetupModal({ isOpen, onClose, initialData }
 
                     {step === 2 && (
                         <div className="space-y-8 py-4">
-                            <div className="bg-slate-50/80 p-8 rounded-[2rem] border border-slate-100">
-                                <label className="block text-sm font-bold text-slate-700 mb-6 text-center uppercase tracking-wider">
+                            <div className="p-8 rounded-[2rem] border" style={{ background: C.surface2, borderColor: C.border }}>
+                                <label className="block text-sm font-bold mb-6 text-center uppercase tracking-wider" style={{ color: C.textSec }}>
                                     ¿Cuántos minutos de actividad física a la SEMANA haces?
                                 </label>
                                 <div className="flex items-center justify-center gap-8">
                                     <button 
                                         type="button"
                                         onClick={() => setFormData(prev => ({ ...prev, weeklyMinutes: Math.max(0, prev.weeklyMinutes - 15) }))}
-                                        className="w-14 h-14 rounded-2xl bg-white shadow-sm border border-slate-200 flex items-center justify-center text-3xl text-slate-400 hover:border-emerald-500 hover:text-emerald-500 hover:shadow-md active:scale-95 transition-all"
+                                        className="w-14 h-14 rounded-2xl shadow-sm border flex items-center justify-center text-3xl active:scale-95 transition-all"
+                                        style={{ background: C.surface1, borderColor: C.border, color: C.label }}
                                     >−</button>
                                     <div className="text-center min-w-[120px]">
-                                        <span className="text-6xl font-black text-emerald-600 tabular-nums">{formData.weeklyMinutes}</span>
-                                        <span className="block text-xs font-bold text-slate-400 uppercase mt-2">Minutos</span>
+                                        <span className="text-6xl font-black tabular-nums" style={{ color: C.green }}>{formData.weeklyMinutes}</span>
+                                        <span className="block text-xs font-bold uppercase mt-2" style={{ color: C.label }}>Minutos</span>
                                     </div>
-                                    <button 
+                                    <button
                                         type="button"
                                         onClick={() => setFormData(prev => ({ ...prev, weeklyMinutes: prev.weeklyMinutes + 15 }))}
-                                        className="w-14 h-14 rounded-2xl bg-white shadow-sm border border-slate-200 flex items-center justify-center text-3xl text-slate-400 hover:border-emerald-500 hover:text-emerald-500 hover:shadow-md active:scale-95 transition-all"
+                                        className="w-14 h-14 rounded-2xl shadow-sm border flex items-center justify-center text-3xl active:scale-95 transition-all"
+                                        style={{ background: C.surface1, borderColor: C.border, color: C.label }}
                                     >+</button>
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-4 flex items-center gap-2 px-2">
-                                    <Calendar size={18} className="text-emerald-500" />
+                                <label className="block text-sm font-bold mb-4 flex items-center gap-2 px-2" style={{ color: C.textSec }}>
+                                    <Calendar size={18} style={{ color: C.green }} />
                                     ¿Cuántos días a la semana realizas actividad física?
                                 </label>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -195,11 +197,10 @@ export default function PhysicalHabitSetupModal({ isOpen, onClose, initialData }
                                             key={opt}
                                             type="button"
                                             onClick={() => setFormData({ ...formData, weeklyDays: opt })}
-                                            className={`p-4 rounded-xl border-2 text-sm font-bold transition-all ${
-                                                formData.weeklyDays === opt
-                                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
-                                                    : 'border-slate-50 hover:border-emerald-200 hover:bg-slate-50 text-slate-600'
-                                            }`}
+                                            className="p-4 rounded-xl border-2 text-sm font-bold transition-all"
+                                            style={formData.weeklyDays === opt
+                                                ? { borderColor: C.green, background: `${C.green}18`, color: C.text }
+                                                : { borderColor: C.border, background: C.surface2, color: C.textMuted }}
                                         >
                                             {opt}
                                         </button>
@@ -212,8 +213,8 @@ export default function PhysicalHabitSetupModal({ isOpen, onClose, initialData }
                     {step === 3 && (
                         <div className="space-y-8 py-4">
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-4 flex items-center gap-2 px-2">
-                                    <Clock size={18} className="text-emerald-500" />
+                                <label className="block text-sm font-bold mb-4 flex items-center gap-2 px-2" style={{ color: C.textSec }}>
+                                    <Clock size={18} style={{ color: C.green }} />
                                     ¿En qué franja horaria eres más consistente?
                                 </label>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -222,11 +223,10 @@ export default function PhysicalHabitSetupModal({ isOpen, onClose, initialData }
                                             key={slot.value}
                                             type="button"
                                             onClick={() => setFormData({ ...formData, preferredTimeSlot: slot.value })}
-                                            className={`w-full text-left p-4 rounded-xl border-2 text-sm font-bold transition-all ${
-                                                formData.preferredTimeSlot === slot.value
-                                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-800 shadow-sm'
-                                                    : 'border-slate-50 hover:bg-slate-50 text-slate-600'
-                                            }`}
+                                            className="w-full text-left p-4 rounded-xl border-2 text-sm font-bold transition-all"
+                                            style={formData.preferredTimeSlot === slot.value
+                                                ? { borderColor: C.green, background: `${C.green}18`, color: C.text }
+                                                : { borderColor: C.border, background: C.surface2, color: C.textMuted }}
                                         >
                                             {slot.label}
                                         </button>
@@ -235,8 +235,8 @@ export default function PhysicalHabitSetupModal({ isOpen, onClose, initialData }
                             </div>
 
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-4 flex items-center gap-2 px-2">
-                                    <Target size={18} className="text-emerald-500" />
+                                <label className="block text-sm font-bold mb-4 flex items-center gap-2 px-2" style={{ color: C.textSec }}>
+                                    <Target size={18} style={{ color: C.green }} />
                                     ¿Qué días realizas o te gustaría realizar actividad?
                                 </label>
                                 <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
@@ -247,11 +247,10 @@ export default function PhysicalHabitSetupModal({ isOpen, onClose, initialData }
                                                 key={day}
                                                 type="button"
                                                 onClick={() => handleDayToggle(day)}
-                                                className={`py-3 rounded-xl border-2 text-[10px] sm:text-xs font-black transition-all uppercase tracking-tighter sm:tracking-normal ${
-                                                    isSelected
-                                                        ? 'border-emerald-500 bg-emerald-500 text-white shadow-lg shadow-emerald-100 scale-105'
-                                                        : 'border-slate-50 hover:border-emerald-200 text-slate-400'
-                                                }`}
+                                                className="py-3 rounded-xl border-2 text-[10px] sm:text-xs font-black transition-all uppercase tracking-tighter sm:tracking-normal"
+                                            style={isSelected
+                                                ? { borderColor: C.green, background: C.green, color: '#FFFFFF', transform: 'scale(1.05)' }
+                                                : { borderColor: C.border, background: C.surface2, color: C.label }}
                                             >
                                                 {day.substring(0, 3)}
                                             </button>
@@ -264,11 +263,11 @@ export default function PhysicalHabitSetupModal({ isOpen, onClose, initialData }
                 </div>
 
                 {/* Footer */}
-                <div className="p-8 border-t border-slate-50 flex justify-between items-center bg-white shrink-0">
-                    <button 
+                <div className="p-8 border-t flex justify-between items-center shrink-0" style={{ borderColor: C.border, background: C.surface1 }}>
+                    <button
                         type="button"
                         onClick={() => step > 1 ? setStep(step - 1) : onClose()}
-                        className="text-slate-400 font-bold hover:text-slate-600 transition-colors px-4 py-2"
+                        className="font-bold transition-colors px-4 py-2" style={{ color: C.label }}
                     >
                         {step === 1 ? 'Cancelar' : 'Anterior'}
                     </button>
@@ -279,7 +278,8 @@ export default function PhysicalHabitSetupModal({ isOpen, onClose, initialData }
                                 type="button"
                                 onClick={() => setStep(step + 1)}
                                 disabled={!isStepValid()}
-                                className="bg-emerald-600 text-white px-10 py-4 rounded-2xl font-bold shadow-xl shadow-emerald-100 hover:bg-emerald-700 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-30 disabled:translate-y-0 disabled:shadow-none"
+                                className="text-white px-10 py-4 rounded-2xl font-bold shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-30 disabled:translate-y-0 disabled:shadow-none"
+                                style={{ background: C.green }}
                             >
                                 Siguiente paso
                             </button>
@@ -288,7 +288,8 @@ export default function PhysicalHabitSetupModal({ isOpen, onClose, initialData }
                                 type="button"
                                 onClick={() => saveMutation.mutate(formData)}
                                 disabled={!isStepValid() || saveMutation.isPending}
-                                className="bg-emerald-600 text-white px-10 py-4 rounded-2xl font-bold shadow-xl shadow-emerald-200 hover:bg-emerald-700 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-3 disabled:opacity-50"
+                                className="text-white px-10 py-4 rounded-2xl font-bold shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-3 disabled:opacity-50"
+                                style={{ background: C.green }}
                             >
                                 {saveMutation.isPending ? <Loader2 className="animate-spin" size={20} /> : <CheckCircle2 size={20} />}
                                 Finalizar Reto

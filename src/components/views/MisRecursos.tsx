@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ArrowLeft, Search, PlayCircle, BookOpen, Calculator } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { HomeSidebar } from '../home/HomeSidebar';
+import { C } from '../../styles/colors';
 
 
 interface ResourceCardData {
@@ -12,21 +13,21 @@ interface ResourceCardData {
 }
 
 const ResourceCard = ({ data }: { data: ResourceCardData }) => (
-    <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer h-full flex flex-col">
+    <div className="rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer h-full flex flex-col border" style={{ background: C.surface1, borderColor: C.border }}>
         {/* Image Area */}
-        <div className="h-40 rounded-xl mb-4 overflow-hidden flex items-center justify-center bg-slate-50 relative">
+        <div className="h-40 rounded-xl mb-4 overflow-hidden flex items-center justify-center relative" style={{ background: C.surface2 }}>
             {data.imageContent}
         </div>
 
         {/* Content */}
         <div className="flex flex-col flex-1">
-            <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-2">
+            <span className="text-[10px] font-bold tracking-wider uppercase mb-2" style={{ color: C.label }}>
                 {data.type}
             </span>
-            <h3 className="text-lg font-bold text-slate-800 mb-2 leading-tight">
+            <h3 className="text-lg font-bold mb-2 leading-tight" style={{ color: C.text }}>
                 {data.title}
             </h3>
-            <p className="text-sm text-slate-500 leading-relaxed">
+            <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>
                 {data.description}
             </p>
         </div>
@@ -48,7 +49,7 @@ export default function MisRecursos() {
                 <div className="text-center p-6">
                     <div className="mx-auto w-24 h-24 relative opacity-80">
                         {/* Stylized Brain Representation */}
-                        <svg viewBox="0 0 100 100" className="w-full h-full text-slate-800" fill="none" stroke="currentColor" strokeWidth="1">
+                        <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" stroke="currentColor" strokeWidth="1" style={{ color: C.text }}>
                             <path d="M20,50 Q20,20 50,20 Q80,20 80,50 Q80,80 50,80 Q20,80 20,50" className="opacity-20" />
                             <path d="M25,55 Q30,30 50,35 Q70,30 75,55" />
                             <path d="M30,65 Q50,90 70,65" />
@@ -80,8 +81,8 @@ export default function MisRecursos() {
             title: 'Calculadora de Interés',
             description: 'Visualiza el poder del interés compuesto.',
             imageContent: (
-                <div className="w-full h-full bg-emerald-50 flex items-center justify-center">
-                    <div className="bg-emerald-100 p-4 rounded-2xl text-emerald-500">
+                <div className="w-full h-full flex items-center justify-center" style={{ background: C.forest }}>
+                    <div className="p-4 rounded-2xl" style={{ background: C.surface3, color: C.green }}>
                         <Calculator size={32} />
                     </div>
                 </div>
@@ -90,7 +91,7 @@ export default function MisRecursos() {
     ];
 
     return (
-        <div className="flex flex-col md:flex-row h-screen bg-slate-50 font-sans overflow-hidden">
+        <div className="flex flex-col md:flex-row h-screen font-sans overflow-hidden" style={{ background: C.bg }}>
             <div className="md:hidden w-full">
                 <Header />
             </div>
@@ -107,12 +108,13 @@ export default function MisRecursos() {
                             <div>
                                 <button
                                     onClick={() => navigate('/dashboard')}
-                                    className="flex items-center text-slate-400 text-sm mb-2 hover:text-slate-600 transition-colors group"
+                                    className="flex items-center text-sm mb-2 transition-colors group"
+                                    style={{ color: C.label }}
                                 >
                                     <ArrowLeft size={16} className="mr-1 group-hover:-translate-x-1 transition-transform" />
                                     Dashboard
                                 </button>
-                                <h2 className="text-3xl font-light text-slate-800">Recursos</h2>
+                                <h2 className="text-3xl font-light" style={{ color: C.text }}>Recursos</h2>
                             </div>
 
                             {/* Search Bar */}
@@ -122,15 +124,16 @@ export default function MisRecursos() {
                                     placeholder="Buscar herramientas..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 shadow-sm"
+                                    className="w-full pl-10 pr-4 py-2.5 rounded-lg text-sm focus:outline-none shadow-sm border"
+                                    style={{ background: C.surface2, borderColor: C.border, color: C.text }}
                                 />
-                                <Search size={18} className="absolute left-3 top-2.5 text-slate-400" />
+                                <Search size={18} className="absolute left-3 top-2.5" style={{ color: C.label }} />
                             </div>
                         </div>
 
                         {/* Recommendation Section */}
                         <section>
-                            <h3 className="text-lg font-bold text-slate-800 mb-6">Recomendados para ti</h3>
+                            <h3 className="text-lg font-bold mb-6" style={{ color: C.text }}>Recomendados para ti</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {resources.map((resource, index) => (
                                     <ResourceCard key={index} data={resource} />

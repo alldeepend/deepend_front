@@ -1,22 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { journeyApi } from '../../../services/journey'
-import type { Area, Journey, UserJourneyProgress } from '../../../types/journey'
+import type { Area, Collection, GateStatus, Journey, UserJourneyProgress } from '../../../types/journey'
 import { useAuth } from '../../../store/useAuth'
 import { HomeSidebar } from '../../home/HomeSidebar'
-
-const C = {
-    bg:       '#231F20',
-    surface1: '#1E1A1B',
-    surface2: '#252020',
-    text:     '#F5F0E8',
-    textMuted:'#A8A29E',
-    red:      '#EE2A28',
-    amber:    '#EF9F27',
-    green:    '#52B788',
-    border:   '#333330',
-    forest: '#1B4332',
-}
+import { C } from '../../../styles/colors'
+import WorldsRightSidebar, { earnedBadgesFromAreas, totalXpFromAreas } from './WorldsRightSidebar'
+import GateModal from './GateModal'
 
 function parseInline(text: string): React.ReactNode[] {
     const parts = text.split(/(\*\*_[^_*]+_\*\*|_\*\*[^_*]+\*\*_|\*\*[^*]+\*\*|_[^_]+_)/g)
@@ -49,30 +39,38 @@ export default function WorldsHome() {
     const navigate  = useNavigate()
     const { user }  = useAuth()
     const [areas, setAreas]       = useState<Area[]>([])
+    const [collections, setCollections] = useState<Collection[]>([])
     const [loading, setLoading]   = useState(true)
     const [currentIdx, setCurrentIdx] = useState(0)
     const [descOpenId, setDescOpenId] = useState<string | null>(null)
     const [showEntryModal, setShowEntryModal] = useState(false)
     const [pendingJourneyId, setPendingJourneyId] = useState<string | null>(null)
+    const [checkingGateId, setCheckingGateId] = useState<string | null>(null)
+    const [gateJourneyId, setGateJourneyId] = useState<string | null>(null)
+    const [gateStatus, setGateStatus] = useState<GateStatus | null>(null)
 
     useEffect(() => {
-        journeyApi.getAvailableJourneys()
-            .then(d => setAreas(d.areas))
+        // `areas` solo se usa para agregar insignias/XP en el sidebar (independiente de las colecciones)
+        Promise.all([
+            journeyApi.getAvailableJourneys().then(d => setAreas(d.areas)),
+            journeyApi.getCollections().then(d => setCollections(d.collections)),
+        ])
             .catch(console.error)
             .finally(() => setLoading(false))
     }, [])
 
-    const allJourneys: (Journey & { areaName: string })[] = areas
-        .flatMap(a => a.journeys.map(j => ({ ...j, areaName: a.name })))
-        .sort((a, b) => {
-            const statusRank = (j: Journey) => {
-                const uj = (j as any).userJourneys?.[0] as UserJourneyProgress | undefined
-                if (uj && uj.status !== 'completado') return 0  // in-progress first
-                if (!uj) return 1                               // not started second
-                return 2                                        // completed last
-            }
-            return statusRank(a) - statusRank(b)
-        })
+    
+    const curatedJourneys: (Journey & { areaName: string })[] = collections.flatMap(c => c.journeys)
+    const isActiveJourney = (j: Journey) => {
+        const uj = j.userJourneys?.[0]
+        if (uj && uj.status !== 'completado') return true
+        const ug = j.gate?.userGates?.[0]
+        return !!(j.gate?.isActive && ug?.activatedAt && !ug?.completedAt)
+    }
+    const activeIdx = curatedJourneys.findIndex(isActiveJourney)
+    const allJourneys = activeIdx > 0
+        ? [curatedJourneys[activeIdx], ...curatedJourneys.slice(0, activeIdx), ...curatedJourneys.slice(activeIdx + 1)]
+        : curatedJourneys
 
     const totalStations = (j: Journey) =>
         (j.worlds ?? []).reduce((s, w) => s + (w.stations?.length ?? 0), 0)
@@ -87,7 +85,7 @@ export default function WorldsHome() {
         setCurrentIdx(Math.max(0, Math.min(idx, totalSections - 1)))
     }
 
-    // Restaura la sección guardada tras volver de un reto (por ID para sobrevivir el re-sort)
+    // Restaura la sección guardada tras volver de un viaje (por ID para sobrevivir el re-sort)
     useEffect(() => {
         if (allJourneys.length === 0) return
         const savedId = sessionStorage.getItem('worldsHomeJourneyId')
@@ -97,6 +95,41 @@ export default function WorldsHome() {
             sessionStorage.removeItem('worldsHomeJourneyId')
         }
     }, [allJourneys.length])
+
+    // Navega al viaje (o abre el aviso de "antes de empezar" la primera vez) — se usa tanto
+    // al presionar el CTA directo como al terminar la Puerta desde su modal.
+    const enterJourney = (journeyId: string) => {
+        const journey = allJourneys.find(j => j.id === journeyId)
+        const userJourney = journey ? (journey as any).userJourneys?.[0] as UserJourneyProgress | undefined : undefined
+        const isCompleted = userJourney?.status === 'completado'
+
+        sessionStorage.setItem('worldsHomeJourneyId', journeyId)
+        if (!isCompleted && !localStorage.getItem('deepend_journey_entry_warned')) {
+            setPendingJourneyId(journeyId)
+            setShowEntryModal(true)
+        } else {
+            navigate(`/worlds/${journeyId}`)
+        }
+    }
+
+    // Antes de entrar a un viaje, revisa si tiene una Puerta sin completar — si la tiene,
+    // el modal se abre aquí mismo y todavía no se navega a los Mundos del viaje.
+    const handleStartClick = async (journeyId: string) => {
+        setCheckingGateId(journeyId)
+        try {
+            const status = await journeyApi.getGateStatus(journeyId)
+            if (status.hasGate && !status.completed) {
+                setGateStatus(status)
+                setGateJourneyId(journeyId)
+                return
+            }
+        } catch {
+            // si falla la consulta de la puerta, no bloquear al usuario
+        } finally {
+            setCheckingGateId(null)
+        }
+        enterJourney(journeyId)
+    }
 
     if (loading) {
         return (
@@ -172,7 +205,7 @@ export default function WorldsHome() {
                                 </h1>
                                 {allJourneys.length > 0 && (
                                     <p className="text-xs tracking-[0.25em] uppercase" style={{ color: C.textMuted }}>
-                                        {allJourneys.length} {allJourneys.length === 1 ? 'reto disponible' : 'retos disponibles'}
+                                        {allJourneys.length} {allJourneys.length === 1 ? 'viaje disponible' : 'viajes disponibles'}
                                     </p>
                                 )}
                             </div>
@@ -180,12 +213,12 @@ export default function WorldsHome() {
                             {/* Hint inferior */}
                             <div className="relative z-10 flex flex-col items-center pb-10 gap-2">
                                 <p className="text-xs tracking-[0.2em] uppercase" style={{ color: C.textMuted }}>
-                                    Explora los retos
+                                    Explora los viajes
                                 </p>
                             </div>
                         </div>
 
-                        {/* ── Secciones 1..N: Retos ── */}
+                        {/* ── Secciones 1..N: Viajes ── */}
                         {allJourneys.map((journey, idx) => {
                             const userJourney = (journey as any).userJourneys?.[0] as UserJourneyProgress | undefined
                             const isStarted   = !!userJourney
@@ -193,10 +226,12 @@ export default function WorldsHome() {
                             const xpEarned    = userJourney?.totalXpEarned ?? 0
                             const xpMax       = totalXpMax(journey)
                             const progress    = xpMax > 0 ? Math.round((xpEarned / xpMax) * 100) : 0
-                            const worldTitle  = journey.worlds?.[0]?.title ?? 'Mundo 1'
-                            const numDays     = 7
-                            const ctaLabel    = isCompleted ? 'Ver mi historia' : isStarted ? 'Continuar mi viaje' : 'Comenzar mi viaje'
-                            const stations    = totalStations(journey)
+                            const worldTitle    = journey.worlds?.[0]?.title ?? 'Mundo 1'
+                            const ctaLabel      = isCompleted ? 'Ver mi historia' : isStarted ? 'Continuar mi viaje' : 'Comenzar mi viaje'
+                            const stations      = totalStations(journey)
+                            const totalBadges   = (journey.worlds ?? []).reduce((s, w) =>
+                                s + (w.stations ?? []).filter((st: any) => st.badgeName).length, 0)
+                            const earnedBadges  = userJourney?.earnedBadges?.length ?? 0
 
                             return (
                                 <div
@@ -270,8 +305,8 @@ export default function WorldsHome() {
                                             style={{ border: '1px solid #6B6560' }}
                                         >
                                             <StatCell value={String(stations)} label="estaciones" />
-                                            <StatCell value={String(numDays)} label="días" />
-                                            <StatCell value={String(xpMax)} label="XP máx" amber />
+                                            <StatCell value={`${earnedBadges}/${totalBadges}`} label="insignias" />
+                                            <StatCell value={String(xpMax)} label="XP máx" color={C.green} />
                                         </div>
                                     </div>
 
@@ -298,19 +333,12 @@ export default function WorldsHome() {
 
                                         {/* CTA */}
                                         <button
-                                            onClick={() => {
-                                                sessionStorage.setItem('worldsHomeJourneyId', journey.id)
-                                                if (!isCompleted && !localStorage.getItem('deepend_journey_entry_warned')) {
-                                                    setPendingJourneyId(journey.id)
-                                                    setShowEntryModal(true)
-                                                } else {
-                                                    navigate(`/worlds/${journey.id}`)
-                                                }
-                                            }}
-                                            className="w-full py-4 rounded-full font-semibold text-sm tracking-wide transition-opacity hover:opacity-90 active:opacity-80"
+                                            onClick={() => handleStartClick(journey.id)}
+                                            disabled={checkingGateId === journey.id}
+                                            className="w-full py-4 rounded-full font-semibold text-sm tracking-wide transition-opacity hover:opacity-90 active:opacity-80 disabled:opacity-70"
                                             style={{ background: C.red, color: '#fff' }}
                                         >
-                                            {ctaLabel}
+                                            {checkingGateId === journey.id ? 'Cargando...' : ctaLabel}
                                         </button>
 
                                         <p className="text-xs text-center" style={{ color: C.textMuted }}>
@@ -365,6 +393,21 @@ export default function WorldsHome() {
                 </div>
             )}
 
+            {/* Reto Puerta — se muestra antes de entrar al viaje, si tiene una sin completar */}
+            {gateJourneyId && gateStatus && (
+                <GateModal
+                    journeyId={gateJourneyId}
+                    initialStatus={gateStatus}
+                    onDismiss={() => { setGateJourneyId(null); setGateStatus(null) }}
+                    onFinish={() => {
+                        const journeyId = gateJourneyId
+                        setGateJourneyId(null)
+                        setGateStatus(null)
+                        enterJourney(journeyId)
+                    }}
+                />
+            )}
+
             {/* Sheet: descripción completa */}
             {descOpenId && (() => {
                 const j = allJourneys.find(j => j.id === descOpenId)
@@ -376,7 +419,7 @@ export default function WorldsHome() {
                         onClick={() => setDescOpenId(null)}
                     >
                         <div
-                            className="w-full max-w-lg rounded-t-2xl p-6 overflow-y-auto"
+                            className="w-full max-w-lg rounded-t-2xl p-6 overflow-y-auto dark-scrollbar"
                             style={{ maxHeight: '72vh', background: C.surface1, border: `1px solid ${C.border}` }}
                             onClick={e => e.stopPropagation()}
                         >
@@ -402,43 +445,49 @@ export default function WorldsHome() {
                 )
             })()}
 
-            {/* Botones de navegación */}
-            <div className="fixed bottom-16 left-1/2 md:left-[calc(50%+8rem)] -translate-x-1/2 z-50 flex flex-row gap-3">
-                {currentIdx > 0 && (
-                    <button
-                        onClick={() => goTo(currentIdx - 1)}
-                        className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95"
-                        style={{ background: C.surface1, border: `1px solid ${C.border}`, color: C.text }}
-                        aria-label="Sección anterior"
-                    >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="18 15 12 9 6 15" />
-                        </svg>
-                    </button>
-                )}
-                {currentIdx < totalSections - 1 && (
-                    <button
-                        onClick={() => goTo(currentIdx + 1)}
-                        className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95 ${currentIdx === 0 ? 'animate-bounce' : ''}`}
-                        style={{ background: C.red, color: '#fff' }}
-                        aria-label="Siguiente sección"
-                    >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="6 9 12 15 18 9" />
-                        </svg>
-                    </button>
-                )}
-            </div>
+            {/* Botones de navegación — ocultos mientras el modal de la Puerta está abierto, no tienen función ahí */}
+            {!gateJourneyId && (
+                <div className="fixed bottom-16 left-1/2 md:left-[calc(50%-2rem)] -translate-x-1/2 z-50 flex flex-row gap-3">
+                    {currentIdx > 0 && (
+                        <button
+                            onClick={() => goTo(currentIdx - 1)}
+                            className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95"
+                            style={{ background: C.surface1, border: `1px solid ${C.border}`, color: C.text }}
+                            aria-label="Sección anterior"
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="18 15 12 9 6 15" />
+                            </svg>
+                        </button>
+                    )}
+                    {currentIdx < totalSections - 1 && (
+                        <button
+                            onClick={() => goTo(currentIdx + 1)}
+                            className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95 ${currentIdx === 0 ? 'animate-bounce' : ''}`}
+                            style={{ background: C.red, color: '#fff' }}
+                            aria-label="Siguiente sección"
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                        </button>
+                    )}
+                </div>
+            )}
+
+            {/* Right sidebar (desktop only) */}
+            <WorldsRightSidebar mode="home" badges={earnedBadgesFromAreas(areas)} totalXp={totalXpFromAreas(areas)} />
+
         </div>
     )
 }
 
-function StatCell({ value, label, amber }: { value: string; label: string; amber?: boolean }) {
+function StatCell({ value, label, color }: { value: string; label: string; color?: string }) {
     return (
         <div className="py-4 flex flex-col items-center gap-1">
             <span
                 className="text-xl font-bold"
-                style={{ fontFamily: "'DM Mono', monospace", color: amber ? C.amber : C.text }}
+                style={{ fontFamily: "'DM Mono', monospace", color: color || C.text }}
             >
                 {value}
             </span>

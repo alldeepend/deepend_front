@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { C } from '../../styles/colors';
 import { ChevronDown, ChevronUp, CircleQuestionMark, X } from 'lucide-react';
 
 
@@ -34,12 +35,12 @@ export const PentagonChart = ({ data = [
         return (
             <div className="flex flex-col items-center">
                 <svg viewBox={`0 0 ${size} ${size}`} className="w-28 h-28 drop-shadow-sm">
-                    <polygon points={outerPoints} fill="none" stroke="#10b981" strokeWidth="0.5" className="opacity-30" />
+                    <polygon points={outerPoints} fill="none" stroke={C.green} strokeWidth="0.5" className="opacity-30" />
                     {[...Array(sides)].map((_, i) => {
                         const [px, py] = getPoint(10, i).split(',');
-                        return <line key={i} x1={center} y1={center} x2={px} y2={py} stroke="#10b981" strokeWidth="0.2" className="opacity-20" />;
+                        return <line key={i} x1={center} y1={center} x2={px} y2={py} stroke={C.green} strokeWidth="0.2" className="opacity-20" />;
                     })}
-                    <polygon points={dataPoints} fill="#ecfdf5" fillOpacity="0.8" stroke="#10b981" strokeWidth="2" strokeLinejoin="round" className="transition-all duration-500 ease-in-out" />
+                    <polygon points={dataPoints} fill={C.green} fillOpacity="0.25" stroke={C.green} strokeWidth="2" strokeLinejoin="round" className="transition-all duration-500 ease-in-out" />
                 </svg>
             </div>
         );
@@ -52,7 +53,7 @@ export const PentagonChart = ({ data = [
                     <polygon
                         points={outerPoints}
                         fill="none"
-                        stroke="#10b981"
+                        stroke={C.green}
                         strokeWidth="0.5"
                         className="opacity-30"
                     />
@@ -64,7 +65,7 @@ export const PentagonChart = ({ data = [
                                 key={i}
                                 x1={center} y1={center}
                                 x2={px} y2={py}
-                                stroke="#10b981"
+                                stroke={C.green}
                                 strokeWidth="0.2"
                                 className="opacity-20"
                             />
@@ -73,9 +74,9 @@ export const PentagonChart = ({ data = [
 
                     <polygon
                         points={dataPoints}
-                        fill="#ecfdf5"
-                        fillOpacity="0.8"
-                        stroke="#10b981"
+                        fill={C.green}
+                        fillOpacity="0.25"
+                        stroke={C.green}
                         strokeWidth="2"
                         strokeLinejoin="round"
                         className="transition-all duration-500 ease-in-out"
@@ -84,15 +85,16 @@ export const PentagonChart = ({ data = [
 
                 </svg>
 
-                <div className="absolute inset-0 flex items-center justify-center text-emerald-500 pointer-events-none">
-                    <div className="bg-white/80 p-2 rounded-full shadow-sm backdrop-blur-sm">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ color: C.green }}>
+                    <div className="p-2 rounded-full shadow-sm backdrop-blur-sm" style={{ background: '#1E1A1Bcc' }}>
+                        <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: C.green }}></div>
                     </div>
                 </div>
 
                 <button
                     onClick={(e) => { e.stopPropagation(); setIsInfoOpen(true); }}
-                    className="flex items-center gap-1.5 bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-200 transition-colors whitespace-nowrap"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap"
+                    style={{ background: `${C.green}22`, color: C.green }}
                 >
                     <CircleQuestionMark size={14} />
                     Entiende tu gráfica
@@ -101,7 +103,8 @@ export const PentagonChart = ({ data = [
 
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-1 text-xs text-slate-400 hover:text-emerald-500 transition-colors mt-2"
+                className="flex items-center gap-1 text-xs transition-colors mt-2"
+                style={{ color: '#A8A29E' }}
             >
                 {isOpen ? 'Ocultar detalles' : 'Ver detalles'}
                 {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -110,16 +113,16 @@ export const PentagonChart = ({ data = [
             {isOpen && (
                 <div className="w-full grid grid-cols-1 gap-2 mt-2 px-2 animate-fade-in-down">
                     {data.map((item, index) => (
-                        <div key={index} className="flex items-center justify-between text-[12px] text-slate-600 bg-slate-50 p-1.5 rounded border border-slate-100">
+                        <div key={index} className="flex items-center justify-between text-[12px] p-1.5 rounded border" style={{ color: '#A8A29E', background: '#252020', borderColor: '#333330' }}>
                             <span className="font-medium truncate mr-1">{item.label}</span>
                             <div className="flex items-center gap-1.5">
-                                <div className="w-6 h-1 bg-slate-200 rounded-full overflow-hidden">
+                                <div className="w-6 h-1 rounded-full overflow-hidden" style={{ background: '#333330' }}>
                                     <div
-                                        className="h-full bg-emerald-500 rounded-full"
-                                        style={{ width: `${(item.value / 10) * 100}%` }}
+                                        className="h-full rounded-full"
+                                        style={{ width: `${(item.value / 10) * 100}%`, background: C.green }}
                                     ></div>
                                 </div>
-                                <span className="font-bold text-slate-800">{item.value}</span>
+                                <span className="font-bold" style={{ color: '#F5F0E8' }}>{item.value}</span>
                             </div>
                         </div>
                     ))}
@@ -127,27 +130,27 @@ export const PentagonChart = ({ data = [
             )}
 
             {isInfoOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsInfoOpen(false)}>
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative animate-fade-in-up" onClick={e => e.stopPropagation()}>
-                        <button onClick={() => setIsInfoOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: '#00000099', backdropFilter: 'blur(4px)' }} onClick={() => setIsInfoOpen(false)}>
+                    <div className="rounded-2xl shadow-xl w-full max-w-md p-6 relative animate-fade-in-up border" style={{ background: '#1E1A1B', borderColor: '#333330' }} onClick={e => e.stopPropagation()}>
+                        <button onClick={() => setIsInfoOpen(false)} className="absolute top-4 right-4 transition-colors" style={{ color: '#A8A29E' }}>
                             <X size={20} />
                         </button>
-                        <h3 className="text-lg font-bold text-slate-800 mb-4">Entiende tu Gráfica</h3>
-                        <div className="space-y-4 text-slate-600 text-sm leading-relaxed">
-                            <p>Esta gráfica es una fotografía de cómo te sientes <strong className="text-slate-800">HOY</strong> en las áreas clave de tu vida. No mide quién eres ni tu valor; muestra dónde estás en este momento.</p>
+                        <h3 className="text-lg font-bold mb-4" style={{ color: '#F5F0E8', fontFamily: "'American Typewriter', Georgia, serif" }}>Entiende tu Gráfica</h3>
+                        <div className="space-y-4 text-sm leading-relaxed" style={{ color: '#A8A29E' }}>
+                            <p>Esta gráfica es una fotografía de cómo te sientes <strong style={{ color: '#F5F0E8' }}>HOY</strong> en las áreas clave de tu vida. No mide quién eres ni tu valor; muestra dónde estás en este momento.</p>
                             <p>Las calificaciones van del 1 al 10, según tu percepción actual, y no tienen juicios:</p>
                             <ul className="space-y-3 mt-4">
                                 <li className="flex items-start gap-3">
                                     <span className="w-3 h-3 rounded-full bg-red-500 mt-1 shrink-0"></span>
-                                    <span><strong className="text-slate-800">1–6</strong> – Áreas que hoy piden atención y decisiones conscientes.</span>
+                                    <span><strong style={{ color: '#F5F0E8' }}>1–6</strong> – Áreas que hoy piden atención y decisiones conscientes.</span>
                                 </li>
                                 <li className="flex items-start gap-3">
                                     <span className="w-3 h-3 rounded-full bg-yellow-400 mt-1 shrink-0"></span>
-                                    <span><strong className="text-slate-800">7–8</strong> – Áreas estables que funcionan, pero aún pueden crecer.</span>
+                                    <span><strong style={{ color: '#F5F0E8' }}>7–8</strong> – Áreas estables que funcionan, pero aún pueden crecer.</span>
                                 </li>
                                 <li className="flex items-start gap-3">
-                                    <span className="w-3 h-3 rounded-full bg-emerald-500 mt-1 shrink-0"></span>
-                                    <span><strong className="text-slate-800">9–10</strong> – Áreas alineadas que reflejan hábitos y coherencia.</span>
+                                    <span className="w-3 h-3 rounded-full mt-1 shrink-0" style={{ background: C.red }}></span>
+                                    <span><strong style={{ color: '#F5F0E8' }}>9–10</strong> – Áreas alineadas que reflejan hábitos y coherencia.</span>
                                 </li>
                             </ul>
                         </div>
