@@ -8,6 +8,7 @@ import { C } from '../../../styles/colors'
 import WorldsRightSidebar, { badgesForJourney, badgeColorFor } from './WorldsRightSidebar'
 import { HomeSidebar } from '../../home/HomeSidebar'
 import { PhotoUploadField, AudioRecorderField, SkipCheckbox } from './EvidenceFields'
+import { parseBold, parseText } from './textParsing'
 
 const BLOCK_LABELS: Record<string, string> = {
     punto_partida:      'Punto de Partida',
@@ -647,6 +648,7 @@ function isResponseValid(blockType: string, response: any): boolean {
         }
 
         case 'opciones_respuesta':
+            if (response && typeof response === 'object' && !Array.isArray(response) && response.skipped) return true
             if (Array.isArray(response)) return response.length > 0
             return !!response
 
@@ -668,6 +670,7 @@ function isResponseValid(blockType: string, response: any): boolean {
             return !!(typeof response === 'string' && response.trim())
 
         case 'evidencia':
+            if (response && typeof response === 'object' && response.skipped) return true
             return !!(typeof response === 'string' && response.trim())
 
         default:
@@ -934,47 +937,6 @@ function PuntoPartida({ content }: { content: any }) {
     )
 }
 
-const SIZE_PATTERN = /(?<plus>\+{1,4})(?<plusBody>[^+]+)\k<plus>|(?<minus>-{1,4})(?<minusBody>[^-]+)\k<minus>|\*\*_(?<bi1>[^_*]+)_\*\*|_\*\*(?<bi2>[^_*]+)\*\*_|\*\*(?<bold>[^*]+)\*\*|_(?<italic>[^_]+)_/g
-
-function parseBold(text: string): React.ReactNode {
-    const nodes: React.ReactNode[] = []
-    let lastIndex = 0
-    let key = 0
-    for (const m of text.matchAll(SIZE_PATTERN)) {
-        if (m.index > lastIndex) nodes.push(text.slice(lastIndex, m.index))
-        const g = m.groups!
-        if (g.plus !== undefined) {
-            const scale = 1 + g.plus.length * 0.15
-            nodes.push(<span key={key++} style={{ fontSize: `${scale}em` }}>{parseBold(g.plusBody)}</span>)
-        } else if (g.minus !== undefined) {
-            const scale = Math.max(0.5, 1 - g.minus.length * 0.12)
-            nodes.push(<span key={key++} style={{ fontSize: `${scale}em` }}>{parseBold(g.minusBody)}</span>)
-        } else if (g.bi1 !== undefined) {
-            nodes.push(<strong key={key++}><em>{parseBold(g.bi1)}</em></strong>)
-        } else if (g.bi2 !== undefined) {
-            nodes.push(<strong key={key++}><em>{parseBold(g.bi2)}</em></strong>)
-        } else if (g.bold !== undefined) {
-            nodes.push(<strong key={key++}>{parseBold(g.bold)}</strong>)
-        } else if (g.italic !== undefined) {
-            nodes.push(<em key={key++}>{parseBold(g.italic)}</em>)
-        }
-        lastIndex = m.index + m[0].length
-    }
-    if (lastIndex < text.length) nodes.push(text.slice(lastIndex))
-    return nodes
-}
-
-function parseText(text: string, className = 'text-sm leading-relaxed', style: React.CSSProperties = { color: C.text }): React.ReactNode {
-    return text.split(/\n\n+/).map((para, pi) => (
-        <p key={pi} className={className} style={style}>
-            {para.split('\n').flatMap((line, li, arr) =>
-                li < arr.length - 1
-                    ? [...(parseBold(line) as any[]), <br key={`br-${li}`} />]
-                    : parseBold(line) as any[]
-            )}
-        </p>
-    ))
-}
 
 function Capsula({ content }: { content: any }) {
     const embedUrl = content.videoUrl ? getYouTubeEmbedUrl(content.videoUrl) : null
@@ -1126,7 +1088,17 @@ function Activacion({
                     ))}
                 </div>
 
+                {content.allowSkip && (
+                    <SkipCheckbox
+                        checked={!!v.skipped}
+                        label={content.skipLabel || 'Prefiero no responder esta pregunta'}
+                        onChange={skipped => onChange({ ...v, skipped })}
+                        disabled={disabled}
+                    />
+                )}
+
                 {/* Response mode selector */}
+                {!v.skipped && (
                 <div className="space-y-2">
                     <p className="text-xs" style={{ color: C.textMuted }}>Opciones de respuesta — para cada una de las {pQuestions.length} preguntas</p>
                     <div className="grid grid-cols-2 gap-2">
@@ -1151,9 +1123,10 @@ function Activacion({
                         ))}
                     </div>
                 </div>
+                )}
 
                 {/* Banco de frases — sequential banks */}
-                {responseMode === 'banco' && pQuestions.map((q, i) => {
+                {!v.skipped && responseMode === 'banco' && pQuestions.map((q, i) => {
                     const isUnlocked = i === 0 || pAnswers.slice(0, i).every(a =>
                         typeof a === 'string' ? !!a.trim() : !!(a?.text?.trim())
                     )
@@ -1253,7 +1226,7 @@ function Activacion({
                 })}
 
                 {/* Texto libre */}
-                {responseMode === 'texto' && pQuestions.map((q, i) => (
+                {!v.skipped && responseMode === 'texto' && pQuestions.map((q, i) => (
                     <div key={i} className="space-y-2">
                         <p className="text-xs leading-relaxed" style={{ color: C.textMuted }}>
                             <span style={{ color: C.red, fontWeight: 700 }}>{i + 1}. </span>{parseBold(q.text)}
@@ -1292,9 +1265,10 @@ function Activacion({
         const routeAnswers: string[] = allRouteAnswers[selectedRoute ?? ''] ?? []
         const activeRoute = routes.find(r => r.id === selectedRoute) ?? null
         const hasChangedRoute: boolean = value?.hasChangedRoute ?? false
+        const skipped: boolean = typeof value === 'object' && value !== null ? !!value.skipped : false
 
         const selectRoute = (id: string) => {
-            if (disabled) return
+            if (disabled || skipped) return
             onChange({ selectedRoute: id, allRouteAnswers, hasChangedRoute })
         }
         const setRouteAnswer = (i: number, text: string) => {
@@ -1310,7 +1284,18 @@ function Activacion({
                     <p className="text-base leading-relaxed" style={{ color: C.text }}>{parseBold(question)}</p>
                 )}
 
+                {content.allowSkip && (
+                    <SkipCheckbox
+                        checked={skipped}
+                        label={content.skipLabel || 'Prefiero no responder esta pregunta'}
+                        onChange={next => onChange({ selectedRoute: next ? null : selectedRoute, allRouteAnswers, hasChangedRoute, skipped: next })}
+                        disabled={disabled}
+                    />
+                )}
+
                 {/* Route selector */}
+                {!skipped && (
+                <>
                 <div className="space-y-2">
                     {routes.map(route => {
                         const isSelected = selectedRoute === route.id
@@ -1436,6 +1421,8 @@ function Activacion({
                         )}
                     </div>
                 )}
+                </>
+                )}
             </div>
         )
     }
@@ -1449,6 +1436,15 @@ function Activacion({
                         {parseBold(question)}
                     </p>
                 )}
+                {content.allowSkip && (
+                    <SkipCheckbox
+                        checked={!!v.skipped}
+                        label={content.skipLabel || 'Prefiero no responder esta pregunta'}
+                        onChange={skipped => onChange({ ...v, skipped })}
+                        disabled={disabled}
+                    />
+                )}
+                {!v.skipped && (
                 <div className="space-y-3">
                     {fields.map((prefix, i) => (
                         <div
@@ -1483,6 +1479,7 @@ function Activacion({
                         </div>
                     ))}
                 </div>
+                )}
             </div>
         )
     }
@@ -1622,11 +1619,12 @@ function OpcionesRespuesta({
     const options: string[] = content.options ?? []
     const multiple: boolean = content.multiple ?? false
     const prompt = content.prompt ?? content.question ?? ''
+    const skipped: boolean = typeof value === 'object' && value !== null && !Array.isArray(value) ? !!value.skipped : false
 
     const toggle = (opt: string) => {
-        if (disabled) return
+        if (disabled || skipped) return
         if (multiple) {
-            const current: string[] = value ?? []
+            const current: string[] = Array.isArray(value) ? value : []
             onChange(
                 current.includes(opt) ? current.filter(x => x !== opt) : [...current, opt]
             )
@@ -1636,19 +1634,28 @@ function OpcionesRespuesta({
     }
 
     const isSelected = (opt: string) => {
-        if (multiple) return (value ?? []).includes(opt)
+        if (skipped) return false
+        if (multiple) return (Array.isArray(value) ? value : []).includes(opt)
         return value === opt
     }
 
     return (
         <div className="space-y-4">
             {prompt && <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>{parseBold(prompt)}</p>}
-            <div className="space-y-2">
+            {content.allowSkip && (
+                <SkipCheckbox
+                    checked={skipped}
+                    label={content.skipLabel || 'Prefiero no responder esta pregunta'}
+                    onChange={next => onChange(next ? { skipped: true } : (multiple ? [] : ''))}
+                    disabled={disabled}
+                />
+            )}
+            <div className="space-y-2" style={{ opacity: skipped ? 0.35 : 1 }}>
                 {options.map((opt, i) => (
                     <button
                         key={i}
                         onClick={() => toggle(opt)}
-                        disabled={disabled}
+                        disabled={disabled || skipped}
                         className="w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-200"
                         style={{
                             background: isSelected(opt) ? `${C.green}20` : C.surface2,
@@ -1705,11 +1712,11 @@ function AccionReal({
         const isGuided = selected === 'guided'
 
         const pickOption = (opt: string) => {
-            if (disabled) return
+            if (disabled || skipped) return
             onChange({ selected: selected === opt ? null : opt, guidedText: '' })
         }
         const pickGuided = () => {
-            if (disabled) return
+            if (disabled || skipped) return
             onChange({ selected: isGuided ? null : 'guided', guidedText: '' })
         }
 
@@ -1718,14 +1725,22 @@ function AccionReal({
                 {prompt && (
                     <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>{parseBold(prompt)}</p>
                 )}
-                <div className="space-y-2">
+                {content.allowSkip && (
+                    <SkipCheckbox
+                        checked={skipped}
+                        label={content.skipLabel || 'Prefiero no responder esta pregunta'}
+                        onChange={next => onChange({ selected: next ? null : selected, guidedText: next ? '' : guidedText, skipped: next })}
+                        disabled={disabled}
+                    />
+                )}
+                <div className="space-y-2" style={{ opacity: skipped ? 0.35 : 1 }}>
                     {opts.map((opt, i) => {
                         const sel = selected === opt
                         return (
                             <button
                                 key={i}
                                 onClick={() => pickOption(opt)}
-                                disabled={disabled}
+                                disabled={disabled || skipped}
                                 className="w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-200"
                                 style={{
                                     background: sel ? `${C.green}20` : C.surface2,
@@ -1753,7 +1768,7 @@ function AccionReal({
                     <div className="space-y-2">
                         <button
                             onClick={pickGuided}
-                            disabled={disabled}
+                            disabled={disabled || skipped}
                             className="w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-200"
                             style={{
                                 background: isGuided ? `${C.green}20` : C.surface2,
@@ -1794,7 +1809,7 @@ function AccionReal({
                                         placeholder="completa aquí..."
                                         value={guidedText}
                                         onChange={e => onChange({ selected: 'guided', guidedText: e.target.value })}
-                                        disabled={disabled}
+                                        disabled={disabled || skipped}
                                         className="w-full rounded-lg px-3 py-2.5 text-sm outline-none placeholder:opacity-30"
                                         style={{
                                             background: C.surface2,
@@ -1831,12 +1846,22 @@ function AccionReal({
                         </p>
                     </div>
                 )}
-                <PhotoUploadField
-                    blockId={blockId}
-                    value={capturedUrl}
-                    onChange={url => onChange(url)}
-                    disabled={disabled}
-                />
+                {content.allowSkip && (
+                    <SkipCheckbox
+                        checked={skipped}
+                        label={content.skipLabel || 'Prefiero no responder esta pregunta'}
+                        onChange={next => onChange(next ? { skipped: true } : null)}
+                        disabled={disabled}
+                    />
+                )}
+                {!skipped && (
+                    <PhotoUploadField
+                        blockId={blockId}
+                        value={capturedUrl}
+                        onChange={url => onChange(url)}
+                        disabled={disabled}
+                    />
+                )}
             </div>
         )
     }
@@ -1969,29 +1994,43 @@ function Evidencia({
     content, value, onChange, disabled,
 }: { content: any; value: any; onChange: (v: any) => void; disabled: boolean }) {
     const prompt = content.description ?? content.prompt ?? content.instruction ?? ''
+    const skipped: boolean = typeof value === 'object' && value !== null ? !!value.skipped : false
+    const text: string = typeof value === 'string' ? value : ''
 
     return (
         <div className="space-y-4">
             {prompt && <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>{parseBold(prompt)}</p>}
-            <textarea
-                rows={5}
-                maxLength={600}
-                placeholder="Describe tu evidencia, aprendizajes o reflexiones..."
-                value={value ?? ''}
-                onChange={e => onChange(e.target.value)}
-                onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px`; }}
-                disabled={disabled}
-                className="w-full rounded-xl p-4 text-sm resize-none outline-none"
-                style={{
-                    background: C.surface2,
-                    border: `1px solid ${C.border}`,
-                    color: C.text,
-                    opacity: disabled ? 0.6 : 1,
-                }}
-            />
-            <p className="text-xs text-right mt-1" style={{ color: (value ?? '').length > 540 ? C.red : C.textMuted }}>
-                {(value ?? '').length}/600
-            </p>
+            {content.allowSkip && (
+                <SkipCheckbox
+                    checked={skipped}
+                    label={content.skipLabel || 'Prefiero no responder esta pregunta'}
+                    onChange={next => onChange(next ? { skipped: true } : '')}
+                    disabled={disabled}
+                />
+            )}
+            {!skipped && (
+                <>
+                <textarea
+                    rows={5}
+                    maxLength={600}
+                    placeholder="Describe tu evidencia, aprendizajes o reflexiones..."
+                    value={text}
+                    onChange={e => onChange(e.target.value)}
+                    onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px`; }}
+                    disabled={disabled}
+                    className="w-full rounded-xl p-4 text-sm resize-none outline-none"
+                    style={{
+                        background: C.surface2,
+                        border: `1px solid ${C.border}`,
+                        color: C.text,
+                        opacity: disabled ? 0.6 : 1,
+                    }}
+                />
+                <p className="text-xs text-right mt-1" style={{ color: text.length > 540 ? C.red : C.textMuted }}>
+                    {text.length}/600
+                </p>
+                </>
+            )}
         </div>
     )
 }
