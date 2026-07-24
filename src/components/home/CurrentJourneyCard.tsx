@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { Compass } from 'lucide-react';
 import { C } from '../../styles/colors';
 import { journeyApi } from '../../services/journey';
 
@@ -153,7 +154,34 @@ export const CurrentJourneyCard = () => {
         return () => { cancelled = true };
     }, []);
 
-    if (loading || !info) return null;
+    if (loading) return null;
+
+    if (!info) {
+        return (
+            <div
+                className="lg:col-span-4 p-6 rounded-2xl shadow-sm border flex flex-col justify-center gap-4 relative overflow-hidden"
+                style={{ background: '#1E1A1B', borderColor: '#333330' }}
+            >
+                <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full -mr-8 -mt-8 opacity-20" style={{ background: C.red }} />
+                <div className="relative z-10 flex flex-col items-center text-center gap-3 py-2">
+                    <div
+                        className="w-11 h-11 rounded-full flex items-center justify-center"
+                        style={{ background: `${C.red}20`, border: `1px solid ${C.red}40` }}
+                    >
+                        <Compass size={20} style={{ color: C.red }} />
+                    </div>
+                    <div>
+                        <h3 className="text-base font-bold" style={{ color: '#F5F0E8', fontFamily: "'American Typewriter', Georgia, serif" }}>
+                            Tu próximo viaje te espera
+                        </h3>
+                        <p className="text-sm leading-relaxed mt-1" style={{ color: '#A8A29E' }}>
+                            Todavía no tienes un viaje en curso. Muy pronto vas a poder empezar el tuyo — vuelve a revisar por aquí.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     const handleClick = () => {
         sessionStorage.setItem('worldsHomeJourneyId', info.journeyId);
