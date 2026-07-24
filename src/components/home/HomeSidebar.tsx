@@ -9,6 +9,7 @@ import {
     ArrowRight,
     LogOut,
     Globe,
+    Newspaper,
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../../store/useAuth';
@@ -16,7 +17,7 @@ import { SidebarItem } from './SidebarItem';
 import { C } from '../../styles/colors';
 
 interface HomeSidebarProps {
-    activeTab: 'Dashboard' | 'Mi Viaje' | 'Mis Retos' | 'Mis Recursos' | 'Perfil' | 'Mundos';
+    activeTab: 'Dashboard' | 'Mi Viaje' | 'Mis Retos' | 'Mis Recursos' | 'Perfil' | 'Mundos' | 'Noticias';
     dark?: boolean;
 }
 
@@ -59,7 +60,7 @@ export const HomeSidebar = ({ activeTab, dark = true }: HomeSidebarProps) => {
                         // disabled={true}
                         onClick={() => navigate('/journey')}
                     /> */}
-                    {user?.membership === 'test' && (
+                    {['test', 'worldtest1', 'worldtest2'].includes(user?.membership ?? '') && (
                         <SidebarItem
                             icon={Globe}
                             label="Mundos & Viajes"
@@ -73,6 +74,13 @@ export const HomeSidebar = ({ activeTab, dark = true }: HomeSidebarProps) => {
                         label="Mis Retos"
                         active={activeTab === 'Mis Retos'}
                         onClick={() => navigate('/challenges')}
+                        dark={dark}
+                    />
+                    <SidebarItem
+                        icon={Newspaper}
+                        label="Noticias"
+                        active={activeTab === 'Noticias'}
+                        onClick={() => navigate('/news')}
                         dark={dark}
                     />
                     {/* ///////Ocualtat/////// */}
