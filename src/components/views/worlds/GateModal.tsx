@@ -4,6 +4,7 @@ import { journeyApi } from '../../../services/journey'
 import type { GateDayStatus, GateEvidenceType, GateInfo, GateStatus } from '../../../types/journey'
 import { C } from '../../../styles/colors'
 import { PhotoUploadField, AudioRecorderField, SkipCheckbox } from './EvidenceFields'
+import { parseBold } from './textParsing'
 
 type Step = 'portada' | 'mapa' | 'dia' | 'recompensa' | 'celebracion'
 
@@ -175,7 +176,7 @@ function MapaStep({ days, currentDay, totalXpEarned, onOpenDay }: {
                             className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-64 rounded-lg p-3 text-xs text-left leading-relaxed shadow-lg z-10"
                             style={{ background: C.surface2, border: `1px solid ${C.border}`, color: C.textSec }}
                         >
-                            No tienes que responder todos los días seguidos. Puedes tomarte tu tiempo entre uno y otro: cuando vuelvas, sigues justo donde te quedaste, con la siguiente pregunta esperándote.
+                            Los días no tienen que ser consecutivos. Tómate tu tiempo...cuando vuelvas, vas a estar justo hasta donde avanzaste, con la siguiente pregunta esperándote.
                         </div>
                     )}
                 </div>
@@ -305,9 +306,9 @@ function DiaStep({ journeyId, day, onBack, onSubmitted }: {
                 )}
             </div>
             <h2 className="text-xl font-bold" style={{ color: C.text, fontFamily: "'American Typewriter', Georgia, serif" }}>
-                {day.question}
+                {parseBold(day.question)}
             </h2>
-            {day.bodyText && <p className="text-sm" style={{ color: C.textSec }}>{day.bodyText}</p>}
+            {day.bodyText && <p className="text-sm" style={{ color: C.textSec }}>{parseBold(day.bodyText)}</p>}
 
             {day.checkOnly ? (
                 <CheckWithText checked={checked} onCheckedChange={setChecked} text={checkText} onTextChange={setCheckText} disabled={submitting} />
@@ -413,7 +414,7 @@ function CheckWithText({ checked, onCheckedChange, text, onTextChange, disabled 
     const wordCount = countWords(text)
     return (
         <div className="space-y-2">
-            <SkipCheckbox checked={checked} label="Ya lo hice" onChange={onCheckedChange} disabled={disabled} />
+            <SkipCheckbox checked={checked} label="Ya lo hice, pero prefiero guardarlo para mí" onChange={onCheckedChange} disabled={disabled} />
             <div>
                 <textarea
                     value={text}
@@ -453,10 +454,10 @@ function RecompensaStep({ xpEarned, onContinue }: { xpEarned: number; onContinue
                 +{xpEarned} XP
             </p>
             <p className="text-sm" style={{ color: C.textSec, fontFamily: "'American Typewriter', Georgia, serif" }}>
-                Cierra este día así. Mañana te espera tu siguiente pregunta, a tu ritmo.
+                Este día cierra así. Mañana, o cuando quieras, te espera tu siguiente pregunta. Vas a tu ritmo.
             </p>
             <p className="text-xs" style={{ color: C.textMuted }}>
-                Si quieres, comparte tu experiencia con la tribu puede acompañar a alguien más en su camino.
+                Si quieres, comparte tu experiencia con la tribu, puedes inspirar a alguien más en su camino.
             </p>
             <button
                 type="button"
