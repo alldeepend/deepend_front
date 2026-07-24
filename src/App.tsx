@@ -25,6 +25,8 @@ import WorldsJourney from './components/views/worlds/WorldsJourney';
 import WorldsStation from './components/views/worlds/WorldsStation';
 import ArchetypeTest from './components/views/ArchetypeTest';
 import MaintenanceGate from './components/shared/MaintenanceGate';
+import WhatsAppButton from './components/shared/WhatsAppButton';
+import News from './components/views/News';
 
 function App() {
     const host = window.location.hostname;
@@ -74,6 +76,11 @@ function App() {
                 <Route path="/profile" element={
                     <ProtectedRoute>
                         <Perfil />
+                    </ProtectedRoute>
+                } />
+                <Route path="/news" element={
+                    <ProtectedRoute>
+                        <News />
                     </ProtectedRoute>
                 } />
                 <Route path="/challenges/financial-assessment" element={
@@ -143,6 +150,7 @@ function App() {
 
 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+            <WhatsAppButton />
             </MaintenanceGate>
         </>
     )

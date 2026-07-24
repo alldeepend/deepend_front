@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { HomeSidebar } from '../../home/HomeSidebar';
 import Header from '../../shared/Header';
-import { ArrowLeft, CheckCircle2, ShieldCheck, Share2, AlertTriangle, BookOpen, Bell, MessageCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ShieldCheck, Share2, AlertTriangle, BookOpen, Bell } from 'lucide-react';
 import { useAuth } from '../../../store/useAuth';
 import { C } from '../../../styles/colors';
 
@@ -1583,18 +1583,6 @@ export default function MyMoneyInAction() {
                     </div>
                 </div>
             </main>
-
-            {/* WhatsApp Floating Button */}
-            <a
-                href="https://wa.me/+573173772122"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="fixed bottom-6 right-6 text-white p-4 rounded-full shadow-lg transition-all z-50 flex items-center justify-center hover:scale-110"
-                style={{ background: C.green }}
-                title="Ayuda por WhatsApp"
-            >
-                <MessageCircle size={28} />  ¿Necesitas ayuda?
-            </a>
         </div>
     );
 }
