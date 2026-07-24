@@ -251,7 +251,7 @@ export default function Header({ dark = false }: { dark?: boolean }) {
                       <span className="font-medium">Noticias</span>
                     </Link>
                   </li>
-                  {['test', 'worldtest1', 'worldtest2'].includes(user?.membership ?? '') && (
+                  {['test', 'worldtest1', 'worldtest2', 'active'].includes(user?.membership ?? '') && (
                     <li>
                       <Link
                         to="/worlds"

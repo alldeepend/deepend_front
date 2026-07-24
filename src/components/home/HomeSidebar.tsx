@@ -60,7 +60,7 @@ export const HomeSidebar = ({ activeTab, dark = true }: HomeSidebarProps) => {
                         // disabled={true}
                         onClick={() => navigate('/journey')}
                     /> */}
-                    {['test', 'worldtest1', 'worldtest2'].includes(user?.membership ?? '') && (
+                    {['test', 'worldtest1', 'worldtest2', 'active'].includes(user?.membership ?? '') && (
                         <SidebarItem
                             icon={Globe}
                             label="Mundos & Viajes"

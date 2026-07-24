@@ -5,7 +5,7 @@ export default function WorldsRoute({ children }: { children: React.ReactNode })
     const { user } = useAuth()
 
     if (!user) return <Navigate to="/" replace />
-    const allowed = ['test', 'worldtest1', 'worldtest2']
+    const allowed = ['test', 'worldtest1', 'worldtest2', 'active']
     if (!allowed.includes(user.membership)) return <Navigate to="/dashboard" replace />
 
     return <>{children}</>
