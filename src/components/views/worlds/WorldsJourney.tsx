@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { Lock, Award } from 'lucide-react'
+import { Lock, Award, DoorOpen, ChevronDown, ChevronUp } from 'lucide-react'
 import { journeyApi } from '../../../services/journey'
-import type { JourneyDetailsResponse, StationProgress } from '../../../types/journey'
+import type { JourneyDetailsResponse, StationProgress, GateStatus } from '../../../types/journey'
 import { C } from '../../../styles/colors'
 import WorldsRightSidebar, { badgesForJourney, badgeColorFor } from './WorldsRightSidebar'
 import { HomeSidebar } from '../../home/HomeSidebar'
@@ -22,6 +22,8 @@ export default function WorldsJourney() {
 
     const [data, setData] = useState<JourneyDetailsResponse | null>(null)
     const [loading, setLoading] = useState(true)
+    const [gateStatus, setGateStatus] = useState<GateStatus | null>(null)
+    const [gateExpanded, setGateExpanded] = useState(false)
 
     useEffect(() => {
         if (!journeyId) return
@@ -33,12 +35,15 @@ export default function WorldsJourney() {
 
     // Red de seguridad: si se entra directo por URL a un viaje con Puerta sin completar
     // (sin pasar por el CTA de "Mundos y Retos", que ya maneja el modal), se regresa a la lista.
+    // De paso, si ya la completó, se guarda para poder mostrar sus respuestas en esta pantalla.
     useEffect(() => {
         if (!journeyId) return
         journeyApi.getGateStatus(journeyId)
             .then(status => {
                 if (status.hasGate && !status.completed) {
                     navigate('/worlds', { replace: true })
+                } else if (status.hasGate && status.completed) {
+                    setGateStatus(status)
                 }
             })
             .catch(console.error)
@@ -158,6 +163,69 @@ export default function WorldsJourney() {
                             🔥 Racha activa: <span style={{ color: C.amber }}>{userJourney.currentStreak} días</span>
                         </p>
                     )}
+                </div>
+            )}
+
+            {/* Mis respuestas de la Puerta — colapsable, solo si ya la completó */}
+            {gateStatus?.days && (
+                <div className="px-6 pt-6 max-w-2xl mx-auto w-full">
+                    <div className="rounded-2xl overflow-hidden" style={{ background: C.surface1, border: `1px solid ${C.border}` }}>
+                        <button
+                            onClick={() => setGateExpanded(v => !v)}
+                            className="w-full flex items-center justify-between px-5 py-4 text-left"
+                        >
+                            <span className="flex items-center gap-2.5">
+                                <DoorOpen size={18} style={{ color: C.amber }} />
+                                <span className="font-bold text-sm" style={{ color: C.text }}>
+                                    {gateStatus.gate?.title ?? 'La Puerta'} · mis respuestas
+                                </span>
+                            </span>
+                            {gateExpanded ? <ChevronUp size={18} style={{ color: C.textMuted }} /> : <ChevronDown size={18} style={{ color: C.textMuted }} />}
+                        </button>
+
+                        {gateExpanded && (
+                            <div className="px-5 pb-5 space-y-3">
+                                {gateStatus.days.map(day => (
+                                    <div key={day.id} className="rounded-xl overflow-hidden" style={{ border: `1px solid ${C.border}` }}>
+                                        <div className="px-4 py-2.5" style={{ background: C.surface2 }}>
+                                            <p className="text-xs font-semibold" style={{ color: C.amber }}>
+                                                Día {day.dayNumber}{day.anchorLabel ? ` · ${day.anchorLabel}` : ''}
+                                            </p>
+                                            {day.question && (
+                                                <p className="text-xs mt-0.5" style={{ color: C.textMuted }}>{day.question}</p>
+                                            )}
+                                        </div>
+                                        <div className="px-4 py-3 space-y-2">
+                                            {!day.response ? (
+                                                <p className="text-sm italic" style={{ color: C.textMuted }}>Sin respuesta.</p>
+                                            ) : (
+                                                <>
+                                                    {day.response.evidenceType === 'foto' && day.response.mediaUrl && (
+                                                        <img src={day.response.mediaUrl} alt="" className="rounded-lg max-h-56 object-cover" />
+                                                    )}
+                                                    {day.response.evidenceType === 'audio' && day.response.mediaUrl && (
+                                                        <audio controls src={day.response.mediaUrl} className="w-full" style={{ height: 36 }} />
+                                                    )}
+                                                    {day.response.responseText && (
+                                                        <p className="text-sm whitespace-pre-wrap" style={{ color: C.text }}>{day.response.responseText}</p>
+                                                    )}
+                                                    {day.response.evidenceType === 'check' && !day.response.responseText && (
+                                                        <p className="text-sm font-medium" style={{ color: C.green }}>✓ Marcado como hecho</p>
+                                                    )}
+                                                    {day.hasSecondQuestion && day.response.secondResponse && (
+                                                        <div className="pt-1">
+                                                            <p className="text-xs" style={{ color: C.textMuted }}>{day.secondQuestion || 'Segunda respuesta'}</p>
+                                                            <p className="text-sm mt-0.5" style={{ color: C.text }}>{day.response.secondResponse}</p>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
 

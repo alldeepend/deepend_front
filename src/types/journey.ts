@@ -146,6 +146,7 @@ export interface GateDayStatus {
 export interface GateInfo {
     id: string;
     title: string;
+    subtitle: string | null;
     xpPerDay: number;
     xpBonusClose: number;
 }

@@ -59,9 +59,18 @@ export default function WorldsHome() {
             .finally(() => setLoading(false))
     }, [])
 
-    // Orden curado por el admin: colecciones en su orden, journeys en su orden dentro de cada una
-    // (la deduplicacion entre colecciones ya la hace el backend)
-    const allJourneys: (Journey & { areaName: string })[] = collections.flatMap(c => c.journeys)
+    
+    const curatedJourneys: (Journey & { areaName: string })[] = collections.flatMap(c => c.journeys)
+    const isActiveJourney = (j: Journey) => {
+        const uj = j.userJourneys?.[0]
+        if (uj && uj.status !== 'completado') return true
+        const ug = j.gate?.userGates?.[0]
+        return !!(j.gate?.isActive && ug?.activatedAt && !ug?.completedAt)
+    }
+    const activeIdx = curatedJourneys.findIndex(isActiveJourney)
+    const allJourneys = activeIdx > 0
+        ? [curatedJourneys[activeIdx], ...curatedJourneys.slice(0, activeIdx), ...curatedJourneys.slice(activeIdx + 1)]
+        : curatedJourneys
 
     const totalStations = (j: Journey) =>
         (j.worlds ?? []).reduce((s, w) => s + (w.stations?.length ?? 0), 0)
@@ -436,33 +445,35 @@ export default function WorldsHome() {
                 )
             })()}
 
-            {/* Botones de navegación */}
-            <div className="fixed bottom-16 left-1/2 md:left-[calc(50%-2rem)] -translate-x-1/2 z-50 flex flex-row gap-3">
-                {currentIdx > 0 && (
-                    <button
-                        onClick={() => goTo(currentIdx - 1)}
-                        className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95"
-                        style={{ background: C.surface1, border: `1px solid ${C.border}`, color: C.text }}
-                        aria-label="Sección anterior"
-                    >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="18 15 12 9 6 15" />
-                        </svg>
-                    </button>
-                )}
-                {currentIdx < totalSections - 1 && (
-                    <button
-                        onClick={() => goTo(currentIdx + 1)}
-                        className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95 ${currentIdx === 0 ? 'animate-bounce' : ''}`}
-                        style={{ background: C.red, color: '#fff' }}
-                        aria-label="Siguiente sección"
-                    >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="6 9 12 15 18 9" />
-                        </svg>
-                    </button>
-                )}
-            </div>
+            {/* Botones de navegación — ocultos mientras el modal de la Puerta está abierto, no tienen función ahí */}
+            {!gateJourneyId && (
+                <div className="fixed bottom-16 left-1/2 md:left-[calc(50%-2rem)] -translate-x-1/2 z-50 flex flex-row gap-3">
+                    {currentIdx > 0 && (
+                        <button
+                            onClick={() => goTo(currentIdx - 1)}
+                            className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95"
+                            style={{ background: C.surface1, border: `1px solid ${C.border}`, color: C.text }}
+                            aria-label="Sección anterior"
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="18 15 12 9 6 15" />
+                            </svg>
+                        </button>
+                    )}
+                    {currentIdx < totalSections - 1 && (
+                        <button
+                            onClick={() => goTo(currentIdx + 1)}
+                            className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95 ${currentIdx === 0 ? 'animate-bounce' : ''}`}
+                            style={{ background: C.red, color: '#fff' }}
+                            aria-label="Siguiente sección"
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                        </button>
+                    )}
+                </div>
+            )}
 
             {/* Right sidebar (desktop only) */}
             <WorldsRightSidebar mode="home" badges={earnedBadgesFromAreas(areas)} totalXp={totalXpFromAreas(areas)} />
