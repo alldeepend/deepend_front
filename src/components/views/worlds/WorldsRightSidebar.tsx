@@ -1,6 +1,10 @@
-import { Award, Brain, Lock, Zap } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router'
+import { Award, Brain, Fingerprint, Lock, Zap } from 'lucide-react'
 import { C } from '../../../styles/colors'
 import type { Area, Journey, UserJourneyProgress } from '../../../types/journey'
+import { archetypeApi } from '../../../services/archetype'
+import { RESULTS } from '../../../data/archetypeData'
 
 const BADGE_COLORS = ['#52B788', '#5B9BF7', '#E8C547', '#B57BEE', '#818CF8', '#3FC6D8', '#F4669B']
 
@@ -66,14 +70,6 @@ interface Props {
     totalXp: number
 }
 
-const ARCHETYPE_MOCK = {
-    code: 'ESTRATEGA',
-    name: 'El Estratega',
-    tagline: 'Piensa antes de actuar. Ve patrones donde otros ven caos.',
-    traits: ['Analítico', 'Constante', 'Metódico'],
-    color: C.amber,
-}
-
 export default function WorldsRightSidebar({ mode, journeyTitle: _journeyTitle, badges: allBadges, totalXp }: Props) {
     const badges = mode === 'journey'
         ? allBadges
@@ -81,6 +77,18 @@ export default function WorldsRightSidebar({ mode, journeyTitle: _journeyTitle, 
 
     const earned  = badges.filter(b => b.earned)
     const pending = mode === 'journey' ? badges.filter(b => !b.earned) : []
+
+    const [archetype, setArchetype] = useState<{ dominantKey: string } | null | undefined>(undefined)
+
+    useEffect(() => {
+        let cancelled = false
+        archetypeApi.getMyResult()
+            .then(res => { if (!cancelled) setArchetype(res.result ? { dominantKey: res.result.dominantKey } : null) })
+            .catch(() => { if (!cancelled) setArchetype(null) })
+        return () => { cancelled = true }
+    }, [])
+
+    const archetypeInfo = archetype ? RESULTS[archetype.dominantKey] : null
 
     return (
         <aside
@@ -98,53 +106,79 @@ export default function WorldsRightSidebar({ mode, journeyTitle: _journeyTitle, 
                         <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: C.label }}>
                             {mode === 'journey' ? 'XP de este viaje' : 'XP Total'}
                         </p>
-                        <p className="text-lg font-bold" style={{ fontFamily: "'American Typewriter', Georgia, serif", color: C.text }}>
-                            {totalXp.toLocaleString('es')} XP
-                        </p>
+                        {totalXp > 0 ? (
+                            <p className="text-lg font-bold" style={{ fontFamily: "'American Typewriter', Georgia, serif", color: C.text }}>
+                                {totalXp.toLocaleString('es')} XP
+                            </p>
+                        ) : (
+                            <p className="text-xs font-semibold leading-snug mt-0.5" style={{ color: C.textMuted }}>
+                                {mode === 'journey' ? 'Completa tu primera estación para sumar XP' : 'Aún no sumas XP — tu primera estación te espera'}
+                            </p>
+                        )}
                     </div>
                 </div>
 
                 {/* Archetype */}
-                <div>
-                    <p className="text-[10px] font-bold tracking-widest uppercase mb-3" style={{ color: C.label }}>
-                        Mi Arquetipo
-                    </p>
-                    <div className="rounded-2xl p-4 border" style={{ background: C.surface1, borderColor: C.border }}>
-                        <div className="flex items-center gap-3 mb-3">
-                            <div
-                                className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                                style={{ background: ARCHETYPE_MOCK.color + '22' }}
-                            >
-                                <Brain size={18} style={{ color: ARCHETYPE_MOCK.color }} />
-                            </div>
-                            <div>
-                                <p className="text-xs font-bold" style={{ color: ARCHETYPE_MOCK.color }}>
-                                    {ARCHETYPE_MOCK.code}
-                                </p>
-                                <p
-                                    className="text-sm font-bold leading-tight"
-                                    style={{ fontFamily: "'American Typewriter', Georgia, serif", color: C.text }}
-                                >
-                                    {ARCHETYPE_MOCK.name}
-                                </p>
-                            </div>
-                        </div>
-                        <p className="text-xs leading-relaxed mb-3" style={{ color: C.textMuted }}>
-                            {ARCHETYPE_MOCK.tagline}
+                {archetype !== undefined && (
+                    <div>
+                        <p className="text-[10px] font-bold tracking-widest uppercase mb-3" style={{ color: C.label }}>
+                            Mi Arquetipo
                         </p>
-                        <div className="flex flex-wrap gap-1.5">
-                            {ARCHETYPE_MOCK.traits.map(t => (
-                                <span
-                                    key={t}
-                                    className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                                    style={{ background: ARCHETYPE_MOCK.color + '22', color: ARCHETYPE_MOCK.color }}
-                                >
-                                    {t}
+                        {archetypeInfo ? (
+                            <div className="rounded-2xl p-4 border" style={{ background: C.surface1, borderColor: C.border }}>
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div
+                                        className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                                        style={{ background: `${C.amber}22` }}
+                                    >
+                                        <Brain size={18} style={{ color: C.amber }} />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-bold" style={{ color: C.amber }}>
+                                            {archetypeInfo.traits[0].toUpperCase()}
+                                        </p>
+                                        <p
+                                            className="text-sm font-bold leading-tight"
+                                            style={{ fontFamily: "'American Typewriter', Georgia, serif", color: C.text }}
+                                        >
+                                            {archetypeInfo.name}
+                                        </p>
+                                    </div>
+                                </div>
+                                <p className="text-xs leading-relaxed mb-3" style={{ color: C.textMuted }}>
+                                    {archetypeInfo.variant}
+                                </p>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {archetypeInfo.traits.map(t => (
+                                        <span
+                                            key={t}
+                                            className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                                            style={{ background: `${C.amber}22`, color: C.amber }}
+                                        >
+                                            {t}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
+                            <Link
+                                to="/test"
+                                className="flex flex-col items-center text-center gap-3 rounded-2xl border p-6 transition-opacity hover:opacity-80"
+                                style={{ borderColor: C.border, borderStyle: 'dashed' }}
+                            >
+                                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: C.surface2 }}>
+                                    <Fingerprint size={22} style={{ color: C.amber }} />
+                                </div>
+                                <p className="text-xs leading-relaxed" style={{ color: C.label }}>
+                                    Aún no has hecho tu Test de Arquetipo
+                                </p>
+                                <span className="text-[11px] font-bold" style={{ color: C.amber }}>
+                                    Hacerlo ahora →
                                 </span>
-                            ))}
-                        </div>
+                            </Link>
+                        )}
                     </div>
-                </div>
+                )}
 
                 {/* Divider */}
                 <div className="h-px" style={{ background: C.border }} />
@@ -179,7 +213,7 @@ export default function WorldsRightSidebar({ mode, journeyTitle: _journeyTitle, 
                     ) : (
                         <div className="flex flex-col gap-2">
                             {earned.map((item, i) => {
-                                const color = C.green
+                                const color = badgeColorFor(item.name)
                                 return (
                                     <div
                                         key={`e-${i}`}

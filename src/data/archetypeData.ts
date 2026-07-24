@@ -31,6 +31,7 @@ export interface ArchetypeResult {
   cost: string
   strengths: string
   microAction: string
+  traits: [string, string, string]
 }
 
 // ─── BLOQUE 0 — contexto (no puntúa) ────────────────────────────────────────
@@ -210,6 +211,7 @@ export const RESULTS: Record<string, ArchetypeResult> = {
     cost: 'Tiempo, principalmente. Tiempo en el que algo que importa lleva esperando mientras terminas de prepararte. También ha costado la versión de ti que ya existía hace un año — la que tenía exactamente lo que tienes ahora y que tampoco arrancó. La exigencia que te aplicas no te ha hecho más capaz. Te ha mantenido quieto.',
     strengths: 'Nadie llega tan preparado como tú cuando finalmente se mueve. La atención que le pones a cada detalle, la conciencia que tienes de lo que podría fallar, la seriedad con la que tomas lo que importa — son reales y son valiosas. El problema nunca fue la calidad de tu preparación. Fue el momento en que decidiste que prepararse era el destino en lugar del camino.',
     microAction: 'Elige una cosa — una sola — que llevas posponiendo porque no te sientes listo. No la hagas perfecta. Hazla en el estado en que estás ahora. Ponle una fecha antes del viernes y dísela a alguien que te vaya a preguntar si la hiciste.',
+    traits: ['Meticuloso', 'Previsor', 'Riguroso'],
   },
   '1B': {
     key: '1B',
@@ -219,6 +221,7 @@ export const RESULTS: Record<string, ArchetypeResult> = {
     cost: 'No se siente como pérdida porque no hay drama visible. Eso lo hace más difícil de ver. Lo que se ha ido son las versiones de proyectos, relaciones o decisiones que nunca tuvieron la oportunidad de probarse en la realidad. No porque no fueran posibles — sino porque la calma se convirtió en el lugar donde todo podía seguir siendo posible sin tener que enfrentarse con nada.',
     strengths: 'Tienes una capacidad de regulación emocional que mucha gente no tiene. No reaccionas impulsivamente, no tomas decisiones desde el miedo, sabes esperar cuando esperar tiene sentido. Eso es genuinamente valioso. Lo que hace falta no es más urgencia — es aprender a distinguir cuándo la calma es sabiduría y cuándo es distancia.',
     microAction: 'Escribe — en papel o donde quieras — una cosa que llevas queriendo y que no has dicho en voz alta todavía. No la compartas si no quieres. Solo ponle palabras. Ver lo que existe en tu cabeza convertido en texto concreto ya es un primer movimiento real.',
+    traits: ['Sereno', 'Estable', 'Paciente'],
   },
   '2A': {
     key: '2A',
@@ -228,6 +231,7 @@ export const RESULTS: Record<string, ArchetypeResult> = {
     cost: 'Ideas que podrían haber existido en el mundo hace meses o años. Conversaciones que no ocurrieron. Personas que podrían haberse sumado y que nunca supieron que había algo a lo que sumarse. Y el desgaste interno de cargar con algo que importa sin tener con quién compartirlo — porque compartirlo significaría comprometerse, y comprometerse significa que ya no puede ser solo tuyo.',
     strengths: 'Tienes una riqueza interna que mucha gente no tiene. La calidad de lo que piensas, la profundidad con la que procesas las cosas, la claridad de tu visión cuando logras articularlo — son reales. El problema no es lo que hay adentro. Es que adentro no tiene efecto en el mundo.',
     microAction: 'Dile a una persona — una sola — algo que llevas guardando. No el proyecto completo, no la explicación perfecta. Una oración que empiece con "hay algo que quiero hacer" y que termine con lo más concreto que puedas decir sobre qué es. Sin agregar "lo estoy pensando todavía."',
+    traits: ['Profundo', 'Visionario', 'Reflexivo'],
   },
   '2B': {
     key: '2B',
@@ -237,6 +241,7 @@ export const RESULTS: Record<string, ArchetypeResult> = {
     cost: 'Credibilidad, primero contigo mismo. Cuando la distancia entre lo que dices y lo que haces se repite, empiezas a creerle menos a tus propias palabras — aunque no lo notes. También ha costado relaciones y oportunidades: personas que estuvieron dispuestas a sumarse y que con el tiempo dejaron de preguntar cómo iba eso que ibas a hacer.',
     strengths: 'Tienes una capacidad de comunicación y de visión que mueve a otros. Cuando describes algo que quieres construir, la gente lo ve. Eso no es menor — es exactamente lo que hace falta para convocar, para liderar, para generar movimiento en otros. Lo que falta es dirigir esa misma energía hacia el primer paso que no puede deshacerse.',
     microAction: 'Elige algo que ya has anunciado antes. No lo anuncies de nuevo. En cambio, haz una sola cosa concreta relacionada con eso — algo que puedas verificar que ocurrió — antes del viernes. Sin contárselo a nadie primero.',
+    traits: ['Carismático', 'Persuasivo', 'Inspirador'],
   },
   '3A': {
     key: '3A',
@@ -246,6 +251,7 @@ export const RESULTS: Record<string, ArchetypeResult> = {
     cost: 'Velocidad, principalmente. Lo que podrías haber avanzado en seis meses con otros lo has estado construyendo solo durante años. También ha costado la profundidad de algunos resultados — hay cosas que solo pueden existir cuando dos o más personas las construyen juntas, y esas cosas todavía no existen en tu vida.',
     strengths: 'Tu autonomía es real y es valiosa. Sabes organizarte, sabes sostenerte, sabes avanzar sin que nadie te esté empujando. Eso en un entorno colectivo se convierte en una capacidad de liderazgo — porque no dependes del estado de ánimo del grupo para moverte. Lo que falta no es menos independencia sino aprender cuándo la independencia sirve y cuándo te está costando más de lo que te está dando.',
     microAction: 'Identifica algo que llevas cargando solo. No tienes que soltarlo todo. Elige una parte — una tarea, una decisión, una conversación — y pídele a alguien específico que se involucre. Sin explicar demasiado por qué lo estás pidiendo.',
+    traits: ['Autónomo', 'Resolutivo', 'Autosuficiente'],
   },
   '3B': {
     key: '3B',
@@ -255,6 +261,7 @@ export const RESULTS: Record<string, ArchetypeResult> = {
     cost: 'Proyectos que no empezaron porque nadie los convocó. Momentos en que sí había con quién, pero nadie propuso, y el silencio fue suficiente para que todo se quedara donde estaba. Y la sensación acumulada de que eres más capaz de lo que tu historial de iniciativas propias muestra.',
     strengths: 'Eres extraordinariamente valioso en un equipo. Cuando hay un contexto que te sostiene, produces con una consistencia que mucha gente no tiene. El problema no es que necesites a otros — eso no es debilidad. El problema es que has confundido necesitar un equipo con necesitar que alguien más tome siempre la iniciativa. Las dos cosas son diferentes.',
     microAction: 'Propón algo. No esperes que te llamen. Escríbele a una persona específica esta semana con una idea concreta de algo que quieras hacer juntos. No tiene que ser grande. Tiene que ser tuyo.',
+    traits: ['Colaborativo', 'Consistente', 'Comprometido'],
   },
   '4A': {
     key: '4A',
@@ -264,6 +271,7 @@ export const RESULTS: Record<string, ArchetypeResult> = {
     cost: 'El tipo de aprendizaje que más necesitas no está disponible antes de actuar. Solo existe adentro del intento — en lo que sale diferente a lo esperado. Cada mes que pasa preparándote es un mes sin ese aprendizaje. Y paradójicamente, más preparación sin acción no te acerca al punto donde te sientas listo — te aleja.',
     strengths: 'Cuando finalmente te mueves, llegas con una profundidad que la mayoría no tiene. Tu capacidad de investigar, de entender contextos, de anticipar problemas — son reales y te dan ventaja cuando están al servicio de la acción. El problema no es cuánto sabes. Es que el saber se convirtió en el destino en lugar del punto de partida.',
     microAction: 'Elige algo que llevas estudiando o preparando. Identifica el mínimo con el que podrías hacer un primer intento real — aunque sea pequeño, aunque sea imperfecto. Hazlo antes del viernes. No lo prepares más. Hazlo.',
+    traits: ['Analítico', 'Investigador', 'Estratégico'],
   },
   '4B': {
     key: '4B',
@@ -273,6 +281,7 @@ export const RESULTS: Record<string, ArchetypeResult> = {
     cost: 'Tiempo y energía que se ha gastado en ciclos que se repiten en lugar de en ciclos que suben. También ha costado la confianza propia — porque cuando el patrón se repite sin que sepas bien por qué, empiezas a dudar de tu capacidad en lugar de dudar de tu método. Y son cosas muy diferentes.',
     strengths: 'Tu disposición a intentar de nuevo después de que algo no funciona no es menor — mucha gente no la tiene. La resiliencia está ahí. Lo que hace falta es agregarle reflexión: no para torturarte con lo que salió mal, sino para extraer la información que ese intento produjo y que todavía no has usado.',
     microAction: 'Piensa en algo que has intentado más de una vez sin el resultado que esperabas. Escribe — en tres líneas — qué crees que pasó realmente. Las tres líneas más honestas que puedas escribir sobre qué falló. Después pregúntate qué harías diferente si lo intentaras esta semana.',
+    traits: ['Resiliente', 'Persistente', 'Tenaz'],
   },
   '5A': {
     key: '5A',
@@ -282,6 +291,7 @@ export const RESULTS: Record<string, ArchetypeResult> = {
     cost: 'La sensación de agencia sobre tu propia vida. Cuando la explicación siempre es externa, la capacidad de cambiar algo también se siente externa. No es solo que los proyectos no avancen. Es que la convicción de que puedes moverlos se va desgastando con cada espera.',
     strengths: 'Tienes una capacidad de lectura del contexto que mucha gente no tiene. Ves cómo las circunstancias afectan los resultados, anticipas riesgos, entiendes que el momento sí importa. Eso no es un defecto — es información valiosa cuando está al servicio de decidir cuándo moverse, no de justificar por qué no moverse.',
     microAction: 'Elige algo que llevas esperando que el contexto resuelva para poder empezar. Pregúntate: si las circunstancias externas no cambiaran en los próximos seis meses, ¿qué harías diferente? Escribe una respuesta honesta. Después elige una parte de esa respuesta y hazla esta semana.',
+    traits: ['Perceptivo', 'Observador', 'Prudente'],
   },
   '5B': {
     key: '5B',
@@ -291,6 +301,7 @@ export const RESULTS: Record<string, ArchetypeResult> = {
     cost: 'Momentos concretos en los que el entendimiento estaba suficientemente maduro para actuar — pero la acción no llegó porque siempre faltaba una capa más de comprensión. También ha costado la energía que va al análisis y que no llega al movimiento. Entenderte mejor no ha producido todavía los cambios que esperabas que produciría.',
     strengths: 'Tu capacidad de introspección es genuina y valiosa. Ves cosas de ti mismo que la mayoría evita mirar. Eso en el contexto correcto — al servicio de la acción — produce un nivel de consciencia en lo que haces que muy poca gente tiene. El problema no es que te conozcas demasiado. Es que el conocimiento no ha encontrado todavía su traducción en pasos concretos.',
     microAction: 'Elige algo que llevas procesando internamente sin que se haya convertido en un movimiento real. No lo analices más. Elige el paso más pequeño posible que puedas dar esta semana — sin necesitar más claridad de la que ya tienes — y hazlo.',
+    traits: ['Introspectivo', 'Consciente', 'Sensible'],
   },
   '6A': {
     key: '6A',
@@ -300,6 +311,7 @@ export const RESULTS: Record<string, ArchetypeResult> = {
     cost: 'Versiones de ti que podrían existir ya. Proyectos que estaban listos hace tiempo pero que cedieron su turno a lo que había que resolver primero. Y la sensación acumulada de que la vida siempre tiene algo que atender antes de que puedas atenderte tú.',
     strengths: 'Tienes una sensibilidad al contexto que te permite leer cuándo un momento es propicio y cuándo no. Eso cuando está bien calibrado es una ventaja real. El problema es que el umbral de "momento correcto" se ha ido subiendo solo, y lo que antes requería 70% de estabilidad ahora requiere 95% — que nunca llega.',
     microAction: 'Identifica algo que llevas esperando que el resto de tu vida te deje espacio para hacer. Ahora pregúntate: ¿qué sería lo mínimo que necesitarías para empezar — no para terminarlo, solo para empezarlo? Si la respuesta es menor de lo que creías, empieza esta semana.',
+    traits: ['Cauteloso', 'Ponderado', 'Equilibrado'],
   },
   '6B': {
     key: '6B',
@@ -309,6 +321,7 @@ export const RESULTS: Record<string, ArchetypeResult> = {
     cost: 'No se siente como pérdida porque siempre hay algo que atender. Pero si miras hacia atrás en el último año y buscas lo que construiste — no lo que resolviste, sino lo que construiste intencionalmente — el balance dice algo. El movimiento ha sido real. La dirección, no siempre.',
     strengths: 'Tu capacidad de operar bajo presión es genuina. Funcionar en contextos exigentes, resolver lo que llega, sostener múltiples frentes — no todo el mundo puede. El problema no es que seas reactivo. Es que la reactividad se quedó como modo permanente cuando debería ser una herramienta ocasional.',
     microAction: 'Bloquea 45 minutos en tu agenda esta semana — no para resolver algo urgente, sino para hacer una sola cosa que hayas estado posponiendo porque siempre hay algo más importante. Trátalo como una reunión que no puedes cancelar.',
+    traits: ['Resistente', 'Adaptable', 'Multitarea'],
   },
   '7A': {
     key: '7A',
@@ -318,6 +331,7 @@ export const RESULTS: Record<string, ArchetypeResult> = {
     cost: 'La única información que un plan no puede darte: lo que pasa cuando lo ejecutas. Cada versión nueva del plan es una versión más de algo que todavía no ha tenido contacto con la realidad. Y la realidad siempre tiene algo que decir que ninguna versión del plan pudo anticipar. Eso solo se sabe haciendo.',
     strengths: 'Cuando finalmente ejecutas, llegas con una claridad estructural que la mayoría no tiene. Sabes para dónde vas, sabes qué necesitas, sabes cómo medir si está funcionando. Eso en movimiento es una ventaja real. El problema no es la calidad del plan. Es que el plan lleva esperando demasiado tiempo su primer contacto con la vida.',
     microAction: 'Elige una parte del plan — la más pequeña, la más concreta — y ejecútala esta semana sin revisarla más. No el plan completo. Una sola pieza que pueda existir en la realidad antes del viernes. El objetivo no es que salga perfecta. Es que salga.',
+    traits: ['Estructurado', 'Metódico', 'Organizado'],
   },
   '7B': {
     key: '7B',
@@ -327,5 +341,6 @@ export const RESULTS: Record<string, ArchetypeResult> = {
     cost: 'La credibilidad de tus propios inicios. Cuando sabes que hay un patrón de no terminar, cada nuevo comienzo viene con una duda silenciosa sobre si esta vez va a ser diferente. También ha costado los resultados que solo existen al final del proceso — porque los más valiosos casi nunca están en el primer tramo del camino.',
     strengths: 'Tu capacidad de arrancar, de generar energía al inicio, de convocar entusiasmo propio y ajeno — es real y es escasa. Mucha gente no puede empezar. Tú sí puedes. Lo que falta no es más motivación para iniciar sino una estructura que te sostenga cuando aparece lo nuevo y brillante que quiere desplazar lo que ya está en marcha.',
     microAction: 'Revisa qué tienes empezado y sin terminar. Elige uno — solo uno. No el más emocionante, sino el más cercano a estar terminado. Dedícale tiempo esta semana sin abrir nada nuevo en paralelo. El objetivo es un aterrizaje, no un nuevo despegue.',
+    traits: ['Entusiasta', 'Iniciador', 'Enérgico'],
   },
 }

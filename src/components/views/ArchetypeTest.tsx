@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
-import { ArrowRight, ChevronLeft, RotateCcw, X, Fingerprint, Lock, Play, Pause } from 'lucide-react'
+import { ArrowRight, ChevronLeft, RotateCcw, X, Fingerprint, Lock, Play, Pause, Mail, Check } from 'lucide-react'
 import { C } from '../../styles/colors'
 import {
   BLOCK0, BLOCK1, BLOCK2,
   RESULTS, ARCHETYPE_NAMES,
   type ArchNum,
 } from '../../data/archetypeData'
+import { archetypeApi } from '../../services/archetype'
 
 // ─── Scoring ─────────────────────────────────────────────────────────────────
 
@@ -190,11 +191,33 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
   const [answers, setAnswers] = useState<Record<number, string | number>>({})
   const [result, setResult] = useState<ResultData | null>(null)
   const [unlockedSections, setUnlockedSections] = useState<number[]>([0])
+  const [emailInput, setEmailInput] = useState('')
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
 
   const serif = "'American Typewriter', Georgia, serif"
+  const isLoggedIn = !!localStorage.getItem('token')
 
   function selectAnswer(questionId: number, value: string | number) {
     setAnswers(prev => ({ ...prev, [questionId]: value }))
+  }
+
+  // Usuario logueado: guarda el resultado automáticamente, ligado a su cuenta.
+  useEffect(() => {
+    if (phase !== 'result' || !result || !isLoggedIn || saveState !== 'idle') return
+    setSaveState('saving')
+    archetypeApi.submitResult({ dominantKey: result.dominantKey, secondaryNum: result.secondaryNum, answers })
+      .then(() => setSaveState('saved'))
+      .catch(() => setSaveState('error'))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, result])
+
+  // Visitante anónimo: guarda el resultado asociado al correo que deje.
+  function saveWithEmail() {
+    if (!result || !emailInput.trim() || saveState === 'saving') return
+    setSaveState('saving')
+    archetypeApi.submitResult({ dominantKey: result.dominantKey, secondaryNum: result.secondaryNum, answers, email: emailInput.trim() })
+      .then(() => setSaveState('saved'))
+      .catch(() => setSaveState('error'))
   }
 
   function advance() {
@@ -232,6 +255,8 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
     setAnswers({})
     setResult(null)
     setUnlockedSections([0])
+    setEmailInput('')
+    setSaveState('idle')
   }
 
   function unlockSection(index: number) {
@@ -361,15 +386,97 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
               </p>
             </div>
 
+            {/* Guardar resultado — visitantes anónimos */}
+            {!isLoggedIn && (
+              <div
+                className="mt-6 rounded-2xl border p-5"
+                style={{ background: C.surface1, borderColor: C.border }}
+              >
+                {saveState === 'saved' ? (
+                  <div className="flex items-start gap-3">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{ background: `${C.green}22` }}
+                    >
+                      <Check size={16} style={{ color: C.green }} />
+                    </div>
+                    <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>
+                      <span className="font-semibold" style={{ color: C.text }}>Guardado.</span>{' '}
+                      Cuando crees tu cuenta en DeepEnd con este correo, tu arquetipo va a estar esperándote.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-[10px] font-bold tracking-[0.18em] uppercase mb-2" style={{ color: C.green }}>
+                      ¿Quieres conservar este resultado?
+                    </p>
+                    <p className="text-sm leading-relaxed mb-4" style={{ color: C.textMuted }}>
+                      Déjanos tu correo. Si en el futuro creas tu cuenta en DeepEnd con ese mismo correo,
+                      tu arquetipo va a aparecer ahí automáticamente.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <div
+                        className="flex-1 flex items-center gap-2 px-4 rounded-xl border"
+                        style={{ borderColor: C.border, background: C.surface2 }}
+                      >
+                        <Mail size={16} style={{ color: C.label }} />
+                        <input
+                          type="email"
+                          value={emailInput}
+                          onChange={e => setEmailInput(e.target.value)}
+                          placeholder="tucorreo@ejemplo.com"
+                          className="flex-1 py-3 bg-transparent outline-none text-sm"
+                          style={{ color: C.text }}
+                        />
+                      </div>
+                      <button
+                        onClick={saveWithEmail}
+                        disabled={!emailInput.trim() || saveState === 'saving'}
+                        className="px-5 py-3 rounded-xl font-bold text-sm transition-opacity hover:opacity-90"
+                        style={{
+                          background: !emailInput.trim() ? C.surface2 : C.green,
+                          color: !emailInput.trim() ? C.disabled : '#fff',
+                          cursor: !emailInput.trim() ? 'not-allowed' : 'pointer',
+                        }}
+                      >
+                        {saveState === 'saving' ? 'Guardando...' : 'Guardar mi resultado'}
+                      </button>
+                    </div>
+                    {saveState === 'error' && (
+                      <p className="text-xs mt-2" style={{ color: C.red }}>
+                        No pudimos guardar tu resultado. Intenta de nuevo.
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-3 mt-10">
-              <Link
-                to="/register"
-                className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-bold text-sm text-center transition-opacity hover:opacity-90"
-                style={{ background: C.red, color: '#fff' }}
-              >
-                Crear mi cuenta en DeepEnd <ArrowRight size={16} />
-              </Link>
+              {isLoggedIn ? (
+                <div
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-bold text-sm text-center"
+                  style={{
+                    background: saveState === 'error' ? `${C.red}12` : `${C.green}18`,
+                    border: `1px solid ${saveState === 'error' ? C.red + '40' : C.green + '40'}`,
+                    color: saveState === 'error' ? C.red : C.green,
+                  }}
+                >
+                  {saveState === 'saving' && 'Guardando tu resultado...'}
+                  {saveState === 'saved' && (<><Check size={16} /> Guardado en tu perfil</>)}
+                  {saveState === 'error' && 'No pudimos guardar tu resultado'}
+                  {saveState === 'idle' && 'Guardado en tu perfil'}
+                </div>
+              ) : (
+                <Link
+                  to="/register"
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-bold text-sm text-center transition-opacity hover:opacity-90"
+                  style={{ background: C.red, color: '#fff' }}
+                >
+                  Crear mi cuenta en DeepEnd <ArrowRight size={16} />
+                </Link>
+              )}
               <button
                 onClick={restart}
                 className="flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-bold text-sm border transition-colors hover:opacity-80"
