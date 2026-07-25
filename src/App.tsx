@@ -26,6 +26,7 @@ import WorldsStation from './components/views/worlds/WorldsStation';
 import ArchetypeTest from './components/views/ArchetypeTest';
 import MaintenanceGate from './components/shared/MaintenanceGate';
 import WhatsAppButton from './components/shared/WhatsAppButton';
+import WhatsNewTour from './components/shared/WhatsNewTour';
 import News from './components/views/News';
 
 function App() {
@@ -151,6 +152,7 @@ function App() {
 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
             <WhatsAppButton />
+            <WhatsNewTour />
             </MaintenanceGate>
         </>
     )

@@ -77,6 +77,7 @@ export const HomeSidebar = ({ activeTab, dark = true }: HomeSidebarProps) => {
                         dark={dark}
                     />
                     <SidebarItem
+                        id="tour-target-noticias"
                         icon={Newspaper}
                         label="Noticias"
                         active={activeTab === 'Noticias'}

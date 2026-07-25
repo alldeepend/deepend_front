@@ -8,10 +8,12 @@ interface SidebarItemProps {
     onClick: () => void;
     disabled?: boolean;
     dark?: boolean;
+    id?: string;
 }
 
-export const SidebarItem = ({ icon: Icon, label, active, onClick, disabled = false, dark = true }: SidebarItemProps) => (
+export const SidebarItem = ({ icon: Icon, label, active, onClick, disabled = false, dark = true, id }: SidebarItemProps) => (
     <button
+        id={id}
         onClick={disabled ? undefined : onClick}
         disabled={disabled}
         className={`w-full flex items-center p-3 rounded-xl cursor-pointer transition-colors ${disabled ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}

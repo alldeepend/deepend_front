@@ -11,6 +11,7 @@ export default function WhatsAppButton() {
 
     return (
         <a
+            id="tour-target-whatsapp"
             href={`https://wa.me/${WHATSAPP_NUMBER.replace('+', '')}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`}
             target="_blank"
             rel="noopener noreferrer"
