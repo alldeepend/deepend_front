@@ -194,7 +194,11 @@ export default function Header({ dark = false }: { dark?: boolean }) {
         {/* Mobile Menu */}
         <div className="flex md:hidden items-center justify-between">
           <Link to="/dashboard" className="transition-colors font-handwriting text-2xl" style={{ color: text }}>
-            <img className="w-20" src="https://media.1000momentos.com/memories/69e82978-65ec-4ca5-9397-468483861205-DeepEnd_FondoBlanco.webp" alt="" style={dark ? { filter: 'invert(1) brightness(2)' } : undefined} />
+            <img
+              className="w-20"
+              src={dark ? '/Logos_Variaciones-02.png' : 'https://media.1000momentos.com/memories/69e82978-65ec-4ca5-9397-468483861205-DeepEnd_FondoBlanco.webp'}
+              alt=""
+            />
           </Link>
           <div className="relative" ref={mobileMenuRef}>
             <button
