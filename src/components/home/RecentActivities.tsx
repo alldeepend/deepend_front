@@ -118,7 +118,7 @@ export const RecentActivities = ({ onAddActivity }: RecentActivitiesProps) => {
                 <button
                     onClick={onAddActivity}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap"
-                    style={{ background: '#EE2A2822', color: C.red }}
+                    style={{ background: `${C.green}22`, color: C.green }}
                 >
                     <PlusCircle size={14} />
                     Registrar Actividad
@@ -139,14 +139,14 @@ export const RecentActivities = ({ onAddActivity }: RecentActivitiesProps) => {
                             key={idx}
                             onClick={() => setPage(idx)}
                             className="h-1.5 rounded-full transition-all"
-                            style={{ width: idx === page ? 20 : 6, background: idx === page ? C.red : '#333330' }}
+                            style={{ width: idx === page ? 20 : 6, background: idx === page ? C.green : '#333330' }}
                         />
                     ))}
                 </div>
             )}
 
             <div className="flex justify-end pt-4">
-                <Link to="/activities" className="text-sm font-bold flex items-center gap-1 group transition-opacity hover:opacity-80" style={{ color: C.red }}>
+                <Link to="/activities" className="text-sm font-bold flex items-center gap-1 group transition-opacity hover:opacity-80" style={{ color: C.green }}>
                     Ver todas <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                 </Link>
             </div>

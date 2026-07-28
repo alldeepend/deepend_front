@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router'
-import { ArrowRight, HeartHandshake, Activity, Award, Quote, Fingerprint, Flame, Play, Pause } from 'lucide-react'
+import { ArrowRight, HeartHandshake, Activity, Award, Quote, Fingerprint, Flame, Play, Pause, ChevronLeft, ChevronRight } from 'lucide-react'
 import InterestForm from '../InterestForm'
 import ArchetypeTest from './ArchetypeTest'
 import { C } from '../../styles/colors'
@@ -180,6 +180,115 @@ function AudioPlayer({ src, color }: { src: string; color: string }) {
       <span className="text-[10px] tabular-nums flex-shrink-0" style={{ color: '#6B6460' }}>
         {fmt(current)} / {fmt(duration)}
       </span>
+    </div>
+  )
+}
+
+function TestimonialCarousel() {
+  const scrollerRef = useRef<HTMLDivElement>(null)
+  const [atStart, setAtStart] = useState(true)
+  const [atEnd, setAtEnd] = useState(false)
+  const pausedRef = useRef(false)
+
+  const stepBy = (dir: 1 | -1) => {
+    const el = scrollerRef.current
+    if (!el) return
+    const card = el.querySelector<HTMLElement>('[data-card]')
+    const step = (card?.offsetWidth ?? el.clientWidth) + 24
+    el.scrollBy({ left: step * dir, behavior: 'smooth' })
+  }
+
+  const goNext = () => {
+    const el = scrollerRef.current
+    if (!el) return
+    if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 4) {
+      el.scrollTo({ left: 0, behavior: 'smooth' })
+    } else {
+      stepBy(1)
+    }
+  }
+
+  useEffect(() => {
+    const el = scrollerRef.current
+    if (!el) return
+    const onScroll = () => {
+      setAtStart(el.scrollLeft <= 4)
+      setAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 4)
+    }
+    onScroll()
+    el.addEventListener('scroll', onScroll)
+    return () => el.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useEffect(() => {
+    const interval = setInterval(() => { if (!pausedRef.current) goNext() }, 4500)
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <div
+      className="relative mt-12"
+      onMouseEnter={() => { pausedRef.current = true }}
+      onMouseLeave={() => { pausedRef.current = false }}
+    >
+      <div
+        ref={scrollerRef}
+        className="flex gap-6 overflow-x-auto no-scrollbar -mx-6 px-6"
+        style={{ scrollSnapType: 'x mandatory', scrollBehavior: 'smooth' }}
+      >
+        {testimonials.map(t => (
+          <div
+            key={t.name}
+            data-card
+            className="rounded-2xl border overflow-hidden flex flex-col flex-shrink-0 w-[260px] sm:w-[300px] lg:w-[310px]"
+            style={{ background: C.surface1, borderColor: C.border, scrollSnapAlign: 'start' }}
+          >
+            {/* Imagen */}
+            <div className="relative h-44 bg-surface2 flex-shrink-0" style={{ background: C.surface2 }}>
+              <img
+                src={t.img}
+                alt={t.name}
+                className="w-full h-full object-cover"
+                style={{ objectPosition: 'center 37%' }}
+                onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+              />
+              {/* Gradiente para leer el texto encima si se superpone */}
+              <div className="absolute bottom-0 inset-x-0 h-10" style={{ background: `linear-gradient(to top, ${C.surface1}, transparent)` }} />
+            </div>
+
+            {/* Contenido */}
+            <div className="p-5 flex flex-col flex-1">
+              <Quote size={18} style={{ color: t.color }} />
+              <p className="text-sm mt-3 leading-relaxed flex-1" style={{ color: C.text + 'd9' }}>
+                "{t.text}"
+              </p>
+              <div className="mt-4">
+                <p className="text-sm font-bold" style={{ color: C.text }}>{t.name}</p>
+                <p className="text-xs" style={body}>{t.role}</p>
+              </div>
+              <AudioPlayer src={t.audio} color={t.color} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <button
+        onClick={() => stepBy(-1)}
+        disabled={atStart}
+        aria-label="Testimonio anterior"
+        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-10 h-10 rounded-full border flex items-center justify-center transition-opacity hover:opacity-90 disabled:opacity-0 disabled:pointer-events-none"
+        style={{ background: C.surface1, borderColor: C.border, color: C.text }}
+      >
+        <ChevronLeft size={18} />
+      </button>
+      <button
+        onClick={() => (atEnd ? scrollerRef.current?.scrollTo({ left: 0, behavior: 'smooth' }) : stepBy(1))}
+        aria-label="Siguiente testimonio"
+        className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-10 h-10 rounded-full border flex items-center justify-center transition-opacity hover:opacity-90"
+        style={{ background: C.surface1, borderColor: C.border, color: C.text }}
+      >
+        <ChevronRight size={18} />
+      </button>
     </div>
   )
 }
@@ -599,41 +708,7 @@ export default function Landing() {
         <h2 className="text-2xl sm:text-3xl font-bold text-center" style={heading}>
           Lo que dice nuestra comunidad
         </h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
-          {testimonials.map(t => (
-            <div
-              key={t.name}
-              className="rounded-2xl border overflow-hidden flex flex-col"
-              style={{ background: C.surface1, borderColor: C.border }}
-            >
-              {/* Imagen */}
-              <div className="relative h-44 bg-surface2 flex-shrink-0" style={{ background: C.surface2 }}>
-                <img
-                  src={t.img}
-                  alt={t.name}
-                  className="w-full h-full object-cover"
-                  style={{ objectPosition: 'center 37%' }}
-                  onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
-                />
-                {/* Gradiente para leer el texto encima si se superpone */}
-                <div className="absolute bottom-0 inset-x-0 h-10" style={{ background: `linear-gradient(to top, ${C.surface1}, transparent)` }} />
-              </div>
-
-              {/* Contenido */}
-              <div className="p-5 flex flex-col flex-1">
-                <Quote size={18} style={{ color: t.color }} />
-                <p className="text-sm mt-3 leading-relaxed flex-1" style={{ color: C.text + 'd9' }}>
-                  "{t.text}"
-                </p>
-                <div className="mt-4">
-                  <p className="text-sm font-bold" style={{ color: C.text }}>{t.name}</p>
-                  <p className="text-xs" style={body}>{t.role}</p>
-                </div>
-                <AudioPlayer src={t.audio} color={t.color} />
-              </div>
-            </div>
-          ))}
-        </div>
+        <TestimonialCarousel />
       </section>
 
       {/* Formulario de interés / CTA final */}

@@ -95,8 +95,18 @@ export const useAuth = create<AuthState>((set) => ({
     }
   },
   logout: () => {
+    const token = localStorage.getItem('token');
+
     // Eliminar el usuario del localStorage
     saveUserToStorage(null, null);
     set({ user: null, token: null, error: null });
+
+    // Invalida el token en el servidor (best-effort, no bloquea el logout local)
+    if (token) {
+      fetch(`${API_URL}/auth/logout`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => {});
+    }
   },
 }))

@@ -121,3 +121,14 @@ html::-webkit-scrollbar-thumb:hover {
 .dark-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: #6b6460;
 }
+
+/* Oculta la barra de scroll del carrusel de testimonios (el desplazamiento
+   sigue funcionando, solo no se ve la barra nativa). */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

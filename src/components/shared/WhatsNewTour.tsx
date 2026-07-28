@@ -1,9 +1,10 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useLocation } from 'react-router';
-import { Sparkles, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router';
+import { X } from 'lucide-react';
 import { C } from '../../styles/colors';
 import { changelogApi } from '../../services/changelog';
 import { CHANGELOG_STEPS } from '../../data/changelogSteps';
+import { useChangelogTour } from '../../store/useChangelogTour';
 
 type SpotBox = { top: number; left: number; width: number; height: number };
 type CardPos = React.CSSProperties;
@@ -17,13 +18,14 @@ function measure(target: string): SpotBox | null {
 
 export default function WhatsNewTour() {
     const { pathname } = useLocation();
+    const navigate = useNavigate();
     const isDashboard = pathname === '/dashboard';
 
-    const [checked, setChecked] = useState(false);
-    const [open, setOpen] = useState(false);
-    const [step, setStep] = useState(0);
+    const { open, step, openTour, close: closeTour, setStep } = useChangelogTour();
     const [box, setBox] = useState<SpotBox | null>(null);
 
+    // Auto-abre el tour la primera vez que el usuario entra al dashboard
+    // después de una versión nueva (no se repite una vez marcado como visto).
     useEffect(() => {
         if (!isDashboard) return;
         const token = localStorage.getItem('token');
@@ -33,58 +35,57 @@ export default function WhatsNewTour() {
             .then(({ shouldShow }) => {
                 if (shouldShow) {
                     // deja que el sidebar y el botón de WhatsApp terminen de montarse
-                    setTimeout(() => { setStep(0); setOpen(true); }, 500);
+                    setTimeout(() => openTour(), 500);
                 }
             })
-            .catch(() => {})
-            .finally(() => setChecked(true));
-    }, [isDashboard]);
+            .catch(() => {});
+    }, [isDashboard, openTour]);
 
-    const reposition = useCallback(() => {
-        const current = CHANGELOG_STEPS[step];
-        if (current.type === 'spot' && current.target) {
-            setBox(measure(current.target));
-        } else {
-            setBox(null);
-        }
-    }, [step]);
-
+    // Si el paso actual pertenece a otra sección, navega ahí automáticamente.
     useEffect(() => {
         if (!open) return;
-        reposition();
-        window.addEventListener('resize', reposition);
-        return () => window.removeEventListener('resize', reposition);
-    }, [open, reposition]);
+        const current = CHANGELOG_STEPS[step];
+        if (current.route && current.route !== pathname) navigate(current.route);
+    }, [open, step, pathname, navigate]);
+
+    // Mide el elemento señalado. Como puede tardar en montarse justo después
+    // de navegar a otra sección, reintenta unas cuantas veces antes de
+    // rendirse y mostrar la tarjeta centrada como respaldo.
+    useEffect(() => {
+        if (!open) return;
+        const current = CHANGELOG_STEPS[step];
+
+        if (current.type !== 'spot' || !current.target) { setBox(null); return; }
+        if (current.route && current.route !== pathname) { setBox(null); return; }
+
+        let cancelled = false;
+        let attempts = 0;
+        const tryMeasure = () => {
+            if (cancelled) return;
+            const b = measure(current.target!);
+            if (b) setBox(b);
+            else if (++attempts < 30) setTimeout(tryMeasure, 100);
+        };
+        tryMeasure();
+
+        const onResize = () => {
+            if (cancelled) return;
+            const b = measure(current.target!);
+            if (b) setBox(b);
+        };
+        window.addEventListener('resize', onResize);
+        return () => { cancelled = true; window.removeEventListener('resize', onResize); };
+    }, [open, step, pathname]);
 
     const close = () => {
-        setOpen(false);
+        closeTour();
         changelogApi.markSeen().catch(() => {});
+        if (pathname !== '/dashboard') navigate('/dashboard');
     };
 
-    if (!isDashboard) return null;
+    if (!open) return null;
 
-    return (
-        <>
-            {checked && (
-                <button
-                    onClick={() => { setStep(0); setOpen(true); }}
-                    className="fixed z-40 flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold transition-colors hover:opacity-90"
-                    style={{
-                        top: 'max(env(safe-area-inset-top), 16px)',
-                        right: '20px',
-                        background: C.surface2,
-                        border: `1px solid ${C.border}`,
-                        color: C.textSec,
-                    }}
-                >
-                    <Sparkles size={14} style={{ color: C.amber }} />
-                    Ver novedades
-                </button>
-            )}
-
-            {open && <TourOverlay step={step} setStep={setStep} box={box} onClose={close} />}
-        </>
-    );
+    return <TourOverlay step={step} setStep={setStep} box={box} onClose={close} />;
 }
 
 function TourOverlay({
@@ -143,7 +144,7 @@ function TourOverlay({
             )}
 
             {isSpot && (
-                <div className="fixed px-4" style={{ ...cardStyle, zIndex: 70, width: 300, maxWidth: 'calc(100vw - 32px)' }}>
+                <div className="fixed px-4" style={{ ...cardStyle, zIndex: 70, width: 320, maxWidth: 'calc(100vw - 32px)' }}>
                     <TourCard step={step} setStep={setStep} onClose={onClose} data={data} Icon={Icon} arrowStyle={arrowStyle} />
                 </div>
             )}
@@ -168,8 +169,6 @@ function TourCard({
     centered?: boolean;
     arrowStyle?: CardPos | null;
 }) {
-    const total = CHANGELOG_STEPS.length;
-
     return (
         <div
             className={`relative rounded-2xl p-5 shadow-2xl ${centered ? 'w-full max-w-[340px] text-center' : ''}`}
@@ -203,8 +202,8 @@ function TourCard({
                 {data.text}
             </p>
 
-            <div className={`flex items-center gap-2.5 ${centered ? 'flex-col' : 'justify-between'}`}>
-                <div className="flex gap-1.5">
+            <div className={`flex flex-col gap-3 ${centered ? 'items-center' : ''}`}>
+                <div className="flex gap-1.5 flex-wrap">
                     {CHANGELOG_STEPS.map((_, idx) => (
                         <span
                             key={idx}
@@ -213,11 +212,11 @@ function TourCard({
                         />
                     ))}
                 </div>
-                <div className="flex gap-2">
+                <div className={`flex gap-2 w-full ${centered ? 'justify-center' : 'justify-end'}`}>
                     {step > 0 && (
                         <button
                             onClick={() => setStep(step - 1)}
-                            className="text-xs font-bold px-3 py-2 rounded-lg"
+                            className="text-xs font-bold px-3 py-2 rounded-lg flex-shrink-0"
                             style={{ color: C.textMuted }}
                         >
                             Atrás
@@ -225,7 +224,7 @@ function TourCard({
                     )}
                     <button
                         onClick={() => (data.last ? onClose() : setStep(step + 1))}
-                        className="text-xs font-bold px-3.5 py-2 rounded-lg"
+                        className="text-xs font-bold px-3.5 py-2 rounded-lg flex-shrink-0"
                         style={{ background: C.red, color: '#fff' }}
                     >
                         {data.last ? 'Listo' : step === 0 ? 'Empezar' : 'Siguiente'}

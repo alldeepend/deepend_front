@@ -9,8 +9,9 @@ import RecognitionChestModal from '../shared/RecognitionChestModal';
 import { RecentActivities } from './RecentActivities';
 import { ChallengeProgressCard } from './ChallengeProgressCard';
 import { CurrentJourneyCard } from './CurrentJourneyCard';
-import { Star } from 'lucide-react';
+import { Star, Sparkles } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useChangelogTour } from '../../store/useChangelogTour';
 
 const host = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/api\/?$/, '');
 
@@ -21,6 +22,7 @@ export const DashboardContent = () => {
     const [modifyingGoal, setModifyingGoal] = useState(false);
     const [goalPopupVisible, setGoalPopupVisible] = useState(false);
     const queryClient = useQueryClient();
+    const openChangelogTour = useChangelogTour(s => s.openTour);
 
     const targetChallengeId = '6cae6006-7b14-42ba-ba21-b6f4aeb6fd7c';
     const targetTaskId = 'd9f07188-27fd-4252-a2ff-9d61806374f9';
@@ -188,7 +190,18 @@ export const DashboardContent = () => {
                 </div>
             )}
 
-            <HomeHeader />
+            <HomeHeader
+                action={
+                    <button
+                        onClick={openChangelogTour}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold transition-opacity hover:opacity-90"
+                        style={{ background: C.surface2, border: `1px solid ${C.border}`, color: C.textSec }}
+                    >
+                        <Sparkles size={14} style={{ color: C.amber }} />
+                        Ver novedades
+                    </button>
+                }
+            />
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
                 <StatsCard />

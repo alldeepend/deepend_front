@@ -191,7 +191,7 @@ export default function WorldsHome() {
                             </div>
 
                             {/* Contenido central */}
-                            <div className="relative z-10 flex-1 flex flex-col items-center justify-center gap-5 px-8 text-center">
+                            <div id="tour-target-mundos-hero" className="relative z-10 flex-1 flex flex-col items-center justify-center gap-5 px-8 text-center">
                                 <img
                                     src="/Logos_Variaciones-02.png"
                                     alt="DeepEnd"

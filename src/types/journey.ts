@@ -32,6 +32,12 @@ export interface JourneyGateSummary {
     userGates: { activatedAt: string | null; completedAt: string | null; totalXpEarned: number }[];
 }
 
+export interface WorldIntro {
+    id: string;
+    text: string | null;
+    recallRefs: string[];
+}
+
 export interface World {
     id: string;
     journeyId: string;
@@ -41,6 +47,7 @@ export interface World {
     imageUrl: string | null;
     completionVideoUrl: string | null;
     stations: Station[];
+    worldIntro?: WorldIntro | null;
 }
 
 export interface Journey {

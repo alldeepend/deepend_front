@@ -20,6 +20,7 @@ export default defineConfig({
         name: 'DeepEnd',
         short_name: 'DeepEnd',
         description: 'DeepEnd Platform',
+        start_url: '/',
         theme_color: '#ffffff',
         icons: [
           {

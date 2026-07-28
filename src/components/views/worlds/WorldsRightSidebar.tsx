@@ -98,7 +98,7 @@ export default function WorldsRightSidebar({ mode, journeyTitle: _journeyTitle, 
             <div className="p-6 flex flex-col gap-6">
 
                 {/* XP total */}
-                <div className="rounded-2xl p-4 border flex items-center gap-3" style={{ background: C.surface1, borderColor: C.border }}>
+                <div id="tour-target-xp" className="rounded-2xl p-4 border flex items-center gap-3" style={{ background: C.surface1, borderColor: C.border }}>
                     <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: C.amber + '22' }}>
                         <Zap size={18} style={{ color: C.amber }} />
                     </div>
@@ -120,7 +120,7 @@ export default function WorldsRightSidebar({ mode, journeyTitle: _journeyTitle, 
 
                 {/* Archetype */}
                 {archetype !== undefined && (
-                    <div>
+                    <div id="tour-target-archetype">
                         <p className="text-[10px] font-bold tracking-widest uppercase mb-3" style={{ color: C.label }}>
                             Mi Arquetipo
                         </p>
@@ -184,7 +184,7 @@ export default function WorldsRightSidebar({ mode, journeyTitle: _journeyTitle, 
                 <div className="h-px" style={{ background: C.border }} />
 
                 {/* Badges */}
-                <div>
+                <div id="tour-target-badges">
                     <div className="flex items-center justify-between mb-3">
                         <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: C.label }}>
                             {mode === 'journey' ? 'Insignias del viaje' : 'Mis Insignias'}

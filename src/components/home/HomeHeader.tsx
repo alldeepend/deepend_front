@@ -11,7 +11,7 @@ export const HomeHeader = ({ action }: HomeHeaderProps) => {
     const displayName = user?.preferredName || user?.firstName || 'Usuario';
 
     return (
-        <header className="flex justify-between items-center mb-8">
+        <header className="flex flex-wrap justify-between items-center gap-3 mb-8">
             <div className="flex items-center gap-4">
                 <Link to="/profile" className="relative group">
                     <div

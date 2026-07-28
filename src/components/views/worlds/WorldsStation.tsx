@@ -9,6 +9,7 @@ import WorldsRightSidebar, { badgesForJourney, badgeColorFor } from './WorldsRig
 import { HomeSidebar } from '../../home/HomeSidebar'
 import { PhotoUploadField, AudioRecorderField, SkipCheckbox } from './EvidenceFields'
 import { parseBold, parseText } from './textParsing'
+import { getRecalledAnswer, getRecalledGateAnswer } from './recallUtils'
 
 const BLOCK_LABELS: Record<string, string> = {
     punto_partida:      'Punto de Partida',
@@ -25,87 +26,6 @@ const BLOCK_LABELS: Record<string, string> = {
 function getYouTubeEmbedUrl(url: string): string | null {
     const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/)
     return match ? `https://www.youtube.com/embed/${match[1]}` : null
-}
-
-// ─── Recordatorio de respuesta anterior ────────────────────────────────────────
-
-function findBlockById(data: JourneyDetailsResponse, blockId: string): Block | null {
-    for (const w of data.journey.worlds) {
-        for (const s of w.stations) {
-            const b = s.blocks.find(bl => bl.id === blockId)
-            if (b) return b
-        }
-    }
-    return null
-}
-
-// Convierte la respuesta guardada (forma distinta según el tipo/modo del bloque) en texto legible
-function extractRecallText(blockType: string, content: any, value: any): string {
-    if (value == null) return ''
-    if (blockType === 'accion_real' && content?.actionType === 'foto' && typeof value === 'string') {
-        return value ? '(Foto subida)' : ''
-    }
-    if (typeof value === 'string') return value
-    if (Array.isArray(value)) return value.filter(Boolean).join(', ')
-
-    if (blockType === 'activacion') {
-        const isPreguntas = content?.selectionType === 'preguntas'
-        const isArbol = content?.selectionType === 'arbol_decision'
-        const isReescritura = content?.selectionType === 'reescritura_guiada'
-        if (isPreguntas) {
-            const answers: any[] = value.answers ?? []
-            return answers
-                .map(a => typeof a === 'string' ? a : (a?.guided ? `${a.prefix ?? ''} ${a.text ?? ''}`.trim() : ''))
-                .filter(Boolean).join(' · ')
-        }
-        if (isArbol) {
-            const route = value.selectedRoute
-            const answers: string[] = (value.allRouteAnswers ?? {})[route] ?? []
-            return answers.filter(Boolean).join(' · ')
-        }
-        if (isReescritura) {
-            const completions: string[] = value.completions ?? []
-            return completions.filter(Boolean).join(' · ')
-        }
-        if (value.mode === 'select') {
-            const sel: string[] = value.selected ?? []
-            return [...sel.filter((s: string) => s !== 'Otra — escribo yo'), value.otherText].filter(Boolean).join(', ')
-        }
-        if (value.mode === 'audio') return value.audioUrl ? '(Nota de voz)' : ''
-        return value.text ?? ''
-    }
-
-    if (blockType === 'accion_real') {
-        if (content?.actionType === 'seleccion') {
-            return value.selected === 'guided' ? (value.guidedText ?? '') : (value.selected ?? '')
-        }
-        if (value.activeTab === 'photo') return value.photoUrl ? '(Foto subida)' : ''
-        if (value.activeTab === 'audio') return value.audioUrl ? '(Nota de voz)' : ''
-        return value.text ?? ''
-    }
-
-    return value.text ?? ''
-}
-
-function getRecalledAnswer(data: JourneyDetailsResponse | null, recallBlockId: string | undefined): string | null {
-    if (!data || !recallBlockId) return null
-    const block = findBlockById(data, recallBlockId)
-    if (!block) return null
-    const interaction = data.progress.blockInteractions.find(bi => bi.blockId === recallBlockId)
-    if (!interaction || interaction.responses == null) return null
-    const text = extractRecallText(block.type, block.content, interaction.responses)
-    return text.trim() || null
-}
-
-// Recordatorio de una respuesta de un día de la Puerta (7 días previos al viaje)
-function getRecalledGateAnswer(gateStatus: GateStatus | null, recallGateDayId: string | undefined): string | null {
-    if (!gateStatus || !recallGateDayId) return null
-    const day = gateStatus.days?.find(d => d.id === recallGateDayId)
-    const response = day?.response
-    if (!response) return null
-    if (response.evidenceType === 'foto') return response.mediaUrl ? '(Foto subida)' : null
-    if (response.evidenceType === 'audio') return response.mediaUrl ? '(Nota de voz)' : null
-    return response.responseText?.trim() || (response.evidenceType === 'check' ? '(Marcado como hecho)' : null)
 }
 
 export default function WorldsStation() {
@@ -228,13 +148,15 @@ export default function WorldsStation() {
                 ? ((currentBlock.content as any)?.skipLabel || 'Prefiero no responder esta pregunta')
                 : rawResponse
 
+            const wasAlreadyDone = completedBlockIds.has(currentBlock.id)
+
             const result: BlockInteractResult = await journeyApi.interactWithBlock(
                 currentBlock.id,
                 responseToSubmit
             )
             setCompletedBlockIds(prev => new Set([...prev, currentBlock.id]))
 
-            if (!XP_EXCLUDED.includes(currentBlock.type) && xpPerBlock > 0) {
+            if (!wasAlreadyDone && !XP_EXCLUDED.includes(currentBlock.type) && xpPerBlock > 0) {
                 const isLastEligible = eligibleBlocks[eligibleBlocks.length - 1]?.id === currentBlock.id
                 const remainder = (station?.xp ?? 0) - xpPerBlock * (eligibleBlocks.length - 1)
                 setXpFlash(isLastEligible ? remainder : xpPerBlock)
@@ -331,7 +253,7 @@ export default function WorldsStation() {
                     ? () => navigate(`/worlds/${journeyId}/station/${nextStation.id}`)
                     : undefined}
                 onContinue={() => navigate(`/worlds/${journeyId}`)}
-                onReview={() => setShowCelebration(false)}
+                onReview={() => { setReviewMode(true); setShowCelebration(false) }}
             />
         )
     }
@@ -424,7 +346,9 @@ export default function WorldsStation() {
 
     const completedCount = blocks.filter(b => completedBlockIds.has(b.id)).length
     const stationProgress = blocks.length > 0 ? Math.round((completedCount / blocks.length) * 100) : 0
-    const blockAlreadyDone = currentBlock ? completedBlockIds.has(currentBlock.id) : false
+    // Los bloques ya respondidos siguen editables mientras la estación no esté
+    // completa del todo — solo se bloquean en modo revisión (estación ya cerrada).
+    const blocksLocked = reviewMode
 
     const earnedEligibleCount = eligibleBlocks.filter(b => completedBlockIds.has(b.id)).length
     const allEligibleDone = earnedEligibleCount === eligibleBlocks.length && eligibleBlocks.length > 0
@@ -562,7 +486,7 @@ export default function WorldsStation() {
                         onResponse={val =>
                             setResponses(prev => ({ ...prev, [currentBlock.id]: val }))
                         }
-                        alreadyDone={blockAlreadyDone}
+                        locked={blocksLocked}
                         onSubmit={handleSubmitBlock}
                         submitting={submitting}
                         isLastStation={nextStation === null}
@@ -686,7 +610,7 @@ function BlockPlayer({
     recalledAnswer,
     response,
     onResponse,
-    alreadyDone,
+    locked,
     onSubmit,
     submitting,
     onNext,
@@ -706,7 +630,7 @@ function BlockPlayer({
     recalledAnswer: string | null
     response: any
     onResponse: (val: any) => void
-    alreadyDone: boolean
+    locked: boolean
     onSubmit: () => Promise<BlockInteractResult | null>
     submitting: boolean
     onNext: () => void
@@ -726,7 +650,7 @@ function BlockPlayer({
     const [showRecall, setShowRecall] = useState(false)
 
     const isCierre = block.type === 'cierre'
-    const canSubmit = alreadyDone || isResponseValid(block.type, response)
+    const canSubmit = isResponseValid(block.type, response)
 
     const showStation1Celebration = block.type === 'punto_partida' && station.orderIndex === 2
     const showLastStationCelebration = block.type === 'punto_partida' && isLastStation
@@ -816,16 +740,16 @@ function BlockPlayer({
             {block.type === 'punto_partida' && <PuntoPartida content={c} />}
             {block.type === 'capsula' && <Capsula content={c} />}
             {block.type === 'activacion' && (
-                <Activacion content={c} value={response} onChange={onResponse} disabled={alreadyDone} blockId={block.id} />
+                <Activacion content={c} value={response} onChange={onResponse} disabled={locked} blockId={block.id} />
             )}
             {block.type === 'opciones_respuesta' && (
-                <OpcionesRespuesta content={c} value={response} onChange={onResponse} disabled={alreadyDone} />
+                <OpcionesRespuesta content={c} value={response} onChange={onResponse} disabled={locked} />
             )}
             {block.type === 'accion_real' && (
-                <AccionReal content={c} value={response} onChange={onResponse} disabled={alreadyDone} blockId={block.id} />
+                <AccionReal content={c} value={response} onChange={onResponse} disabled={locked} blockId={block.id} />
             )}
             {block.type === 'evidencia' && (
-                <Evidencia content={c} value={response} onChange={onResponse} disabled={alreadyDone} />
+                <Evidencia content={c} value={response} onChange={onResponse} disabled={locked} />
             )}
             {block.type === 'refuerzo' && <Refuerzo content={c} />}
             {block.type === 'recompensa' && <Recompensa content={c} />}
@@ -842,7 +766,7 @@ function BlockPlayer({
             {/* CTA — oculto para cierre (maneja su propia navegación) */}
             {!isCierre && (
                 <div className="space-y-2 pt-1">
-                    {!alreadyDone && nextBlockType === 'refuerzo' && canSubmit && (
+                    {!locked && nextBlockType === 'refuerzo' && canSubmit && (
                         <div
                             className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm leading-relaxed"
                             style={{ background: `${C.amber}20`, border: `1px solid ${C.amber}50` }}
@@ -853,7 +777,7 @@ function BlockPlayer({
                             </p>
                         </div>
                     )}
-                    {!alreadyDone && (
+                    {!locked && (
                         <>
                             <button
                                 onClick={() => onSubmit()}
@@ -876,7 +800,7 @@ function BlockPlayer({
                         </>
                     )}
 
-                    {alreadyDone && canGoNext && (
+                    {locked && canGoNext && (
                         <button
                             onClick={onNext}
                             className="w-full py-3.5 rounded-xl font-semibold text-sm"
@@ -886,7 +810,7 @@ function BlockPlayer({
                         </button>
                     )}
 
-                    {alreadyDone && isLast && !isLastStation && onGoToNextStation && (
+                    {locked && isLast && !isLastStation && onGoToNextStation && (
                         <button
                             onClick={onGoToNextStation}
                             className="w-full py-3.5 rounded-xl font-semibold text-sm"
@@ -967,7 +891,7 @@ function Capsula({ content }: { content: any }) {
                 {content.concept && (
                     <div className="space-y-1.5">
                         <p className="text-[10px] tracking-[0.16em] uppercase font-semibold" style={{ color: C.textMuted }}>
-                            Concepto del libro
+                            Concepto
                         </p>
                         <div className="space-y-3">{parseText(content.concept)}</div>
                     </div>
@@ -992,7 +916,7 @@ function Capsula({ content }: { content: any }) {
                 {content.bridge && (
                     <div className="space-y-1.5">
                         <p className="text-[10px] tracking-[0.16em] uppercase font-semibold" style={{ color: C.textMuted }}>
-                            Frase puente
+                            Frase destacada
                         </p>
                         <p
                             className="text-sm leading-relaxed italic"
@@ -1258,7 +1182,7 @@ function Activacion({
 
     // ── Árbol de decisiones ──
     if (isArbol) {
-        const routes: { id: string; label: string; description: string; questions: string[] }[] = content.routes ?? []
+        const routes: { id: string; label: string; description: string; questions: (string | { isGuided: true; prefix: string })[] }[] = content.routes ?? []
         const selectedRoute: string | null = value?.selectedRoute ?? null
         // allRouteAnswers guarda respuestas por ruta: { A: [...], B: [...] }
         const allRouteAnswers: Record<string, string[]> = value?.allRouteAnswers ?? {}
@@ -1299,41 +1223,39 @@ function Activacion({
                 <div className="space-y-2">
                     {routes.map(route => {
                         const isSelected = selectedRoute === route.id
-                        const isLocked = !!selectedRoute && !isSelected
+                        if (selectedRoute && !isSelected) return null
                         return (
-                            <button
-                                key={route.id}
-                                onClick={() => selectRoute(route.id)}
-                                disabled={disabled || isLocked}
-                                className="w-full text-left rounded-xl px-4 py-3 flex gap-3 items-start transition-all"
-                                style={{
-                                    background: isSelected ? `${C.green}15` : C.surface2,
-                                    border: `1px solid ${isSelected ? C.green : isLocked ? C.border : C.amber}`,
-                                    opacity: isLocked ? 0.35 : 1,
-                                    cursor: disabled || isLocked ? 'default' : 'pointer',
-                                }}
-                            >
-                                <span
-                                    className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5"
+                            <div key={route.id}>
+                                <button
+                                    onClick={() => selectRoute(route.id)}
+                                    disabled={disabled}
+                                    className="w-full text-left rounded-xl px-4 py-3 flex gap-3 items-center transition-all"
                                     style={{
-                                        background: isSelected ? C.green : 'transparent',
-                                        border: `1.5px solid ${isSelected ? C.green : C.amber}`,
-                                        color: isSelected ? '#fff' : C.amber,
+                                        background: isSelected ? `${C.green}15` : C.surface2,
+                                        border: `1px solid ${isSelected ? C.green : C.amber}`,
+                                        cursor: disabled ? 'default' : 'pointer',
                                     }}
                                 >
-                                    {route.id}
-                                </span>
-                                <div>
+                                    <span
+                                        className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                                        style={{
+                                            background: isSelected ? C.green : 'transparent',
+                                            border: `1.5px solid ${isSelected ? C.green : C.amber}`,
+                                            color: isSelected ? '#fff' : C.amber,
+                                        }}
+                                    >
+                                        {route.id}
+                                    </span>
                                     <p className="text-sm font-semibold" style={{ color: isSelected ? C.text : C.amber }}>
                                         {parseBold(route.label)}
                                     </p>
-                                    {route.description && (
-                                        <p className="text-xs mt-0.5 leading-relaxed" style={{ color: C.textMuted }}>
-                                            {parseBold(route.description)}
-                                        </p>
-                                    )}
-                                </div>
-                            </button>
+                                </button>
+                                {isSelected && route.description && (
+                                    <div className="mt-1.5 px-1">
+                                        {parseText(route.description, 'text-xs leading-relaxed', { color: C.textMuted })}
+                                    </div>
+                                )}
+                            </div>
                         )
                     })}
                 </div>
@@ -1342,30 +1264,68 @@ function Activacion({
                 {activeRoute && activeRoute.questions.length > 0 && (
                     <div className="space-y-3 pt-1">
                         <div className="h-px" style={{ background: C.border }} />
-                        {activeRoute.questions.map((q, i) => (
-                            <div key={i} className="space-y-1.5">
-                                <p className="text-sm font-medium" style={{ color: C.text }}>{parseBold(q)}</p>
-                                <textarea
-                                    rows={3}
-                                    maxLength={400}
-                                    placeholder="Escribe tu respuesta..."
-                                    value={routeAnswers[i] ?? ''}
-                                    onChange={e => setRouteAnswer(i, e.target.value)}
-                                    onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px`; }}
-                                    disabled={disabled}
-                                    className="w-full rounded-xl p-3 text-sm resize-none outline-none"
-                                    style={{
-                                        background: C.surface2,
-                                        border: `1px solid ${C.border}`,
-                                        color: C.text,
-                                        opacity: disabled ? 0.6 : 1,
-                                    }}
-                                />
-                                <p className="text-xs text-right mt-1" style={{ color: (routeAnswers[i] ?? '').length > 360 ? C.red : C.textMuted }}>
-                                    {(routeAnswers[i] ?? '').length}/400
-                                </p>
-                            </div>
-                        ))}
+                        {activeRoute.questions.map((q, i) => {
+                            const isGuidedQuestion = typeof q === 'object' && q !== null && (q as any).isGuided
+                            if (isGuidedQuestion) {
+                                const prefix = (q as { prefix: string }).prefix
+                                return (
+                                    <div
+                                        key={i}
+                                        className="rounded-xl overflow-hidden"
+                                        style={{ border: `1px solid ${(routeAnswers[i] ?? '').trim() ? C.green : C.border}` }}
+                                    >
+                                        <div className="px-4 pt-3 pb-1" style={{ background: C.surface1 }}>
+                                            <p
+                                                className="text-sm leading-relaxed italic"
+                                                style={{ color: C.textMuted, fontFamily: "'American Typewriter', Georgia, serif" }}
+                                            >
+                                                {prefix}
+                                            </p>
+                                        </div>
+                                        <div className="px-4 pb-3" style={{ background: C.surface1 }}>
+                                            <input
+                                                type="text"
+                                                placeholder="completa aquí..."
+                                                value={routeAnswers[i] ?? ''}
+                                                onChange={e => setRouteAnswer(i, e.target.value)}
+                                                disabled={disabled}
+                                                className="w-full rounded-lg px-3 py-2.5 text-sm outline-none placeholder:opacity-30"
+                                                style={{
+                                                    background: C.surface2,
+                                                    border: `1px solid ${(routeAnswers[i] ?? '').trim() ? `${C.green}60` : C.border}`,
+                                                    color: C.text,
+                                                    opacity: disabled ? 0.6 : 1,
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                )
+                            }
+                            return (
+                                <div key={i} className="space-y-1.5">
+                                    <p className="text-sm font-medium" style={{ color: C.text }}>{parseBold(q as string)}</p>
+                                    <textarea
+                                        rows={3}
+                                        maxLength={400}
+                                        placeholder="Escribe tu respuesta..."
+                                        value={routeAnswers[i] ?? ''}
+                                        onChange={e => setRouteAnswer(i, e.target.value)}
+                                        onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px`; }}
+                                        disabled={disabled}
+                                        className="w-full rounded-xl p-3 text-sm resize-none outline-none"
+                                        style={{
+                                            background: C.surface2,
+                                            border: `1px solid ${C.border}`,
+                                            color: C.text,
+                                            opacity: disabled ? 0.6 : 1,
+                                        }}
+                                    />
+                                    <p className="text-xs text-right mt-1" style={{ color: (routeAnswers[i] ?? '').length > 360 ? C.red : C.textMuted }}>
+                                        {(routeAnswers[i] ?? '').length}/400
+                                    </p>
+                                </div>
+                            )
+                        })}
                         {!disabled && !hasChangedRoute && (
                             <button
                                 onClick={() => setShowRouteChangeWarning(true)}

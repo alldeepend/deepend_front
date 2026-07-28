@@ -21,7 +21,7 @@ export const StatsCard = () => {
 
     return (
         <div className="lg:col-span-4 p-6 rounded-2xl shadow-sm border flex flex-col justify-between relative overflow-hidden" style={{ background: '#1E1A1B', borderColor: '#333330' }}>
-            <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full -mr-8 -mt-8 opacity-20" style={{ background: C.red }}></div>
+            <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full -mr-8 -mt-8 opacity-20" style={{ background: C.green }}></div>
 
             <div>
                 <h3 className="text-xl font-bold text-center" style={{ color: '#F5F0E8', fontFamily: "'American Typewriter', Georgia, serif" }}>Tu Gráfica de la Vida</h3>

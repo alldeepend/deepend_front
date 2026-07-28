@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { Lock, Award, DoorOpen, ChevronDown, ChevronUp } from 'lucide-react'
 import { journeyApi } from '../../../services/journey'
-import type { JourneyDetailsResponse, StationProgress, GateStatus } from '../../../types/journey'
+import type { JourneyDetailsResponse, StationProgress, GateStatus, World } from '../../../types/journey'
 import { C } from '../../../styles/colors'
 import WorldsRightSidebar, { badgesForJourney, badgeColorFor } from './WorldsRightSidebar'
 import { HomeSidebar } from '../../home/HomeSidebar'
+import WorldIntroModal from './WorldIntroModal'
 
 function PinIcon({ color, size = 32 }: { color: string; size?: number }) {
     return (
@@ -24,6 +25,7 @@ export default function WorldsJourney() {
     const [loading, setLoading] = useState(true)
     const [gateStatus, setGateStatus] = useState<GateStatus | null>(null)
     const [gateExpanded, setGateExpanded] = useState(false)
+    const [pendingWorldIntro, setPendingWorldIntro] = useState<{ world: World; stationId: string } | null>(null)
 
     useEffect(() => {
         if (!journeyId) return
@@ -239,7 +241,7 @@ export default function WorldsJourney() {
                     // Build flat list: world headers + stations interleaved
                     type TrackItem =
                         | { kind: 'world'; world: typeof sortedWorlds[0]; wIdx: number; hasStarted: boolean }
-                        | { kind: 'station'; station: typeof sortedWorlds[0]['stations'][0]; world: typeof sortedWorlds[0] }
+                        | { kind: 'station'; station: typeof sortedWorlds[0]['stations'][0]; world: typeof sortedWorlds[0]; wIdx: number; hasStarted: boolean; isFirstOfWorld: boolean }
 
                     const items: TrackItem[] = []
                     sortedWorlds.forEach((world, wIdx) => {
@@ -249,7 +251,7 @@ export default function WorldsJourney() {
                         world.stations
                             .slice()
                             .sort((a, b) => a.orderIndex - b.orderIndex)
-                            .forEach(station => items.push({ kind: 'station', station, world }))
+                            .forEach((station, sIdx) => items.push({ kind: 'station', station, world, wIdx, hasStarted, isFirstOfWorld: sIdx === 0 }))
                     })
 
                     return (
@@ -347,7 +349,15 @@ export default function WorldsJourney() {
                                                 unlocked={unlocked}
                                                 isCurrent={isCurrent}
                                                 onClick={() => {
-                                                    if (unlocked) navigate(`/worlds/${journeyId}/station/${station.id}`)
+                                                    if (!unlocked) return
+                                                    const intro = item.world.worldIntro
+                                                    const showIntro = item.isFirstOfWorld && item.wIdx > 0 && !item.hasStarted &&
+                                                        intro && ((intro.text && intro.text.trim()) || intro.recallRefs.length > 0)
+                                                    if (showIntro) {
+                                                        setPendingWorldIntro({ world: item.world, stationId: station.id })
+                                                    } else {
+                                                        navigate(`/worlds/${journeyId}/station/${station.id}`)
+                                                    }
                                                 }}
                                             />
                                         </div>
@@ -375,6 +385,19 @@ export default function WorldsJourney() {
             </div>
         </div>
         <WorldsRightSidebar mode="journey" journeyTitle={journey.title} badges={badgesForJourney(journey, userJourney)} totalXp={userJourney?.totalXpEarned ?? 0} />
+        {pendingWorldIntro && pendingWorldIntro.world.worldIntro && (
+            <WorldIntroModal
+                worldTitle={pendingWorldIntro.world.title}
+                intro={pendingWorldIntro.world.worldIntro}
+                data={data}
+                gateStatus={gateStatus}
+                onContinue={() => {
+                    const stationId = pendingWorldIntro.stationId
+                    setPendingWorldIntro(null)
+                    navigate(`/worlds/${journeyId}/station/${stationId}`)
+                }}
+            />
+        )}
         </div>
     )
 }

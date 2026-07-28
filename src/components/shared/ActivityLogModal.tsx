@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Upload, Clock, Activity, Loader2, CheckCircle2 } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import AlertModal from './AlertModal';
 
 interface ActivityLogModalProps {
     isOpen: boolean;
@@ -21,6 +22,7 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [checkinResponse, setCheckinResponse] = useState('');
     const [formError, setFormError] = useState('');
+    const [uploadError, setUploadError] = useState('');
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const queryClient = useQueryClient();
@@ -46,6 +48,7 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
         setPreviewUrl(null);
         setCheckinResponse('');
         setFormError('');
+        setUploadError('');
     };
 
     const checkinMutation = useMutation({
@@ -67,13 +70,28 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
     const logMutation = useMutation({
         mutationFn: async (formData: FormData) => {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${host}/api/activity-log`, {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${token}` },
-                body: formData
-            });
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 25000);
+
+            let res: Response;
+            try {
+                res = await fetch(`${host}/api/activity-log`, {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${token}` },
+                    body: formData,
+                    signal: controller.signal
+                });
+            } catch (err: any) {
+                if (err.name === 'AbortError') {
+                    throw new Error('La subida está tardando demasiado. Revisa tu conexión e intenta de nuevo.');
+                }
+                throw new Error('No se pudo conectar. Revisa tu conexión e intenta de nuevo.');
+            } finally {
+                clearTimeout(timeoutId);
+            }
+
             if (!res.ok) {
-                const error = await res.json();
+                const error = await res.json().catch(() => ({}));
                 throw new Error(error.error || 'Error al guardar actividad');
             }
             return await res.json();
@@ -93,7 +111,7 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
             alert('Actividad registrada con éxito!');
         },
         onError: (err: any) => {
-            alert(err.message === "Unexpected token '<', \"<html>...\" is not valid JSON"
+            setUploadError(err.message === "Unexpected token '<', \"<html>...\" is not valid JSON"
                 ? 'Error de conexión o archivo demasiado grande. Por favor intenta de nuevo.'
                 : err.message);
         }
@@ -152,6 +170,7 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setFormError('');
+        setUploadError('');
         if (!activity || !duration) {
             setFormError('Por favor completa la actividad y la duración.');
             return;
@@ -288,6 +307,13 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
                     </form>
                 </div>
             </div>
+
+            <AlertModal
+                isOpen={!!uploadError}
+                title="No se pudo subir"
+                message={uploadError}
+                onConfirm={() => setUploadError('')}
+            />
         </>
     );
 }

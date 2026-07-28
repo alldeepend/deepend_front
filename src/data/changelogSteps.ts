@@ -3,6 +3,8 @@ import {
     Newspaper,
     MessageCircle,
     Globe,
+    Zap,
+    Award,
     Compass,
     Palette,
     SkipForward,
@@ -19,6 +21,7 @@ export type ChangelogStep = {
     type: 'center' | 'spot';
     target?: string;
     side?: 'left' | 'right';
+    route?: string;
     icon: LucideIcon;
     eyebrow: string;
     title: string;
@@ -53,18 +56,44 @@ export const CHANGELOG_STEPS: ChangelogStep[] = [
         text: 'Este botón te acompaña en Dashboard, Mundos y Perfil por si tienes una duda a un toque de distancia.',
     },
     {
-        type: 'center',
+        type: 'spot',
+        target: '#tour-target-mundos-hero',
+        side: 'right',
+        route: '/worlds',
         icon: Globe,
         eyebrow: 'Todo nuevo',
         title: 'Mundos y Viajes',
-        text: 'Una forma distinta de avanzar: viajes con mundos y estaciones, un Reto Puerta de 7 días antes de empezar cada uno, insignias y XP a tu ritmo.',
+        text: 'Una forma distinta de avanzar: viajes con mundos y estaciones, y un Reto Puerta de 7 días antes de empezar cada uno. Explora los viajes disponibles cuando quieras.',
     },
     {
-        type: 'center',
+        type: 'spot',
+        target: '#tour-target-xp',
+        side: 'left',
+        route: '/worlds',
+        icon: Zap,
+        eyebrow: 'Tu progreso',
+        title: 'Experiencia (XP)',
+        text: 'Cada estación que completas te da XP. Aquí, en el sidebar de Mundos, ves tu total acumulado en todo momento.',
+    },
+    {
+        type: 'spot',
+        target: '#tour-target-badges',
+        side: 'left',
+        route: '/worlds',
+        icon: Award,
+        eyebrow: 'Reconocimientos',
+        title: 'Insignias',
+        text: 'Cada viaje tiene insignias propias por ganar. Las que ya conseguiste quedan coleccionadas justo aquí.',
+    },
+    {
+        type: 'spot',
+        target: '#tour-target-archetype',
+        side: 'left',
+        route: '/worlds',
         icon: Compass,
         eyebrow: 'También nuevo',
-        title: 'El test de arquetipo',
-        text: 'Descubre tu arquetipo y guárdalo en tu perfil automáticamente. Lo puedes revisar cuando quieras desde el sidebar de Mundos.',
+        title: 'Tu arquetipo',
+        text: 'Descubre tu arquetipo y se guarda en tu perfil automáticamente. Lo revisas cuando quieras justo aquí.',
     },
     {
         type: 'center',
