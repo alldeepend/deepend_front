@@ -30,14 +30,19 @@ export function parseBold(text: string): React.ReactNode {
     return nodes
 }
 
+
+export function parseLines(text: string): React.ReactNode {
+    return text.split('\n').flatMap((line, li, arr) =>
+        li < arr.length - 1
+            ? [...(parseBold(line) as any[]), <br key={`br-${li}`} />]
+            : parseBold(line) as any[]
+    )
+}
+
 export function parseText(text: string, className = 'text-sm leading-relaxed', style: React.CSSProperties = { color: C.text }): React.ReactNode {
     return text.split(/\n\n+/).map((para, pi) => (
         <p key={pi} className={className} style={style}>
-            {para.split('\n').flatMap((line, li, arr) =>
-                li < arr.length - 1
-                    ? [...(parseBold(line) as any[]), <br key={`br-${li}`} />]
-                    : parseBold(line) as any[]
-            )}
+            {parseLines(para)}
         </p>
     ))
 }

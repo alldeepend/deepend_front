@@ -4,7 +4,7 @@ import { journeyApi } from '../../../services/journey'
 import type { GateDayStatus, GateEvidenceType, GateInfo, GateStatus } from '../../../types/journey'
 import { C } from '../../../styles/colors'
 import { PhotoUploadField, AudioRecorderField, SkipCheckbox } from './EvidenceFields'
-import { parseBold } from './textParsing'
+import { parseLines } from './textParsing'
 
 type Step = 'portada' | 'mapa' | 'dia' | 'recompensa' | 'celebracion'
 
@@ -129,7 +129,7 @@ function PortadaStep({ gate, onActivate, activating }: { gate: GateInfo; onActiv
                 {gate.title}
             </h2>
             <p className="text-sm" style={{ color: C.textSec }}>
-                {gate.subtitle || 'Una pregunta al día durante 7 días. Sin respuestas buenas ni malas.'}
+                {parseLines(gate.subtitle || 'Una pregunta al día durante 7 días. Sin respuestas buenas ni malas.')}
             </p>
             <p className="text-xs" style={{ color: C.amber, fontFamily: "'DM Mono', monospace" }}>
                 +{totalXp} XP · 1 pregunta/día
@@ -306,9 +306,9 @@ function DiaStep({ journeyId, day, onBack, onSubmitted }: {
                 )}
             </div>
             <h2 className="text-xl font-bold" style={{ color: C.text, fontFamily: "'American Typewriter', Georgia, serif" }}>
-                {parseBold(day.question)}
+                {parseLines(day.question)}
             </h2>
-            {day.bodyText && <p className="text-sm" style={{ color: C.textSec }}>{parseBold(day.bodyText)}</p>}
+            {day.bodyText && <p className="text-sm" style={{ color: C.textSec }}>{parseLines(day.bodyText)}</p>}
 
             {day.checkOnly ? (
                 <CheckWithText checked={checked} onCheckedChange={setChecked} text={checkText} onTextChange={setCheckText} disabled={submitting} />

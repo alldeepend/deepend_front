@@ -13,6 +13,9 @@ function measure(target: string): SpotBox | null {
     const el = document.querySelector(target);
     if (!el) return null;
     const r = el.getBoundingClientRect();
+    // Un elemento oculto por CSS (ej. sidebar "hidden md:flex" en móvil) sigue
+    // en el DOM pero mide 0x0 — hay que tratarlo como "no encontrado".
+    if (r.width === 0 && r.height === 0) return null;
     return { top: r.top, left: r.left, width: r.width, height: r.height };
 }
 
@@ -48,9 +51,7 @@ export default function WhatsNewTour() {
         if (current.route && current.route !== pathname) navigate(current.route);
     }, [open, step, pathname, navigate]);
 
-    // Mide el elemento señalado. Como puede tardar en montarse justo después
-    // de navegar a otra sección, reintenta unas cuantas veces antes de
-    // rendirse y mostrar la tarjeta centrada como respaldo.
+    
     useEffect(() => {
         if (!open) return;
         const current = CHANGELOG_STEPS[step];
@@ -60,11 +61,14 @@ export default function WhatsNewTour() {
 
         let cancelled = false;
         let attempts = 0;
+        
+        setBox(null);
         const tryMeasure = () => {
             if (cancelled) return;
             const b = measure(current.target!);
             if (b) setBox(b);
             else if (++attempts < 30) setTimeout(tryMeasure, 100);
+            
         };
         tryMeasure();
 
