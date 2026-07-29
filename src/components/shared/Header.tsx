@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../store/useAuth';
-import { LogOut, Bell, Check, X, Loader2, Menu, LayoutDashboard, Compass, Flag, BookOpen, User, Globe, Newspaper } from 'lucide-react';
+import { LogOut, Bell, Check, X, Loader2, Menu, LayoutDashboard, Compass, Flag, BookOpen, User, Globe, Newspaper, CalendarDays } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router';
+import { C } from '../../styles/colors';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-export default function Header({ dark = false }: { dark?: boolean }) {
+export default function Header({ dark = true }: { dark?: boolean }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout, setUser } = useAuth();
@@ -204,7 +205,7 @@ export default function Header({ dark = false }: { dark?: boolean }) {
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
               className="transition-colors"
-              style={{ color: text }}
+              style={{ color: C.green }}
               aria-label="Menú"
             >
               <Menu size={24} />
@@ -231,7 +232,7 @@ export default function Header({ dark = false }: { dark?: boolean }) {
                     </Link>
                   </li>
 
-                  {/* ///////Ocualtar/////// */}
+                  {/* ///////Ocultar/////// */}
 
                   <li>
                     <Link
@@ -279,6 +280,19 @@ export default function Header({ dark = false }: { dark?: boolean }) {
                       >
                         <BookOpen size={20} />
                         <span className="font-medium">Mis Recursos</span>
+                      </Link>
+                    </li>
+                  )}
+                  {user?.role === 'admin' && (
+                    <li>
+                      <Link
+                        to="/reto-semanal"
+                        onClick={() => setShowMobileMenu(false)}
+                        className="flex items-center gap-3 w-full text-left px-4 py-3 transition-colors"
+                        style={{ color: dark ? muted : '#44403c' }}
+                      >
+                        <CalendarDays size={20} />
+                        <span className="font-medium">Reto Semanal</span>
                       </Link>
                     </li>
                   )}

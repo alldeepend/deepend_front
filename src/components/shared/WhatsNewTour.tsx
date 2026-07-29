@@ -110,14 +110,21 @@ function TourOverlay({
     let cardStyle: CardPos = {};
     let arrowStyle: CardPos | null = null;
 
+    
+    const CARD_W = Math.min(320, window.innerWidth - 32);
+    const CARD_H_EST = 280;
+
     if (isSpot && box) {
         if (data.side === 'right') {
-            cardStyle = { top: Math.max(16, box.top + box.height / 2 - 60), left: box.left + box.width + 24 };
+            cardStyle = {
+                top: Math.max(16, Math.min(box.top + box.height / 2 - 60, window.innerHeight - CARD_H_EST - 16)),
+                left: Math.max(16, Math.min(box.left + box.width + 24, window.innerWidth - CARD_W - 16)),
+            };
             arrowStyle = { left: -6, top: 40, borderRadius: 2 };
         } else {
             cardStyle = {
-                bottom: Math.max(16, window.innerHeight - box.top + 24),
-                right: Math.max(16, window.innerWidth - box.left - box.width),
+                bottom: Math.max(16, Math.min(window.innerHeight - box.top + 24, window.innerHeight - CARD_H_EST - 16)),
+                right: Math.max(16, Math.min(window.innerWidth - box.left - box.width, window.innerWidth - CARD_W - 16)),
             };
             arrowStyle = { right: 30, bottom: -6, borderRadius: 2, transform: 'rotate(-45deg)' };
         }

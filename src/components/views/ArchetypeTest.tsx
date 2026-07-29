@@ -8,6 +8,7 @@ import {
   type ArchNum,
 } from '../../data/archetypeData'
 import { archetypeApi } from '../../services/archetype'
+import { validateEmail } from '../../utils/validateEmail'
 
 // ─── Scoring ─────────────────────────────────────────────────────────────────
 
@@ -57,14 +58,14 @@ const FINGERPRINT_TEXTURE: {
   opacity: number
   size: number
 }[] = [
-  { side: 'left', offset: '-6%', top: '4%', rotate: -18, opacity: 0.12, size: 190 },
-  { side: 'left', offset: '-5%', top: '18%', rotate: -12, opacity: 0.18, size: 300 },
-  { side: 'left', offset: '-8%', top: '54%', rotate: -6, opacity: 0.1, size: 220 },
-  { side: 'left', offset: '-4%', top: '82%', rotate: -22, opacity: 0.14, size: 160 },
-  { side: 'right', offset: '-7%', top: '8%', rotate: 16, opacity: 0.13, size: 210 },
-  { side: 'right', offset: '-5%', top: '38%', rotate: 8, opacity: 0.1, size: 170 },
-  { side: 'right', offset: '-5%', top: '60%', rotate: 10, opacity: 0.18, size: 300 },
-  { side: 'right', offset: '-8%', top: '88%', rotate: 20, opacity: 0.12, size: 190 },
+  { side: 'left', offset: '-2%', top: '4%', rotate: -18, opacity: 0.16, size: 260 },
+  { side: 'left', offset: '-1%', top: '18%', rotate: -12, opacity: 0.22, size: 400 },
+  { side: 'left', offset: '-3%', top: '54%', rotate: -6, opacity: 0.15, size: 300 },
+  { side: 'left', offset: '-1%', top: '82%', rotate: -22, opacity: 0.18, size: 220 },
+  { side: 'right', offset: '-2%', top: '8%', rotate: 16, opacity: 0.17, size: 280 },
+  { side: 'right', offset: '-1%', top: '38%', rotate: 8, opacity: 0.15, size: 230 },
+  { side: 'right', offset: '-1%', top: '60%', rotate: 10, opacity: 0.22, size: 400 },
+  { side: 'right', offset: '-3%', top: '88%', rotate: 20, opacity: 0.16, size: 260 },
 ]
 
 function Wrapper({
@@ -79,6 +80,14 @@ function Wrapper({
       className="min-h-screen flex flex-col relative overflow-hidden"
       style={{ background: C.bg, fontFamily: 'Montserrat, sans-serif', color: C.text }}
     >
+      {/* Resplandor rojo ambiental detrás del contenido, le da cuerpo al fondo en pantallas anchas */}
+      <div
+        className="absolute inset-0 pointer-events-none select-none"
+        style={{
+          background: `radial-gradient(ellipse 1100px 800px at 50% 35%, ${C.red}16, transparent 65%)`,
+        }}
+      />
+
       {/* Textura decorativa — huellas tenues a los lados, mismo tema del "Espejo" */}
       {FINGERPRINT_TEXTURE.map((fp, i) => (
         <div
@@ -192,6 +201,7 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
   const [result, setResult] = useState<ResultData | null>(null)
   const [unlockedSections, setUnlockedSections] = useState<number[]>([0])
   const [emailInput, setEmailInput] = useState('')
+  const [emailError, setEmailError] = useState<string | null>(null)
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
 
   const serif = "'American Typewriter', Georgia, serif"
@@ -212,10 +222,17 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
   }, [phase, result])
 
   // Visitante anónimo: guarda el resultado asociado al correo que deje.
+  // Se valida formato + dominio (rechaza correos desechables) antes de enviar.
   function saveWithEmail() {
-    if (!result || !emailInput.trim() || saveState === 'saving') return
+    if (!result || saveState === 'saving') return
+    const check = validateEmail(emailInput)
+    if (!check.valid) {
+      setEmailError(check.reason ?? 'Correo inválido.')
+      return
+    }
+    setEmailError(null)
     setSaveState('saving')
-    archetypeApi.submitResult({ dominantKey: result.dominantKey, secondaryNum: result.secondaryNum, answers, email: emailInput.trim() })
+    archetypeApi.submitResult({ dominantKey: result.dominantKey, secondaryNum: result.secondaryNum, answers, email: emailInput.trim().toLowerCase() })
       .then(() => setSaveState('saved'))
       .catch(() => setSaveState('error'))
   }
@@ -256,6 +273,7 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
     setResult(null)
     setUnlockedSections([0])
     setEmailInput('')
+    setEmailError(null)
     setSaveState('idle')
   }
 
@@ -344,111 +362,155 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
       <Wrapper phase={phase} onClose={onClose}>
         <div className="flex-1 flex flex-col items-center py-12 px-6">
           <div className="w-full max-w-lg">
-            {/* Header */}
-            <p className="text-[10px] font-bold tracking-[0.2em] uppercase mb-2" style={{ color: C.label }}>
-              Arquetipo
-            </p>
-            <h1
-              className="text-3xl sm:text-4xl font-bold leading-tight mb-1"
-              style={{ fontFamily: serif, color: C.text }}
-            >
-              {res.name}
-            </h1>
-            <p className="text-sm italic mb-8" style={{ color: C.textMuted }}>
-              {res.variant}
-            </p>
+            {/* Contenido del resultado — bloqueado con candado hasta dejar el correo (visitantes anónimos) */}
+            {(() => {
+              const locked = !isLoggedIn && saveState !== 'saved'
+              return (
+                <div className="relative">
+                  <div
+                    className="rounded-2xl"
+                    style={{
+                      filter: locked ? 'blur(14px)' : 'none',
+                      opacity: locked ? 0.9 : 1,
+                      pointerEvents: locked ? 'none' : 'auto',
+                      userSelect: locked ? 'none' : 'auto',
+                      transition: 'filter 0.6s ease, opacity 0.6s ease',
+                    }}
+                    aria-hidden={locked}
+                  >
+                    <p className="text-[10px] font-bold tracking-[0.2em] uppercase mb-2" style={{ color: C.label }}>
+                      Arquetipo
+                    </p>
+                    <h1
+                      className="text-3xl sm:text-4xl font-bold leading-tight mb-1"
+                      style={{ fontFamily: serif, color: C.text }}
+                    >
+                      {res.name}
+                    </h1>
+                    <p className="text-sm italic mb-8" style={{ color: C.textMuted }}>
+                      {res.variant}
+                    </p>
 
-            <ResultAudioPlayer audioKey={result.dominantKey} />
+                    <ResultAudioPlayer audioKey={result.dominantKey} />
 
-            <div className="border-t" style={{ borderColor: C.border }} />
+                    <div className="border-t" style={{ borderColor: C.border }} />
 
-            <Section title="Tu patrón" body={res.pattern} index={0} />
-            <Section title="Lo que esto ha costado" body={res.cost} index={1} />
-            <Section title="Lo que ya sabes hacer" body={res.strengths} index={2} />
-            <Section title="Una micro-acción esta semana" body={res.microAction} index={3} />
+                    <Section title="Tu patrón" body={res.pattern} index={0} />
+                    <Section title="Lo que esto ha costado" body={res.cost} index={1} />
+                    <Section title="Lo que ya sabes hacer" body={res.strengths} index={2} />
+                    <Section title="Una micro-acción esta semana" body={res.microAction} index={3} />
 
-            {/* Teaser */}
-            <div
-              className="mt-6 rounded-2xl border p-5"
-              style={{ background: C.surface1, borderColor: `${C.red}30` }}
-            >
-              <p className="text-[10px] font-bold tracking-[0.18em] uppercase mb-2" style={{ color: C.red }}>
-                Hay algo más en tu patrón
-              </p>
-              <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>
-                Tus respuestas también muestran una tendencia hacia{' '}
-                <span className="font-semibold" style={{ color: C.text }}>
-                  {result.secondaryName}
-                </span>
-                . Esa combinación tiene una dinámica particular que vale explorar — porque
-                los dos patrones juntos se refuerzan de una manera que este diagnóstico
-                solo puede nombrar, no desarrollar. Eso viene después del espejo.
-              </p>
-            </div>
+                    {/* Teaser */}
+                    <div
+                      className="mt-6 rounded-2xl border p-5"
+                      style={{ background: C.surface1, borderColor: `${C.red}30` }}
+                    >
+                      <p className="text-[10px] font-bold tracking-[0.18em] uppercase mb-2" style={{ color: C.red }}>
+                        Hay algo más en tu patrón
+                      </p>
+                      <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>
+                        Tus respuestas también muestran una tendencia hacia{' '}
+                        <span className="font-semibold" style={{ color: C.text }}>
+                          {result.secondaryName}
+                        </span>
+                        . Esa combinación tiene una dinámica particular que vale explorar — porque
+                        los dos patrones juntos se refuerzan de una manera que este diagnóstico
+                        solo puede nombrar, no desarrollar. Eso viene después del espejo.
+                      </p>
+                    </div>
+                  </div>
 
-            {/* Guardar resultado — visitantes anónimos */}
-            {!isLoggedIn && (
+                  {/* Candado — visitante anónimo que aún no dejó su correo */}
+                  {locked && (
+                    <div
+                      className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 py-8 rounded-2xl"
+                      style={{ background: `${C.bg}d9`, border: `1px solid ${C.border}` }}
+                    >
+                      <div
+                        className="w-14 h-14 rounded-full flex items-center justify-center mb-4"
+                        style={{ background: `${C.green}18`, border: `1px solid ${C.green}40` }}
+                      >
+                        <Lock size={22} style={{ color: C.green }} />
+                      </div>
+                      <p className="text-[10px] font-bold tracking-[0.18em] uppercase mb-2" style={{ color: C.green }}>
+                        Tu arquetipo ya está listo
+                      </p>
+                      <h2
+                        className="text-lg font-bold leading-snug mb-2 max-w-xs"
+                        style={{ fontFamily: serif, color: C.text }}
+                      >
+                        Déjanos tu correo para revelarlo
+                      </h2>
+                      <p className="text-sm leading-relaxed mb-5 max-w-xs" style={{ color: C.textMuted }}>
+                        De paso lo guardamos: si creas tu cuenta en DeepEnd con ese mismo correo,
+                        tu arquetipo va a estar esperándote ahí.
+                      </p>
+                      <div className="w-full max-w-xs flex flex-col gap-2">
+                        <div
+                          className="flex items-center gap-2 px-4 rounded-xl border"
+                          style={{ borderColor: emailError ? C.red : C.border, background: C.surface1 }}
+                        >
+                          <Mail size={16} style={{ color: C.label }} />
+                          <input
+                            type="email"
+                            value={emailInput}
+                            onChange={e => { setEmailInput(e.target.value); if (emailError) setEmailError(null) }}
+                            onBlur={() => {
+                              if (!emailInput.trim()) return
+                              const check = validateEmail(emailInput)
+                              setEmailError(check.valid ? null : (check.reason ?? 'Correo inválido.'))
+                            }}
+                            onKeyDown={e => { if (e.key === 'Enter') saveWithEmail() }}
+                            placeholder="tucorreo@ejemplo.com"
+                            className="flex-1 py-3 bg-transparent outline-none text-sm"
+                            style={{ color: C.text }}
+                          />
+                        </div>
+                        <button
+                          onClick={saveWithEmail}
+                          disabled={!emailInput.trim() || saveState === 'saving'}
+                          className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-opacity hover:opacity-90"
+                          style={{
+                            background: !emailInput.trim() ? C.surface2 : C.green,
+                            color: !emailInput.trim() ? C.disabled : '#fff',
+                            cursor: !emailInput.trim() ? 'not-allowed' : 'pointer',
+                          }}
+                        >
+                          {saveState === 'saving' ? 'Revelando...' : <><Lock size={14} /> Revelar mi arquetipo</>}
+                        </button>
+                      </div>
+                      {emailError && (
+                        <p className="text-xs mt-3" style={{ color: C.red }}>
+                          {emailError}
+                        </p>
+                      )}
+                      {!emailError && saveState === 'error' && (
+                        <p className="text-xs mt-3" style={{ color: C.red }}>
+                          No pudimos guardar tu resultado. Intenta de nuevo.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
+
+            {/* Confirmación — visitante anónimo que ya dejó su correo */}
+            {!isLoggedIn && saveState === 'saved' && (
               <div
-                className="mt-6 rounded-2xl border p-5"
+                className="mt-6 rounded-2xl border p-5 flex items-start gap-3"
                 style={{ background: C.surface1, borderColor: C.border }}
               >
-                {saveState === 'saved' ? (
-                  <div className="flex items-start gap-3">
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                      style={{ background: `${C.green}22` }}
-                    >
-                      <Check size={16} style={{ color: C.green }} />
-                    </div>
-                    <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>
-                      <span className="font-semibold" style={{ color: C.text }}>Guardado.</span>{' '}
-                      Cuando crees tu cuenta en DeepEnd con este correo, tu arquetipo va a estar esperándote.
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <p className="text-[10px] font-bold tracking-[0.18em] uppercase mb-2" style={{ color: C.green }}>
-                      ¿Quieres conservar este resultado?
-                    </p>
-                    <p className="text-sm leading-relaxed mb-4" style={{ color: C.textMuted }}>
-                      Déjanos tu correo. Si en el futuro creas tu cuenta en DeepEnd con ese mismo correo,
-                      tu arquetipo va a aparecer ahí automáticamente.
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <div
-                        className="flex-1 flex items-center gap-2 px-4 rounded-xl border"
-                        style={{ borderColor: C.border, background: C.surface2 }}
-                      >
-                        <Mail size={16} style={{ color: C.label }} />
-                        <input
-                          type="email"
-                          value={emailInput}
-                          onChange={e => setEmailInput(e.target.value)}
-                          placeholder="tucorreo@ejemplo.com"
-                          className="flex-1 py-3 bg-transparent outline-none text-sm"
-                          style={{ color: C.text }}
-                        />
-                      </div>
-                      <button
-                        onClick={saveWithEmail}
-                        disabled={!emailInput.trim() || saveState === 'saving'}
-                        className="px-5 py-3 rounded-xl font-bold text-sm transition-opacity hover:opacity-90"
-                        style={{
-                          background: !emailInput.trim() ? C.surface2 : C.green,
-                          color: !emailInput.trim() ? C.disabled : '#fff',
-                          cursor: !emailInput.trim() ? 'not-allowed' : 'pointer',
-                        }}
-                      >
-                        {saveState === 'saving' ? 'Guardando...' : 'Guardar mi resultado'}
-                      </button>
-                    </div>
-                    {saveState === 'error' && (
-                      <p className="text-xs mt-2" style={{ color: C.red }}>
-                        No pudimos guardar tu resultado. Intenta de nuevo.
-                      </p>
-                    )}
-                  </>
-                )}
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ background: `${C.green}22` }}
+                >
+                  <Check size={16} style={{ color: C.green }} />
+                </div>
+                <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>
+                  <span className="font-semibold" style={{ color: C.text }}>Guardado.</span>{' '}
+                  Cuando crees tu cuenta en DeepEnd con este correo, tu arquetipo va a estar esperándote.
+                </p>
               </div>
             )}
 

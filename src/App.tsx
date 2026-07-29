@@ -29,6 +29,7 @@ import WhatsAppButton from './components/shared/WhatsAppButton';
 import WhatsNewTour from './components/shared/WhatsNewTour';
 import PwaUpdater from './components/shared/PwaUpdater';
 import News from './components/views/News';
+import RetoSemanal from './components/views/RetoSemanal';
 
 function App() {
     const host = window.location.hostname;
@@ -83,6 +84,11 @@ function App() {
                 <Route path="/news" element={
                     <ProtectedRoute>
                         <News />
+                    </ProtectedRoute>
+                } />
+                <Route path="/reto-semanal" element={
+                    <ProtectedRoute>
+                        <RetoSemanal />
                     </ProtectedRoute>
                 } />
                 <Route path="/challenges/financial-assessment" element={

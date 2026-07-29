@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { Lock, Award, DoorOpen, ChevronDown, ChevronUp } from 'lucide-react'
+import { Lock, Award, DoorOpen, ChevronDown, ChevronUp, ChevronRight } from 'lucide-react'
 import { journeyApi } from '../../../services/journey'
 import type { JourneyDetailsResponse, StationProgress, GateStatus, World } from '../../../types/journey'
 import { C } from '../../../styles/colors'
@@ -441,13 +441,19 @@ function StationCard({
         <div className="relative">
             <button
                 onClick={onClick}
-                className="w-full text-left rounded-xl p-4 transition-all duration-200"
+                className="w-full text-left rounded-xl p-4 pr-9 md:pr-4 transition-all duration-200"
                 style={{
                     background: C.surface1,
                     border: `1px solid ${statusColor}`,
                     boxShadow: isCurrent ? `0 0 0 2px ${C.red}30` : undefined,
                 }}
             >
+                {/* En PC el cursor ya indica que es clicable; en celular no hay ese aviso, así que se muestra la flecha */}
+                <ChevronRight
+                    size={16}
+                    className="md:hidden absolute top-1/2 right-3 -translate-y-1/2 pointer-events-none"
+                    style={{ color: C.textMuted }}
+                />
                 <div className="flex items-start justify-between gap-2 flex-wrap">
                     <p className="font-semibold text-sm leading-snug" style={{ color: C.text }}>
                         {title}

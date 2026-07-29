@@ -4,6 +4,7 @@ import { journeyApi } from '../../../services/journey'
 import type { Area, Collection, GateStatus, Journey, UserJourneyProgress } from '../../../types/journey'
 import { useAuth } from '../../../store/useAuth'
 import { HomeSidebar } from '../../home/HomeSidebar'
+import Header from '../../shared/Header'
 import { C } from '../../../styles/colors'
 import WorldsRightSidebar, { earnedBadgesFromAreas, totalXpFromAreas } from './WorldsRightSidebar'
 import GateModal from './GateModal'
@@ -239,6 +240,11 @@ export default function WorldsHome() {
                                     className="flex flex-col overflow-hidden"
                                     style={{ height: '100dvh', background: C.bg }}
                                 >
+                                    {/* Header móvil con menú hamburguesa */}
+                                    <div className="md:hidden flex-shrink-0">
+                                        <Header dark />
+                                    </div>
+
                                     {/* ── Zona superior: contador + área + título ── */}
                                     <div className="relative z-10 flex flex-col gap-4 px-6 pt-14 text-center">
                                         <p className="text-xs tracking-[0.3em] uppercase" style={{ color: C.textMuted }}>

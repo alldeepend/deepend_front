@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router'
-import { ArrowRight, HeartHandshake, Activity, Award, Quote, Fingerprint, Flame, Play, Pause, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowRight, HeartHandshake, Activity, Award, Quote, Fingerprint, Flame, Play, Pause, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react'
 import InterestForm from '../InterestForm'
 import ArchetypeTest from './ArchetypeTest'
 import { C } from '../../styles/colors'
@@ -125,6 +125,14 @@ const testimonials = [
     img: '/Imagen_Testimonio.jpg',     // reemplazar con foto real
     audio: '/audio/testimonials/susana-panqueva.mp3',
     color: '#5B9BF7',
+  },
+  {
+    name: 'Paola Vargas',
+    role: 'Usuaria DeepEnd',
+    text: 'Para mí, DeepEnd ha sido una comunidad que me ayudó en momentos difíciles y me acercó a gente que hoy considero mis amigos.',
+    img: '/Imagen_Testimonio.jpg',     // reemplazar con foto real
+    audio: '/audio/testimonials/paola-vargas.mp3',
+    color: '#E8C547',
   },
 ]
 
@@ -303,6 +311,10 @@ export default function Landing() {
     document.getElementById('interest-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }
 
+  const scrollToNextSection = () => {
+    document.getElementById('landing-value-prop')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   useEffect(() => {
     if (testOpen) {
       document.body.style.overflow = 'hidden'
@@ -318,7 +330,12 @@ export default function Landing() {
         style={{ background: C.bg + 'e6', borderColor: C.border }}
       >
         <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
-          <img src="/pwa-512x512.png" alt="DeepEnd" className="w-9 h-9 rounded-full" />
+          <div className="flex items-center gap-2.5">
+            <img src="/pwa-512x512.png" alt="" className="w-9 h-9 rounded-full" />
+            <span className="text-lg font-bold" style={heading}>
+              DeepEnd<span style={{ color: C.green }}>.</span>
+            </span>
+          </div>
           <button
             onClick={() => navigate('/login')}
             className="cursor-pointer text-sm font-bold px-5 py-2.5 rounded-full transition-opacity hover:opacity-90"
@@ -353,10 +370,26 @@ export default function Landing() {
             <ArrowRight size={18} />
           </button>
         </div>
+
+        <button
+          onClick={scrollToNextSection}
+          className="cursor-pointer absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 transition-opacity hover:opacity-80"
+          aria-label="Descubre más"
+        >
+          <span className="text-[10px] tracking-[0.25em] uppercase" style={{ color: C.text + '99' }}>
+            Descubre más
+          </span>
+          <span
+            className="w-9 h-9 rounded-full flex items-center justify-center animate-bounce"
+            style={{ background: C.surface1 + 'cc', border: `1px solid ${C.border}` }}
+          >
+            <ChevronDown size={18} style={{ color: C.text }} />
+          </span>
+        </button>
       </section>
 
       {/* Propuesta de valor — Ruta metro */}
-      <section className="py-16 sm:py-28 overflow-hidden" style={{ background: C.bg }}>
+      <section id="landing-value-prop" className="py-16 sm:py-28 overflow-hidden" style={{ background: C.bg }}>
 
         {/* Encabezado */}
         <div className="max-w-5xl mx-auto px-6 text-center mb-12 sm:mb-20">
@@ -674,7 +707,7 @@ export default function Landing() {
           style={{ borderColor: `${C.red}30`, background: C.bg }}
         >
           <p className="text-[11px] font-bold tracking-[0.2em] uppercase mb-4" style={{ color: C.red }}>
-            DeepEnd · Test
+            DeepEnd · Arquetipo
           </p>
           <h2 className="text-2xl sm:text-3xl font-bold" style={heading}>
             Antes de seguir, conoce tu patrón
@@ -687,7 +720,7 @@ export default function Landing() {
             className="cursor-pointer mt-8 inline-flex items-center gap-2 font-bold px-7 py-4 rounded-full transition-opacity hover:opacity-90"
             style={{ background: C.red, color: '#fff' }}
           >
-            Hacer el test
+            Descubre tu arquetipo
             <ArrowRight size={18} />
           </button>
         </div>

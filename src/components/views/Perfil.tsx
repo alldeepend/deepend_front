@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Edit2, Save, X, User as UserIcon, Calendar, MapPin, Phone, RefreshCw, Trash2, AlertTriangle, Camera, Loader2, Plus, Heart, Sparkles } from 'lucide-react';
+import { ArrowLeft, Edit2, Save, X, User as UserIcon, Calendar, MapPin, Phone, RefreshCw, Trash2, AlertTriangle, Camera, Loader2, Plus, Heart, Sparkles, Zap, Brain, Award, Fingerprint } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { HomeSidebar } from '../home/HomeSidebar';
 import { useAuth } from '../../store/useAuth';
 import Header from '../../components/shared/Header';
 import { C } from '../../styles/colors';
+import { journeyApi } from '../../services/journey';
+import { archetypeApi } from '../../services/archetype';
+import { RESULTS, type ArchetypeResult } from '../../data/archetypeData';
+import { earnedBadgesFromAreas, totalXpFromAreas, badgeColorFor, type SidebarBadge } from './worlds/WorldsRightSidebar';
 
 // Helper to get API URL
 const getApiUrl = () => {
@@ -39,6 +43,23 @@ export default function Perfil() {
     const [saving, setSaving] = useState(false);
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+    // XP, arquetipo e insignias — antes solo visibles en el sidebar derecho de
+    // escritorio (Dashboard/Mundos); en celular ese sidebar está oculto, así que
+    // se muestran acá para que también sean visibles ahí.
+    const [progress, setProgress] = useState<{ totalXp: number; badges: SidebarBadge[]; archetypeInfo: ArchetypeResult | null } | null>(null);
+
+    useEffect(() => {
+        Promise.all([journeyApi.getAvailableJourneys(), archetypeApi.getMyResult()])
+            .then(([{ areas }, archRes]) => {
+                setProgress({
+                    totalXp: totalXpFromAreas(areas),
+                    badges: earnedBadgesFromAreas(areas),
+                    archetypeInfo: archRes.result ? (RESULTS[archRes.result.dominantKey] ?? null) : null,
+                });
+            })
+            .catch(() => {});
+    }, []);
 
     // Initial state matching the requested fields
     const [formData, setFormData] = useState<ProfileData>({
@@ -346,6 +367,88 @@ export default function Perfil() {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Mi Progreso — XP, arquetipo e insignias */}
+                            {progress && (
+                                <div className="mb-8">
+                                    <h4 className="text-sm font-bold uppercase tracking-wider mb-4 pl-1" style={{ color: C.text }}>Mi Progreso</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="rounded-2xl p-4 border flex items-center gap-3" style={{ background: C.surface1, borderColor: C.border }}>
+                                            <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: `${C.amber}22` }}>
+                                                <Zap size={18} style={{ color: C.amber }} />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: C.label }}>XP Total</p>
+                                                {progress.totalXp > 0 ? (
+                                                    <p className="text-lg font-bold" style={{ fontFamily: "'American Typewriter', Georgia, serif", color: C.text }}>
+                                                        {progress.totalXp.toLocaleString('es')} XP
+                                                    </p>
+                                                ) : (
+                                                    <p className="text-xs font-semibold" style={{ color: C.textMuted }}>Aún no sumas XP</p>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {progress.archetypeInfo ? (
+                                            <div className="rounded-2xl p-4 border flex items-center gap-3" style={{ background: C.surface1, borderColor: C.border }}>
+                                                <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: `${C.amber}22` }}>
+                                                    <Brain size={18} style={{ color: C.amber }} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: C.label }}>Mi Arquetipo</p>
+                                                    <p className="text-sm font-bold leading-tight" style={{ fontFamily: "'American Typewriter', Georgia, serif", color: C.text }}>
+                                                        {progress.archetypeInfo.name}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => navigate('/test')}
+                                                className="rounded-2xl p-4 flex items-center gap-3 text-left transition-opacity hover:opacity-80"
+                                                style={{ border: `1px dashed ${C.border}`, background: 'transparent' }}
+                                            >
+                                                <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: C.surface2 }}>
+                                                    <Fingerprint size={18} style={{ color: C.amber }} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: C.label }}>Mi Arquetipo</p>
+                                                    <p className="text-xs font-bold" style={{ color: C.amber }}>Hacer el test →</p>
+                                                </div>
+                                            </button>
+                                        )}
+
+                                        <div className="rounded-2xl p-4 border flex items-center gap-3" style={{ background: C.surface1, borderColor: C.border }}>
+                                            <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: `${C.green}22` }}>
+                                                <Award size={18} style={{ color: C.green }} />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: C.label }}>Insignias</p>
+                                                <p className="text-lg font-bold" style={{ fontFamily: "'American Typewriter', Georgia, serif", color: C.text }}>
+                                                    {progress.badges.length}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {progress.badges.length > 0 && (
+                                        <div className="mt-4 flex flex-wrap gap-2">
+                                            {progress.badges.map((b, i) => {
+                                                const color = badgeColorFor(b.name);
+                                                return (
+                                                    <span
+                                                        key={i}
+                                                        className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border"
+                                                        style={{ background: `${color}18`, borderColor: `${color}55`, color }}
+                                                    >
+                                                        <Award size={12} />
+                                                        {b.name}
+                                                    </span>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             {/* Form Grid */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

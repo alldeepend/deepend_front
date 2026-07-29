@@ -10,6 +10,7 @@ import {
     LogOut,
     Globe,
     Newspaper,
+    CalendarDays,
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../../store/useAuth';
@@ -17,7 +18,7 @@ import { SidebarItem } from './SidebarItem';
 import { C } from '../../styles/colors';
 
 interface HomeSidebarProps {
-    activeTab: 'Dashboard' | 'Mi Viaje' | 'Mis Retos' | 'Mis Recursos' | 'Perfil' | 'Mundos' | 'Noticias';
+    activeTab: 'Dashboard' | 'Mi Viaje' | 'Mis Retos' | 'Mis Recursos' | 'Perfil' | 'Mundos' | 'Noticias' | 'Reto Semanal';
     dark?: boolean;
 }
 
@@ -84,6 +85,15 @@ export const HomeSidebar = ({ activeTab, dark = true }: HomeSidebarProps) => {
                         onClick={() => navigate('/news')}
                         dark={dark}
                     />
+                    {user?.role === 'admin' && (
+                        <SidebarItem
+                            icon={CalendarDays}
+                            label="Reto Semanal"
+                            active={activeTab === 'Reto Semanal'}
+                            onClick={() => navigate('/reto-semanal')}
+                            dark={dark}
+                        />
+                    )}
                     {/* ///////Ocualtat/////// */}
                     <SidebarItem
                         icon={User}

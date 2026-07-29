@@ -10,7 +10,7 @@ export default defineConfig({
     react(),
     tailwindcss() as PluginOption,
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       injectRegister: false,
       devOptions: {
         enabled: true
