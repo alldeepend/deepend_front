@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, Link } from 'react-router'
 import { ArrowRight, HeartHandshake, Activity, Award, Quote, Fingerprint, Flame, Play, Pause, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react'
 import InterestForm from '../InterestForm'
 import ArchetypeTest from './ArchetypeTest'
@@ -337,7 +337,14 @@ export default function Landing() {
             </span>
           </div>
           <button
-            onClick={() => navigate('/login')}
+            onClick={() => {
+              
+              if (window.location.hostname === 'alldeepend.com') {
+                window.location.href = 'https://app.alldeepend.com/login'
+              } else {
+                navigate('/login')
+              }
+            }}
             className="cursor-pointer text-sm font-bold px-5 py-2.5 rounded-full transition-opacity hover:opacity-90"
             style={{ background: C.green, color: C.bg }}
           >
@@ -728,7 +735,13 @@ export default function Landing() {
 
       {/* Imagen ilustrativa / reto */}
       <section className="relative">
-        <img src="/Reto Desde Aquí.png" alt="Reto Desde Aquí - Por ti" className="w-full h-72 sm:h-96 object-cover" />
+        <div className="w-full h-72 sm:h-96 overflow-hidden">
+          <img
+            src="/Reto Desde Aquí.png"
+            alt="Reto Desde Aquí - Por ti"
+            className="w-full h-full object-cover object-bottom scale-[1.4] -translate-y-[8%] sm:object-center sm:scale-100 sm:translate-y-0"
+          />
+        </div>
         <div className="absolute inset-0 flex items-center justify-center text-center px-6" style={{ background: C.bg + '66' }}>
           <p className="text-2xl sm:text-4xl font-bold max-w-2xl" style={heading}>
             El cambio empieza desde aquí, por ti.
@@ -754,6 +767,15 @@ export default function Landing() {
       <footer className="py-8 text-center">
         <img src="/pwa-512x512.png" alt="DeepEnd" className="w-8 h-8 rounded-full mx-auto" />
         <p className="text-xs mt-3" style={body}>© {new Date().getFullYear()} DeepEnd</p>
+        <div className="flex items-center justify-center gap-3 mt-1.5">
+          <Link to="/privacy-policy" className="text-xs transition-opacity hover:opacity-80" style={{ color: C.label }}>
+            Política de Privacidad
+          </Link>
+          <span className="text-xs" style={{ color: C.border }}>·</span>
+          <Link to="/creditos" className="text-xs transition-opacity hover:opacity-80" style={{ color: C.label }}>
+            Créditos
+          </Link>
+        </div>
       </footer>
 
       {testOpen && (

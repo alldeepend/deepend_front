@@ -30,6 +30,8 @@ import WhatsNewTour from './components/shared/WhatsNewTour';
 import PwaUpdater from './components/shared/PwaUpdater';
 import News from './components/views/News';
 import RetoSemanal from './components/views/RetoSemanal';
+import PrivacyPolicy from './components/views/PrivacyPolicy';
+import Creditos from './components/views/Creditos';
 
 function App() {
     const host = window.location.hostname;
@@ -46,6 +48,8 @@ function App() {
                         <Landing />
                     </PublicRoute>
                 } />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/creditos" element={<Creditos />} />
                 <Route path="/dashboard" element={
                     <ProtectedRoute>
                         <HomePage />
