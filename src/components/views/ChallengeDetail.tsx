@@ -8,6 +8,8 @@ import Header from '../../components/shared/Header';
 import { useAuth } from '../../store/useAuth';
 import myMoneyInActionSchema from '../../data/forms/finance/my_money_in_action.json';
 import { C } from '../../styles/colors';
+import WeeklyProgressSection from '../shared/WeeklyProgressSection';
+import { getYouTubeEmbedUrl } from '../../utils/youtube';
 
 const host = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/api\/?$/, '');
 
@@ -64,25 +66,6 @@ const AccordionSection = ({ title, content }: { title: string, content: string }
         </div>
     );
 };
-
-function getYouTubeEmbedUrl(url: string): string | null {
-    try {
-        const u = new URL(url);
-        let videoId: string | null = null;
-        if (u.hostname === 'youtu.be') {
-            videoId = u.pathname.slice(1).split('?')[0];
-        } else if (u.hostname.includes('youtube.com')) {
-            if (u.pathname.startsWith('/embed/')) {
-                videoId = u.pathname.split('/embed/')[1].split('?')[0];
-            } else {
-                videoId = u.searchParams.get('v');
-            }
-        }
-        return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
-    } catch {
-        return null;
-    }
-}
 
 const VideoAccordionSection = ({ title, url }: { title: string, url: string }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -161,6 +144,20 @@ export default function ChallengeDetail() {
         queryFn: async () => {
             const token = localStorage.getItem('token');
             const res = await fetch(`${host}/api/challenge/me`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) return null;
+            return await res.json();
+        },
+        enabled: challengeId === PHYSICAL_CHALLENGE_ID,
+    });
+
+    // Fetch the full 8-week breakdown (meta vs. registrado) for this participant
+    const { data: progressHistory } = useQuery({
+        queryKey: ['challenge-progress-history'],
+        queryFn: async () => {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${host}/api/challenge/progress/history`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (!res.ok) return null;
@@ -552,6 +549,9 @@ export default function ChallengeDetail() {
                         </div>
                     </div>
 
+                    {challengeId === PHYSICAL_CHALLENGE_ID && progressHistory?.isParticipant && (
+                        <WeeklyProgressSection history={progressHistory} />
+                    )}
 
                     {/* Details Grid - New Fields */}
                     <div className="flex flex-col gap-6 mb-8">

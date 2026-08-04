@@ -7,7 +7,7 @@ import { ActiveChallenges } from './ActiveChallenges';
 import ActivityLogModal from '../shared/ActivityLogModal';
 import RecognitionChestModal from '../shared/RecognitionChestModal';
 import { RecentActivities } from './RecentActivities';
-import { ChallengeProgressCard } from './ChallengeProgressCard';
+import { WeeklyChallengeProgressCard } from './WeeklyChallengeProgressCard';
 import { CurrentJourneyCard } from './CurrentJourneyCard';
 import { Star, Sparkles } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -205,7 +205,7 @@ export const DashboardContent = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
                 <StatsCard />
-                <ChallengeProgressCard />
+                <WeeklyChallengeProgressCard />
                 <CurrentJourneyCard />
                 {/* <SocialProfileCard /> */}
             </div>

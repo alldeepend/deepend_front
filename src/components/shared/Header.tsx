@@ -283,19 +283,17 @@ export default function Header({ dark = true }: { dark?: boolean }) {
                       </Link>
                     </li>
                   )}
-                  {user?.role === 'admin' && (
-                    <li>
-                      <Link
-                        to="/reto-semanal"
-                        onClick={() => setShowMobileMenu(false)}
-                        className="flex items-center gap-3 w-full text-left px-4 py-3 transition-colors"
-                        style={{ color: dark ? muted : '#44403c' }}
-                      >
-                        <CalendarDays size={20} />
-                        <span className="font-medium">Reto Semanal</span>
-                      </Link>
-                    </li>
-                  )}
+                  <li>
+                    <Link
+                      to="/reto-semanal"
+                      onClick={() => setShowMobileMenu(false)}
+                      className="flex items-center gap-3 w-full text-left px-4 py-3 transition-colors"
+                      style={{ color: dark ? muted : '#44403c' }}
+                    >
+                      <CalendarDays size={20} />
+                      <span className="font-medium">Reto Semanal</span>
+                    </Link>
+                  </li>
 
                   {/* ///////Ocualtar/////// */}
 

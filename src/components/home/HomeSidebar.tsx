@@ -85,15 +85,13 @@ export const HomeSidebar = ({ activeTab, dark = true }: HomeSidebarProps) => {
                         onClick={() => navigate('/news')}
                         dark={dark}
                     />
-                    {user?.role === 'admin' && (
-                        <SidebarItem
-                            icon={CalendarDays}
-                            label="Reto Semanal"
-                            active={activeTab === 'Reto Semanal'}
-                            onClick={() => navigate('/reto-semanal')}
-                            dark={dark}
-                        />
-                    )}
+                    <SidebarItem
+                        icon={CalendarDays}
+                        label="Reto Semanal"
+                        active={activeTab === 'Reto Semanal'}
+                        onClick={() => navigate('/reto-semanal')}
+                        dark={dark}
+                    />
                     {/* ///////Ocualtat/////// */}
                     <SidebarItem
                         icon={User}

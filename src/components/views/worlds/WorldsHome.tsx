@@ -113,22 +113,28 @@ export default function WorldsHome() {
         }
     }
 
-    // Antes de entrar a un viaje, revisa si tiene una Puerta sin completar — si la tiene,
-    // el modal se abre aquí mismo y todavía no se navega a los Mundos del viaje.
+    
     const handleStartClick = async (journeyId: string) => {
         setCheckingGateId(journeyId)
         try {
-            const status = await journeyApi.getGateStatus(journeyId)
+            let status
+            try {
+                status = await journeyApi.getGateStatus(journeyId)
+            } catch {
+                status = await journeyApi.getGateStatus(journeyId)
+            }
             if (status.hasGate && !status.completed) {
                 setGateStatus(status)
                 setGateJourneyId(journeyId)
+                setCheckingGateId(null)
                 return
             }
         } catch {
-            // si falla la consulta de la puerta, no bloquear al usuario
-        } finally {
             setCheckingGateId(null)
+            alert('No se pudo verificar tu viaje. Revisa tu conexión e intenta de nuevo.')
+            return
         }
+        setCheckingGateId(null)
         enterJourney(journeyId)
     }
 

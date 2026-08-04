@@ -41,6 +41,19 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
         enabled: isOpen,
     });
 
+    const { data: weeklyChallengeData } = useQuery({
+        queryKey: ['weekly-challenge-me'],
+        queryFn: async () => {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${host}/api/v2/weekly-challenge/me`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) return null;
+            return await res.json();
+        },
+        enabled: isOpen,
+    });
+
     const resetForm = () => {
         setActivity('');
         setDuration('');
@@ -64,6 +77,22 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['challenge-me'] });
+        }
+    });
+
+    const weeklyChallengeCheckinMutation = useMutation({
+        mutationFn: async (response: string) => {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${host}/api/v2/weekly-challenge/checkin`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ response })
+            });
+            if (!res.ok) throw new Error('Error al guardar check-in');
+            return await res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['weekly-challenge-me'] });
         }
     });
 
@@ -100,10 +129,14 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
             queryClient.invalidateQueries({ queryKey: ['recent-activities'] });
             queryClient.invalidateQueries({ queryKey: ['all-activities'] });
             queryClient.invalidateQueries({ queryKey: ['challenge-progress'] });
+            queryClient.invalidateQueries({ queryKey: ['weekly-challenge-progress'] });
 
-            // Save check-in if provided
+            // Save check-in if provided (reto viejo "Desde Aquí" y/o Reto Semanal, el que aplique)
             if (checkinResponse && challengeData?.isParticipant && (!challengeData?.hasCheckedInThisWeek || !challengeData?.checkinResponse)) {
                 try { await checkinMutation.mutateAsync(checkinResponse); } catch {}
+            }
+            if (checkinResponse && weeklyChallengeData?.isParticipant && !weeklyChallengeData?.hasCheckedInThisWeek) {
+                try { await weeklyChallengeCheckinMutation.mutateAsync(checkinResponse); } catch {}
             }
 
             onClose();
@@ -186,8 +219,10 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
         logMutation.mutate(formData);
     };
 
-    const showCheckin = challengeData?.isParticipant && challengeData?.isInChallenge &&
-        (!challengeData?.hasCheckedInThisWeek || !challengeData?.checkinResponse);
+    const showCheckin =
+        (challengeData?.isParticipant && challengeData?.isInChallenge &&
+            (!challengeData?.hasCheckedInThisWeek || !challengeData?.checkinResponse)) ||
+        (weeklyChallengeData?.isParticipant && !weeklyChallengeData?.hasCheckedInThisWeek);
 
     if (!isOpen) return null;
 
