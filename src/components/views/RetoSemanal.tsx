@@ -9,7 +9,6 @@ import { C } from '../../styles/colors';
 import { weeklyChallengeApi } from '../../services/weeklyChallenge';
 import WeeklyChallengeGrid from '../shared/WeeklyChallengeGrid';
 import { getYouTubeEmbedUrl } from '../../utils/youtube';
-import { INTRO_VIDEO_URL, INTRO_VIDEO_TITLE, INTRO_TEXT_TITLE, INTRO_TEXT_HTML, INTRO_FORM_SCHEMA } from '../../data/weeklyChallengeIntro';
 import { journeyApi } from '../../services/journey';
 import type { Area } from '../../types/journey';
 import WorldsRightSidebar, { earnedBadgesFromAreas, totalXpFromAreas } from './worlds/WorldsRightSidebar';
@@ -34,6 +33,12 @@ export default function RetoSemanal() {
     const { data: me, isLoading: loadingMe } = useQuery({
         queryKey: ['weekly-challenge-me'],
         queryFn: weeklyChallengeApi.getMe,
+    });
+
+    const { data: introContent } = useQuery({
+        queryKey: ['weekly-challenge-intro-content'],
+        queryFn: weeklyChallengeApi.getIntroContent,
+        enabled: !!me?.isParticipant && !!me?.needsIntro,
     });
 
     const { data: history } = useQuery({
@@ -96,7 +101,7 @@ export default function RetoSemanal() {
     const showIntro = me?.isParticipant && me?.needsIntro;
     const showGoalPopup = me?.isParticipant && !me?.needsIntro && (me?.showGoalPopup || modifyingGoal);
     const isFirstGoal = !me?.goalMinutes;
-    const embedUrl = getYouTubeEmbedUrl(INTRO_VIDEO_URL);
+    const embedUrl = introContent ? getYouTubeEmbedUrl(introContent.videoUrl) : null;
     // La meta del primer bloque (semanas 1-3) no se puede tocar antes de tiempo —
     // recién se puede modificar a partir de la semana 4, cuando ya se vivió el bloque.
     const canModifyGoal = (me?.weekNumber ?? 0) > 3;
@@ -199,12 +204,14 @@ export default function RetoSemanal() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
                     <div className="rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200" style={{ background: C.surface1 }}>
                         <div className="p-6 md:p-8 overflow-y-auto">
-                            <DynamicForm
-                                schema={INTRO_FORM_SCHEMA}
-                                onSubmit={(_data, rawData) => introMutation.mutate(rawData)}
-                                onCancel={() => setShowIntroForm(false)}
-                                isSubmitting={introMutation.isPending}
-                            />
+                            {introContent && (
+                                <DynamicForm
+                                    schema={introContent.formSchema}
+                                    onSubmit={(_data, rawData) => introMutation.mutate(rawData)}
+                                    onCancel={() => setShowIntroForm(false)}
+                                    isSubmitting={introMutation.isPending}
+                                />
+                            )}
                         </div>
                     </div>
                 </div>
@@ -262,7 +269,12 @@ export default function RetoSemanal() {
                                 {activateMutation.isPending ? 'Activando...' : 'Comenzar mi reto'}
                             </button>
                         </div>
-                    ) : showIntro ? (
+                    ) : showIntro && !introContent ? (
+                        <div className="flex justify-center py-12">
+                            <div className="w-8 h-8 border-2 rounded-full animate-spin"
+                                style={{ borderColor: `${C.border} ${C.red} ${C.border} ${C.border}` }} />
+                        </div>
+                    ) : showIntro && introContent ? (
                         <div className="space-y-4">
                             {isRetake && (
                                 <div className="rounded-2xl p-4 flex items-center gap-3" style={{ background: `${C.amber}18`, border: `1px solid ${C.amber}40` }}>
@@ -275,13 +287,13 @@ export default function RetoSemanal() {
                             <div className="rounded-2xl p-6" style={{ background: C.surface1, border: `1px solid ${C.border}` }}>
                                 <div className="flex items-center gap-2 mb-4">
                                     <Video size={16} style={{ color: C.label }} />
-                                    <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: C.text }}>{INTRO_VIDEO_TITLE}</h3>
+                                    <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: C.text }}>{introContent.videoTitle}</h3>
                                 </div>
                                 {embedUrl && (
                                     <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
                                         <iframe
                                             src={embedUrl}
-                                            title={INTRO_VIDEO_TITLE}
+                                            title={introContent.videoTitle}
                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                             allowFullScreen
                                             className="absolute inset-0 w-full h-full rounded-xl"
@@ -291,11 +303,11 @@ export default function RetoSemanal() {
                             </div>
 
                             <div className="rounded-2xl p-6" style={{ background: C.surface1, border: `1px solid ${C.border}` }}>
-                                <h3 className="text-sm font-bold uppercase tracking-wider mb-3" style={{ color: C.text }}>{INTRO_TEXT_TITLE}</h3>
+                                <h3 className="text-sm font-bold uppercase tracking-wider mb-3" style={{ color: C.text }}>{introContent.textTitle}</h3>
                                 <div
                                     className="prose max-w-none leading-relaxed [&_h3]:text-sm [&_h3]:font-normal [&_h3]:mb-3 [&_h3:empty]:mb-0 [&_h3:last-child]:mb-0"
                                     style={{ lineHeight: '1.75', color: C.textMuted }}
-                                    dangerouslySetInnerHTML={{ __html: INTRO_TEXT_HTML.replaceAll('&nbsp;', ' ') }}
+                                    dangerouslySetInnerHTML={{ __html: introContent.textHtml.replaceAll('&nbsp;', ' ') }}
                                 />
                             </div>
 

@@ -34,7 +34,7 @@ export default function HomePage() {
     const goTo = (idx: number) => setCurrentIdx(Math.max(0, Math.min(idx, 1)));
 
     return (
-        <div className="flex flex-col md:flex-row h-screen font-montserrat overflow-hidden" style={{ background: '#231F20' }}>
+        <div className="flex flex-col md:flex-row h-[100dvh] font-montserrat overflow-hidden" style={{ background: '#231F20' }}>
             <div className="md:hidden w-full">
                 <Header dark />
             </div>

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Upload, Clock, Activity, Loader2, CheckCircle2 } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import AlertModal from './AlertModal';
@@ -226,11 +227,11 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
 
     if (!isOpen) return null;
 
-    return (
+    return createPortal(
         <>
             {/* Main modal */}
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: '#000000b3', backdropFilter: 'blur(4px)' }}>
-                <div className="rounded-2xl shadow-xl w-full max-w-md flex flex-col max-h-[80vh] [max-height:85svh] animate-fade-in-up border" style={{ background: '#1E1A1B', borderColor: '#333330' }}>
+                <div className="rounded-2xl shadow-xl w-full max-w-md flex flex-col max-h-[85dvh] animate-fade-in-up border" style={{ background: '#1E1A1B', borderColor: '#333330' }}>
                     <div className="flex justify-between items-center p-4 border-b shrink-0" style={{ borderColor: '#333330' }}>
                         <h3 className="font-bold text-lg flex items-center gap-2" style={{ color: '#F5F0E8', fontFamily: "'American Typewriter', Georgia, serif" }}>
                             <Activity style={{ color: '#52B788' }} size={20} />
@@ -349,6 +350,7 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
                 message={uploadError}
                 onConfirm={() => setUploadError('')}
             />
-        </>
+        </>,
+        document.body
     );
 }

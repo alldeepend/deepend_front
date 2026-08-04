@@ -1,6 +1,6 @@
 import type {
     ProgressHistory, WeeklyChallengeMe, WeeklyChallengeProgress, WeeklyChallengeActivateResult,
-    WeeklyChallengeCycleSummary
+    WeeklyChallengeCycleSummary, WeeklyChallengeIntroContent
 } from '../types/weeklyChallenge';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
@@ -20,6 +20,15 @@ export const weeklyChallengeApi = {
             headers: authHeaders()
         });
         if (!response.ok) throw new Error('Error activating weekly challenge');
+        return response.json();
+    },
+
+    getIntroContent: async (): Promise<WeeklyChallengeIntroContent> => {
+        const response = await fetch(`${API_URL}/v2/weekly-challenge/intro-content`, {
+            method: 'GET',
+            headers: authHeaders()
+        });
+        if (!response.ok) throw new Error('Error fetching weekly challenge intro content');
         return response.json();
     },
 

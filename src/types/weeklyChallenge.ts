@@ -42,6 +42,32 @@ export interface WeeklyChallengeActivateResult {
     cycleNumber: number;
 }
 
+export interface WeeklyChallengeFormField {
+    id: string;
+    type: string;
+    label: string;
+    help_text?: string;
+    options?: (string | { label: string; value: string })[];
+    required?: boolean;
+    min?: number;
+    max?: number;
+    step?: number;
+    condition?: {
+        field: string;
+        value?: any;
+        values?: string[];
+        rules?: { field: string; value?: any; values?: string[] }[];
+    };
+}
+
+export interface WeeklyChallengeIntroContent {
+    videoUrl: string;
+    videoTitle: string;
+    textTitle: string;
+    textHtml: string;
+    formSchema: { fields: WeeklyChallengeFormField[] };
+}
+
 export interface WeeklyChallengeCycleSummary {
     cycleNumber: number;
     startDate: string;

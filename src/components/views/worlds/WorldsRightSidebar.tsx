@@ -44,6 +44,7 @@ export function totalXpFromAreas(areas: Area[]): number {
     for (const area of areas) {
         for (const journey of area.journeys) {
             total += journey.userJourneys?.[0]?.totalXpEarned ?? 0
+            total += journey.gate?.userGates?.[0]?.totalXpEarned ?? 0
         }
     }
     return total
