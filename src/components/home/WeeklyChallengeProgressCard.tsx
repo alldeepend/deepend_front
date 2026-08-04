@@ -14,7 +14,7 @@ export const WeeklyChallengeProgressCard = () => {
     const { data: progress } = useQuery({
         queryKey: ['weekly-challenge-progress'],
         queryFn: weeklyChallengeApi.getProgress,
-        enabled: !!me?.isParticipant && !me?.showGoalPopup && !me?.cycleExpired,
+        enabled: !!me?.isParticipant && !me?.needsIntro && !me?.showGoalPopup,
     });
 
     if (isLoading) return null;
@@ -44,8 +44,8 @@ export const WeeklyChallengeProgressCard = () => {
         );
     }
 
-    // El ciclo de 12 semanas ya terminó — hay que responder el cuestionario de nuevo
-    if (me.cycleExpired) {
+    // Arrancó un ciclo global nuevo — hay que responder el cuestionario de nuevo
+    if (me.needsIntro && me.isRetake) {
         return (
             <div
                 className="lg:col-span-4 p-6 rounded-2xl shadow-sm border flex flex-col items-center justify-center gap-3 text-center relative overflow-hidden"
@@ -54,10 +54,10 @@ export const WeeklyChallengeProgressCard = () => {
                 <div className="absolute top-0 right-0 w-24 h-24 rounded-bl-full -mr-6 -mt-6 opacity-20" style={{ background: '#EF9F27' }} />
                 <p className="text-xs font-semibold uppercase tracking-wide relative z-10" style={{ color: '#EF9F27' }}>Reto Semanal · Ciclo {me.cycleNumber}</p>
                 <h3 className="text-lg font-bold relative z-10" style={{ color: '#F5F0E8', fontFamily: "'American Typewriter', Georgia, serif" }}>
-                    Tu ciclo de 12 semanas terminó
+                    Empezó un nuevo ciclo de 12 semanas
                 </h3>
                 <p className="text-sm leading-relaxed relative z-10" style={{ color: '#A8A29E' }}>
-                    Responde de nuevo tu punto de partida para empezar el siguiente.
+                    Responde de nuevo tu punto de partida para seguir.
                 </p>
                 <button
                     onClick={() => navigate('/reto-semanal')}

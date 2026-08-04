@@ -18,12 +18,12 @@ export interface ProgressHistory {
 export interface WeeklyChallengeMe {
     isParticipant: boolean;
     cycleNumber?: number;
-    cycleExpired?: boolean;
     weekNumber?: number;
     goalMinutes?: number | null;
     hasCheckedInThisWeek?: boolean;
     checkinResponse?: string | null;
     needsIntro?: boolean;
+    isRetake?: boolean;
     showGoalPopup?: boolean;
 }
 
@@ -39,7 +39,6 @@ export interface WeeklyChallengeProgress {
 
 export interface WeeklyChallengeActivateResult {
     success: boolean;
-    startDate: string;
     cycleNumber: number;
 }
 

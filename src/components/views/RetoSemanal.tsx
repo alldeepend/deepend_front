@@ -39,7 +39,7 @@ export default function RetoSemanal() {
     const { data: history } = useQuery({
         queryKey: ['weekly-challenge-progress-history'],
         queryFn: weeklyChallengeApi.getProgressHistory,
-        enabled: !!me?.isParticipant && !me?.needsIntro && !me?.cycleExpired && !me?.showGoalPopup,
+        enabled: !!me?.isParticipant && !me?.needsIntro && !me?.showGoalPopup,
     });
 
     const { data: cyclesData } = useQuery({
@@ -92,9 +92,9 @@ export default function RetoSemanal() {
         );
     }
 
-    const isRetake = !!me?.cycleExpired;
-    const showIntro = me?.isParticipant && (me?.needsIntro || isRetake);
-    const showGoalPopup = me?.isParticipant && !me?.needsIntro && !isRetake && (me?.showGoalPopup || modifyingGoal);
+    const isRetake = !!me?.isRetake;
+    const showIntro = me?.isParticipant && me?.needsIntro;
+    const showGoalPopup = me?.isParticipant && !me?.needsIntro && (me?.showGoalPopup || modifyingGoal);
     const isFirstGoal = !me?.goalMinutes;
     const embedUrl = getYouTubeEmbedUrl(INTRO_VIDEO_URL);
     // La meta del primer bloque (semanas 1-3) no se puede tocar antes de tiempo —
