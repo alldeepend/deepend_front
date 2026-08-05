@@ -99,3 +99,4 @@ export function resolveRecallRef(
     // Compatibilidad: referencias guardadas sin prefijo se tratan como bloque.
     return getRecalledAnswer(data, ref)
 }
+

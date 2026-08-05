@@ -8,8 +8,8 @@ import { C } from '../../../styles/colors'
 import WorldsRightSidebar, { badgesForJourney, badgeColorFor } from './WorldsRightSidebar'
 import { HomeSidebar } from '../../home/HomeSidebar'
 import { PhotoUploadField, AudioRecorderField, SkipCheckbox } from './EvidenceFields'
-import { parseBold, parseText } from './textParsing'
-import { getRecalledAnswer, getRecalledGateAnswer } from './recallUtils'
+import { parseBold, parseText, parseTextWithRecalls } from './textParsing'
+import { getRecalledAnswer, getRecalledGateAnswer, resolveRecallRef } from './recallUtils'
 
 const BLOCK_LABELS: Record<string, string> = {
     punto_partida:      'Punto de Partida',
@@ -107,9 +107,17 @@ export default function WorldsStation() {
     const station: Station | undefined = data ? findStation(data, stationId!) : undefined
     const blocks = station?.blocks.slice().sort((a, b) => a.orderIndex - b.orderIndex) ?? []
     const currentBlock = blocks[blockIndex]
-    const recalledAnswer = currentBlock?.content?.recallGateDayId
-        ? getRecalledGateAnswer(gateStatus, currentBlock.content.recallGateDayId)
-        : getRecalledAnswer(data, currentBlock?.content?.recallBlockId)
+    // Recordatorio legacy (un solo botón debajo del bloque) — bloques guardados
+    // antes de que existieran los marcadores {N} dentro del texto.
+    const legacyRecalledAnswer = !currentBlock?.content?.recallRefs
+        ? (currentBlock?.content?.recallGateDayId
+            ? getRecalledGateAnswer(gateStatus, currentBlock.content.recallGateDayId)
+            : getRecalledAnswer(data, currentBlock?.content?.recallBlockId))
+        : null
+    // Recordatorios nuevos — se resuelven aquí y se insertan inline donde el
+    // admin puso el marcador {N} dentro del campo de texto del bloque.
+    const recalls: (string | null)[] = (currentBlock?.content?.recallRefs ?? [])
+        .map((ref: string) => resolveRecallRef(ref, data ?? null, gateStatus))
 
     const XP_EXCLUDED = ['punto_partida', 'cierre']
     const eligibleBlocks = blocks.filter(b => !XP_EXCLUDED.includes(b.type))
@@ -481,7 +489,8 @@ export default function WorldsStation() {
                         key={currentBlock.id}
                         block={currentBlock}
                         station={station}
-                        recalledAnswer={recalledAnswer}
+                        legacyRecalledAnswer={legacyRecalledAnswer}
+                        recalls={recalls}
                         response={responses[currentBlock.id]}
                         onResponse={val =>
                             setResponses(prev => ({ ...prev, [currentBlock.id]: val }))
@@ -607,7 +616,8 @@ function isResponseValid(blockType: string, response: any): boolean {
 function BlockPlayer({
     block,
     station,
-    recalledAnswer,
+    legacyRecalledAnswer,
+    recalls,
     response,
     onResponse,
     locked,
@@ -627,7 +637,8 @@ function BlockPlayer({
 }: {
     block: Block
     station: Station
-    recalledAnswer: string | null
+    legacyRecalledAnswer: string | null
+    recalls: (string | null)[]
     response: any
     onResponse: (val: any) => void
     locked: boolean
@@ -647,7 +658,7 @@ function BlockPlayer({
 }) {
     const label = BLOCK_LABELS[block.type] ?? block.type
     const c = block.content ?? {}
-    const [showRecall, setShowRecall] = useState(false)
+    const [showLegacyRecall, setShowLegacyRecall] = useState(false)
 
     const isCierre = block.type === 'cierre'
     const canSubmit = isResponseValid(block.type, response)
@@ -708,13 +719,13 @@ function BlockPlayer({
                 </h2>
             )}
 
-            {/* Recordatorio de respuesta anterior */}
-            {recalledAnswer && (
+            {/* Recordatorio de respuesta anterior (legacy — bloques guardados antes de los marcadores {N}) */}
+            {legacyRecalledAnswer && (
                 <div>
-                    {!showRecall ? (
+                    {!showLegacyRecall ? (
                         <button
                             type="button"
-                            onClick={() => setShowRecall(true)}
+                            onClick={() => setShowLegacyRecall(true)}
                             className="text-xs px-3 py-2 rounded-lg font-medium transition-colors"
                             style={{ background: C.surface1, border: `1px solid ${C.border}`, color: C.textMuted }}
                         >
@@ -729,7 +740,7 @@ function BlockPlayer({
                                 Tu respuesta anterior
                             </p>
                             <p className="text-sm leading-relaxed italic" style={{ color: C.text }}>
-                                "{recalledAnswer}"
+                                "{legacyRecalledAnswer}"
                             </p>
                         </div>
                     )}
@@ -737,8 +748,8 @@ function BlockPlayer({
             )}
 
             {/* Type-specific content */}
-            {block.type === 'punto_partida' && <PuntoPartida content={c} />}
-            {block.type === 'capsula' && <Capsula content={c} />}
+            {block.type === 'punto_partida' && <PuntoPartida content={c} recalls={recalls} />}
+            {block.type === 'capsula' && <Capsula content={c} recalls={recalls} />}
             {block.type === 'activacion' && (
                 <Activacion content={c} value={response} onChange={onResponse} disabled={locked} blockId={block.id} />
             )}
@@ -751,11 +762,12 @@ function BlockPlayer({
             {block.type === 'evidencia' && (
                 <Evidencia content={c} value={response} onChange={onResponse} disabled={locked} />
             )}
-            {block.type === 'refuerzo' && <Refuerzo content={c} />}
+            {block.type === 'refuerzo' && <Refuerzo content={c} recalls={recalls} />}
             {block.type === 'recompensa' && <Recompensa content={c} />}
             {isCierre && (
                 <Cierre
                     content={c}
+                    recalls={recalls}
                     submitting={submitting}
                     hasNextStation={!!nextStationId}
                     onGoToNextStation={() => onCierreSubmit('next')}
@@ -837,11 +849,11 @@ function BlockPlayer({
 
 // ─── Block type renderers ─────────────────────────────────────────────────────
 
-function PuntoPartida({ content }: { content: any }) {
+function PuntoPartida({ content, recalls }: { content: any; recalls: (string | null)[] }) {
     return (
         <div className="space-y-4">
             {content.text && (
-                <div className="space-y-3">{parseText(content.text, 'text-base leading-relaxed')}</div>
+                <div className="space-y-3">{parseTextWithRecalls(content.text, recalls, 'text-base leading-relaxed')}</div>
             )}
             {content.quote && (
                 <blockquote
@@ -862,13 +874,13 @@ function PuntoPartida({ content }: { content: any }) {
 }
 
 
-function Capsula({ content }: { content: any }) {
+function Capsula({ content, recalls }: { content: any; recalls: (string | null)[] }) {
     const embedUrl = content.videoUrl ? getYouTubeEmbedUrl(content.videoUrl) : null
 
     return (
         <div className="space-y-5">
             {content.text && (
-                <div className="space-y-3">{parseText(content.text)}</div>
+                <div className="space-y-3">{parseTextWithRecalls(content.text, recalls)}</div>
             )}
 
             {embedUrl && (
@@ -1995,7 +2007,7 @@ function Evidencia({
     )
 }
 
-function Refuerzo({ content }: { content: any }) {
+function Refuerzo({ content, recalls }: { content: any; recalls: (string | null)[] }) {
     const msg1 = content.message1 ?? content.message ?? ''
     const msg2 = content.message2 ?? ''
     const embedUrl = content.videoUrl ? getYouTubeEmbedUrl(content.videoUrl) : null
@@ -2016,7 +2028,7 @@ function Refuerzo({ content }: { content: any }) {
                     {msg1 && (
                         <div className="flex gap-3">
                             <div className="flex-none w-0.5 rounded-full" style={{ background: C.green }} />
-                            <div className="space-y-3">{parseText(msg1, 'text-base leading-relaxed', { fontFamily: 'Montserrat, sans-serif', color: C.text })}</div>
+                            <div className="space-y-3">{parseTextWithRecalls(msg1, recalls, 'text-base leading-relaxed', { fontFamily: 'Montserrat, sans-serif', color: C.text })}</div>
                         </div>
                     )}
                     {msg2 && (
@@ -2073,12 +2085,14 @@ function Recompensa({ content }: { content: any }) {
 
 function Cierre({
     content,
+    recalls,
     submitting,
     hasNextStation,
     onGoToNextStation,
     onGoToWorld,
 }: {
     content: any
+    recalls: (string | null)[]
     submitting: boolean
     hasNextStation: boolean
     onGoToNextStation: () => void
@@ -2089,7 +2103,7 @@ function Cierre({
     return (
         <div className="space-y-5">
             {content.text && (
-                <div className="space-y-3">{parseText(content.text)}</div>
+                <div className="space-y-3">{parseTextWithRecalls(content.text, recalls)}</div>
             )}
 
             {embedUrl && (
