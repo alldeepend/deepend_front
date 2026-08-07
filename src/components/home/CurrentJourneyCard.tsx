@@ -22,6 +22,12 @@ function computeGateCurrentDay(activatedAt: string): number {
 }
 
 
+async function resolveFirstJourneyId(): Promise<string | null> {
+    const { collections } = await journeyApi.getCollections();
+    const journeys = collections.flatMap(c => c.journeys);
+    return journeys[0]?.id ?? null;
+}
+
 async function resolveActiveJourney(): Promise<ActiveJourneyInfo | null> {
     const { areas } = await journeyApi.getAvailableJourneys();
     const journeys = areas.flatMap(a => a.journeys);
@@ -143,20 +149,42 @@ function StatCell({ value, label, color }: { value: string; label: string; color
 export const CurrentJourneyCard = () => {
     const navigate = useNavigate();
     const [info, setInfo] = useState<ActiveJourneyInfo | null>(null);
+    const [firstJourneyId, setFirstJourneyId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         let cancelled = false;
-        resolveActiveJourney()
-            .then(result => { if (!cancelled) setInfo(result); })
-            .catch(() => { if (!cancelled) setInfo(null); })
-            .finally(() => { if (!cancelled) setLoading(false); });
+        (async () => {
+            let result: ActiveJourneyInfo | null = null;
+            try {
+                result = await resolveActiveJourney();
+            } catch {
+                result = null;
+            }
+            if (cancelled) return;
+            setInfo(result);
+            if (!result) {
+                try {
+                    const id = await resolveFirstJourneyId();
+                    if (!cancelled) setFirstJourneyId(id);
+                } catch {
+                    // el placeholder simplemente se queda sin botón de acción
+                }
+            }
+            if (!cancelled) setLoading(false);
+        })();
         return () => { cancelled = true };
     }, []);
 
     if (loading) return null;
 
     if (!info) {
+        const goToFirstJourney = () => {
+            if (!firstJourneyId) return;
+            sessionStorage.setItem('worldsHomeJourneyId', firstJourneyId);
+            navigate('/worlds');
+        };
+
         return (
             <div
                 className="lg:col-span-4 p-6 rounded-2xl shadow-sm border flex flex-col justify-center gap-4 relative overflow-hidden"
@@ -175,10 +203,19 @@ export const CurrentJourneyCard = () => {
                             Tu próximo viaje te espera
                         </h3>
                         <p className="text-sm leading-relaxed mt-1" style={{ color: '#A8A29E' }}>
-                            Todavía no tienes un viaje en curso. Muy pronto vas a poder empezar el tuyo — vuelve a revisar por aquí.
+                            Todavía no tienes un viaje en curso. Descubre los viajes disponibles y empieza cuando quieras.
                         </p>
                     </div>
                 </div>
+                {firstJourneyId && (
+                    <button
+                        onClick={goToFirstJourney}
+                        className="relative z-10 block w-full text-center py-2.5 rounded-full text-sm font-semibold transition-opacity hover:opacity-90"
+                        style={{ background: C.red, color: '#fff' }}
+                    >
+                        Ver mi próximo viaje →
+                    </button>
+                )}
             </div>
         );
     }

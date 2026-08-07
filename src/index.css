@@ -132,3 +132,21 @@ html::-webkit-scrollbar-thumb:hover {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Llama la atención sobre el botón de "Ver novedades" cuando hay algo nuevo sin ver. */
+@keyframes whats-new-bounce {
+  0%, 100% { transform: translateY(0); }
+  25% { transform: translateY(-5px); }
+  50% { transform: translateY(0); }
+}
+
+.whats-new-glow {
+  animation: whats-new-bounce 1.7s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .whats-new-glow {
+    animation: none;
+  }
+}
+

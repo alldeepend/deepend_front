@@ -7,7 +7,6 @@ import {
     Award,
     Compass,
     Palette,
-    SkipForward,
     Mic,
     Archive,
     CheckCircle2,
@@ -101,13 +100,6 @@ export const CHANGELOG_STEPS: ChangelogStep[] = [
         eyebrow: 'Nueva cara',
         title: 'Landing page renovada',
         text: 'La primera impresión de DeepEnd tiene diseño nuevo, con testimonios reales de la comunidad.',
-    },
-    {
-        type: 'center',
-        icon: SkipForward,
-        eyebrow: 'Más flexibilidad',
-        title: 'Salta lo que prefieras',
-        text: '"Ya lo hice, pero prefiero guardarlo para mí" ya está disponible en cualquier tipo de pregunta dentro de una estación.',
     },
     {
         type: 'center',

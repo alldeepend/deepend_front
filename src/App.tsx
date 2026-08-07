@@ -20,6 +20,7 @@ import MyMoneyInAction from './components/views/finance/MyMoneyInAction';
 import GastoHormiga from './components/views/finance/GastoHormiga';
 import { usePageTracking } from './hooks/usePageTracking';
 import WorldsRoute from './components/shared/WorldsRoute';
+import LegacyChallengesRoute from './components/shared/LegacyChallengesRoute';
 import WorldsHome from './components/views/worlds/WorldsHome';
 import WorldsJourney from './components/views/worlds/WorldsJourney';
 import WorldsStation from './components/views/worlds/WorldsStation';
@@ -67,12 +68,16 @@ function App() {
                 } />
                 <Route path="/challenges" element={
                     <ProtectedRoute>
-                        <MisRetos />
+                        <LegacyChallengesRoute>
+                            <MisRetos />
+                        </LegacyChallengesRoute>
                     </ProtectedRoute>
                 } />
                 <Route path="/challenges/detail" element={
                     <ProtectedRoute>
-                        <ChallengeDetail />
+                        <LegacyChallengesRoute>
+                            <ChallengeDetail />
+                        </LegacyChallengesRoute>
                     </ProtectedRoute>
                 } />
                 <Route path="/resources" element={
@@ -117,7 +122,9 @@ function App() {
                 } />
                 <Route path="/challenge-logs" element={
                     <ProtectedRoute>
-                        <ChallengeLogs />
+                        <LegacyChallengesRoute>
+                            <ChallengeLogs />
+                        </LegacyChallengesRoute>
                     </ProtectedRoute>
                 } />
                 <Route path="/login" element={

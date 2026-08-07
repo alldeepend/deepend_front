@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router';
 import { useAuth } from '../../store/useAuth';
 import { SidebarItem } from './SidebarItem';
 import { C } from '../../styles/colors';
+import { useLegacyChallengesAccess } from '../../hooks/useLegacyChallengesAccess';
 
 interface HomeSidebarProps {
     activeTab: 'Dashboard' | 'Mi Viaje' | 'Mis Retos' | 'Mis Recursos' | 'Perfil' | 'Mundos' | 'Noticias' | 'Reto Semanal';
@@ -25,6 +26,7 @@ interface HomeSidebarProps {
 export const HomeSidebar = ({ activeTab, dark = true }: HomeSidebarProps) => {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
+    const { data: legacyAccess } = useLegacyChallengesAccess();
 
     const bg      = dark ? '#231F20' : '#ffffff'
     const border  = dark ? '#333330' : '#f1f5f9'
@@ -64,19 +66,12 @@ export const HomeSidebar = ({ activeTab, dark = true }: HomeSidebarProps) => {
                     {['test', 'worldtest1', 'worldtest2', 'active'].includes(user?.membership ?? '') && (
                         <SidebarItem
                             icon={Globe}
-                            label="Mundos & Viajes"
+                            label="Viajes & Mundos"
                             active={activeTab === 'Mundos'}
                             onClick={() => navigate('/worlds')}
                             dark={dark}
                         />
                     )}
-                    <SidebarItem
-                        icon={Flag}
-                        label="Mis Retos"
-                        active={activeTab === 'Mis Retos'}
-                        onClick={() => navigate('/challenges')}
-                        dark={dark}
-                    />
                     <SidebarItem
                         id="tour-target-noticias"
                         icon={Newspaper}
@@ -92,6 +87,15 @@ export const HomeSidebar = ({ activeTab, dark = true }: HomeSidebarProps) => {
                         onClick={() => navigate('/reto-semanal')}
                         dark={dark}
                     />
+                    {legacyAccess?.hasAccess && (
+                        <SidebarItem
+                            icon={Flag}
+                            label="Mis Archivados"
+                            active={activeTab === 'Mis Retos'}
+                            onClick={() => navigate('/challenges')}
+                            dark={dark}
+                        />
+                    )}
                     {/* ///////Ocualtat/////// */}
                     <SidebarItem
                         icon={User}

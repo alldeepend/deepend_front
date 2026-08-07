@@ -108,7 +108,7 @@ export default function HomePage() {
 
             {/* Botones de navegación entre portada y dashboard — solo desktop */}
             {!isMobile && (
-                <div className="fixed bottom-16 left-1/2 md:left-[calc(50%-2rem)] -translate-x-1/2 z-50 flex flex-row gap-3">
+                <div className={`fixed left-1/2 md:left-[calc(50%-2rem)] -translate-x-1/2 z-50 flex flex-row gap-3 ${currentIdx > 0 ? 'bottom-6' : 'bottom-16'}`}>
                     {currentIdx > 0 && (
                         <button
                             onClick={() => goTo(currentIdx - 1)}

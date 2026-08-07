@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Clock, Trophy, Upload, CheckCircle, Lock, Play, FileText, Download, Video, Link, ChevronUp, ChevronDown, CheckCircle2, Loader2, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Trophy, Circle, FileText, Download, Video, Link, ChevronUp, ChevronDown, CheckCircle2 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { HomeSidebar } from '../home/HomeSidebar';
-import DynamicForm from '../shared/DynamicForm';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import Header from '../../components/shared/Header';
-import { useAuth } from '../../store/useAuth';
-import myMoneyInActionSchema from '../../data/forms/finance/my_money_in_action.json';
 import { C } from '../../styles/colors';
 import WeeklyProgressSection from '../shared/WeeklyProgressSection';
 import { getYouTubeEmbedUrl } from '../../utils/youtube';
@@ -104,55 +101,15 @@ const VideoAccordionSection = ({ title, url }: { title: string, url: string }) =
 };
 
 const PHYSICAL_CHALLENGE_ID = 'dcf4574f-8cd3-4925-b88f-c66df26ed8cc';
-const PHYSICAL_TRIGGER_TASK_ID = '37b4c944-261e-4467-b478-7b85ef570502';
 
 export default function ChallengeDetail() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const challengeId = searchParams.get('id');
-    const queryClient = useQueryClient();
     const [currentFinancialIndex, setCurrentFinancialIndex] = useState(0);
     const [currentResponseIndex, setCurrentResponseIndex] = useState(0);
-    const { user } = useAuth();
-    const [hasFinancialDraft, setHasFinancialDraft] = useState(false);
-    const [isRestartDialogOpen, setIsRestartDialogOpen] = useState(false);
 
-    // Goal popup state
-    const [showGoalPopup, setShowGoalPopup] = useState(false);
-    const [goalInput, setGoalInput] = useState('');
-    const [modifyingGoal, setModifyingGoal] = useState(false);
-
-    // --- Auto Reload Logic (Moved to Top) ---
-    const [shouldReloadOnComplete, setShouldReloadOnComplete] = useState(false);
-
-    // Helper to calculate completion safely even before full data
-    // We can't access 'challenge' directly if it's not loaded, but we can check if it exists in the effect
-
-    // Check for draft
-    React.useEffect(() => {
-        if (user?.id) {
-            const draft = localStorage.getItem(`financial_assessment_${user.id}_ingresos` || `financial_assessment_v2_${user.id}_ingresos`);
-            if (draft) {
-                setHasFinancialDraft(true);
-            }
-        }
-    }, [user?.id]);
-
-    // Fetch physical challenge data (for goal popup)
-    const { data: challengePhysical } = useQuery({
-        queryKey: ['challenge-me'],
-        queryFn: async () => {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${host}/api/challenge/me`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (!res.ok) return null;
-            return await res.json();
-        },
-        enabled: challengeId === PHYSICAL_CHALLENGE_ID,
-    });
-
-    // Fetch the full 8-week breakdown (meta vs. registrado) for this participant
+    // Fetch the full 8-week breakdown (meta vs. registrado) para este participante — solo lectura.
     const { data: progressHistory } = useQuery({
         queryKey: ['challenge-progress-history'],
         queryFn: async () => {
@@ -165,39 +122,6 @@ export default function ChallengeDetail() {
         },
         enabled: challengeId === PHYSICAL_CHALLENGE_ID,
     });
-
-    // Show popup on load if backend says goal not confirmed this week
-    React.useEffect(() => {
-        if (challengePhysical?.showGoalPopup) {
-            setGoalInput(String(challengePhysical.goalMinutes ?? ''));
-            setShowGoalPopup(true);
-        }
-    }, [challengePhysical?.showGoalPopup]);
-
-    const goalMutation = useMutation({
-        mutationFn: async (goalMinutes: number) => {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${host}/api/challenge/goal`, {
-                method: 'PUT',
-                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ goalMinutes })
-            });
-            if (!res.ok) throw new Error('Error al guardar meta');
-            return await res.json();
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['challenge-me'] });
-            queryClient.invalidateQueries({ queryKey: ['challenge-progress'] });
-            setShowGoalPopup(false);
-            setModifyingGoal(false);
-        }
-    });
-
-    const handleConfirmGoal = () => {
-        const val = parseInt(goalInput);
-        if (!val || val <= 0) { alert('Por favor ingresa un número válido en minutos.'); return; }
-        goalMutation.mutate(val);
-    };
 
     // Fetch challenge details
     const { data: challenge, isLoading } = useQuery({
@@ -232,137 +156,29 @@ export default function ChallengeDetail() {
         ? areTasksCompleted && hasSubmission
         : areTasksCompleted;
 
-
-
-    // 1. Enable reload trigger ONLY if we start with an incomplete challenge
-    React.useEffect(() => {
-        if (!isLoading && challenge && !isTotallyCompletedSafe) {
-            setShouldReloadOnComplete(true);
-        }
-    }, [isLoading, challenge, isTotallyCompletedSafe]);
-
-    // 2. Trigger reload if we were tracking (started incomplete) and now it is complete
-    // Defer reload while goal popup is open so user can confirm their goal first
-    React.useEffect(() => {
-        if (shouldReloadOnComplete && isTotallyCompletedSafe && !showGoalPopup) {
-            window.location.reload();
-        }
-    }, [shouldReloadOnComplete, isTotallyCompletedSafe, showGoalPopup]);
-
-    // 3. Security Check: Redirect if Finance Challenge and Disclaimer NOT accepted
-    React.useEffect(() => {
-        if (!isLoading && challenge) {
-            if (challenge.category === 'Finanzas' && challenge.disclaimerAccepted === false) {
-                // Redirect to challenges list where they can click and see the modal
-                navigate('/challenges');
-            }
-        }
-    }, [isLoading, challenge, navigate]);
-
-    // Toggle Task Mutation
-    const toggleTaskMutation = useMutation({
-        mutationFn: async (taskId: string) => {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${host}/api/challenges/${challengeId}/tasks/${taskId}/toggle`, {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (!res.ok) throw new Error('Failed to toggle task');
-            return { result: await res.json(), taskId };
-        },
-        onSuccess: ({ taskId }) => {
-            queryClient.invalidateQueries({ queryKey: ['challenge', challengeId] });
-            queryClient.invalidateQueries({ queryKey: ['challenges'] });
-            queryClient.invalidateQueries({ queryKey: ['passport-current', user?.id] });
-            if (taskId === PHYSICAL_TRIGGER_TASK_ID && challengePhysical?.isParticipant) {
-                setGoalInput(String(challengePhysical.goalMinutes ?? ''));
-                setShowGoalPopup(true);
-            }
-        }
-    });
-
-    // --- Dynamic Form Logic (Moved to top level) ---
-    const [activeTaskForm, setActiveTaskForm] = useState<{ id: string, schema: any } | null>(null);
-
-    const submitFormMutation = useMutation({
-        mutationFn: async ({ taskId, data, rawData }: { taskId: string, data: any, rawData?: any }) => {
-            const token = localStorage.getItem('token');
-
-            // 1. Save Submission
-            const resSub = await fetch(`${host}/api/challenges/${challengeId}/submissions`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    responses: {
-                        taskId: taskId,
-                        ...rawData, // Priority to rawData (readable IDs)
-                        ordered: data // Still keep ordered for UI display if needed
-                    }
-                })
-            });
-            if (!resSub.ok) throw new Error('Failed to save submission');
-
-            // 2. Mark Task as Complete (if not already)
-            // Note: We need to find the task to check completion, but inside mutation we just blindly toggle if needed or rely on backend idempotency.
-            // For safety, let's just toggle.
-            const resToggle = await fetch(`${host}/api/challenges/${challengeId}/tasks/${taskId}/toggle`, {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (!resToggle.ok) throw new Error('Failed to complete task');
-
-            return { success: true, taskId };
-        },
-        onSuccess: (_data, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['challenge', challengeId] });
-            queryClient.invalidateQueries({ queryKey: ['passport-current', user?.id] });
-            setActiveTaskForm(null);
-            if (variables.taskId === PHYSICAL_TRIGGER_TASK_ID && challengePhysical?.isParticipant) {
-                setGoalInput(String(challengePhysical.goalMinutes ?? ''));
-                setShowGoalPopup(true);
-            }
-        }
-    });
-
-    // --- Restart Challenge Logic ---
-    const restartChallengeMutation = useMutation({
-        mutationFn: async () => {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${host}/api/challenges/${challengeId}/restart`, {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.error || 'Failed to restart challenge');
-            }
-            return await res.json();
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['challenge', challengeId] });
-            queryClient.invalidateQueries({ queryKey: ['challenges'] });
-            setIsRestartDialogOpen(false);
-        },
-        onError: (error: any) => {
-            alert(error.message || 'Error al reiniciar el reto');
-        }
-    });
-
-    if (!challengeId) return <div>No challenge ID provided</div>;
-    if (isLoading) return <div className="flex justify-center p-12"><div className="animate-spin h-8 w-8 border-4 border-emerald-500 rounded-full border-t-transparent"></div></div>;
-    if (!challenge) return <div>Challenge not found</div>;
+    if (!challengeId) return (
+        <div className="min-h-screen flex items-center justify-center" style={{ background: C.bg, color: C.textMuted }}>
+            No se proporcionó un reto.
+        </div>
+    );
+    if (isLoading) return (
+        <div className="min-h-screen flex items-center justify-center" style={{ background: C.bg }}>
+            <div
+                className="w-8 h-8 border-2 rounded-full animate-spin"
+                style={{ borderColor: `${C.border} ${C.green} ${C.border} ${C.border}` }}
+            />
+        </div>
+    );
+    if (!challenge) return (
+        <div className="min-h-screen flex items-center justify-center" style={{ background: C.bg, color: C.textMuted }}>
+            No se encontró este reto.
+        </div>
+    );
 
     // Calculate progress (using backend data)
     const steps = challenge.tasks || [];
     const completedSteps = steps.filter((s: ChallengeStep) => s.completed).length;
     const progressPercentage = steps.length > 0 ? (completedSteps / steps.length) * 100 : 0;
-
-    const toggleStep = (id: string) => {
-        toggleTaskMutation.mutate(id);
-    };
 
     // Helper to get financial assessments (parsed)
     const financialSubmissions = challenge.submissions && challenge.submissions.length > 0
@@ -392,97 +208,8 @@ export default function ChallengeDetail() {
     const genericSubmissions = challenge.submissions || [];
     const currentGenericSubmission = genericSubmissions[currentResponseIndex];
 
-    const handleTaskClick = (task: any) => {
-        if (task.formSchema) {
-            // Open Form
-            setActiveTaskForm({ id: task.id, schema: task.formSchema });
-        } else {
-            // Standard Toggle
-            toggleStep(task.id);
-        }
-    };
-
     return (
         <div className="flex flex-col md:flex-row h-screen font-sans overflow-hidden" style={{ background: C.bg }}>
-            {/* Goal popup — physical challenge */}
-            {showGoalPopup && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
-                    <div className="rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4" style={{ background: C.surface1 }}>
-                        <div className="text-center">
-                            <div className="flex justify-center mb-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: C.green }}>
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <circle cx="12" cy="12" r="6"/>
-                                    <circle cx="12" cy="12" r="2"/>
-                                </svg>
-                            </div>
-                            <h3 className="text-lg font-bold" style={{ color: C.text }}>Tu meta esta semana</h3>
-                            <p className="text-sm mt-1" style={{ color: C.textMuted }}>
-                                Semana {challengePhysical?.weekNumber} del reto — ¿la mantienes o la ajustas?
-                            </p>
-                        </div>
-                        {!modifyingGoal ? (
-                            <>
-                                <div className="rounded-xl px-6 py-4 text-center" style={{ background: C.forest }}>
-                                    <span className="text-3xl font-bold" style={{ color: C.green }}>{challengePhysical?.goalMinutes}</span>
-                                    <span className="font-medium ml-1" style={{ color: C.green }}>min</span>
-                                </div>
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={handleConfirmGoal}
-                                        disabled={goalMutation.isPending}
-                                        className="flex-1 text-white font-semibold py-2.5 rounded-xl transition-colors disabled:opacity-60"
-                                        style={{ background: C.red }}
-                                    >
-                                        Acepto esta meta
-                                    </button>
-                                    <button
-                                        onClick={() => setModifyingGoal(true)}
-                                        className="flex-1 border font-semibold py-2.5 rounded-xl transition-colors"
-                                        style={{ borderColor: C.border, color: C.text, background: C.surface2 }}
-                                    >
-                                        Quiero cambiarla
-                                    </button>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <div>
-                                    <label className="block text-sm font-semibold mb-1.5" style={{ color: C.textMuted }}>Nueva meta en minutos</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        value={goalInput}
-                                        onChange={e => setGoalInput(e.target.value)}
-                                        placeholder="Ej: 150 (min)"
-                                        className="w-full px-4 py-3 rounded-xl border outline-none"
-                                        style={{ background: C.surface2, borderColor: C.border, color: C.text }}
-                                    />
-                                    <p className="text-xs mt-1" style={{ color: C.label }}>Este valor aplica solo para esta semana</p>
-                                </div>
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={handleConfirmGoal}
-                                        disabled={goalMutation.isPending}
-                                        className="flex-1 text-white font-semibold py-2.5 rounded-xl transition-colors disabled:opacity-60"
-                                        style={{ background: C.red }}
-                                    >
-                                        {goalMutation.isPending ? 'Guardando...' : 'Guardar meta'}
-                                    </button>
-                                    <button
-                                        onClick={() => setModifyingGoal(false)}
-                                        className="flex-1 border font-semibold py-2.5 rounded-xl transition-colors"
-                                        style={{ borderColor: C.border, color: C.text, background: C.surface2 }}
-                                    >
-                                        Cancelar
-                                    </button>
-                                </div>
-                            </>
-                        )}
-                    </div>
-                </div>
-            )}
-
             <div className="md:hidden w-full">
                 <Header />
             </div>
@@ -495,14 +222,22 @@ export default function ChallengeDetail() {
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
 
                         {/* Back Button */}
-                        <button
-                            onClick={() => navigate('/challenges')}
-                            className="flex items-center text-sm mb-6 transition-colors group"
-                            style={{ color: C.label }}
-                        >
-                            <ArrowLeft size={16} className="mr-1 group-hover:-translate-x-1 transition-transform" />
-                            Volver a Retos
-                        </button>
+                        <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
+                            <button
+                                onClick={() => navigate('/challenges')}
+                                className="flex items-center text-sm transition-colors group"
+                                style={{ color: C.label }}
+                            >
+                                <ArrowLeft size={16} className="mr-1 group-hover:-translate-x-1 transition-transform" />
+                                Volver al archivo
+                            </button>
+                            <span
+                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide"
+                                style={{ background: `${C.green}1F`, border: `1px solid ${C.green}59`, color: C.green }}
+                            >
+                                Solo lectura
+                            </span>
+                        </div>
 
                         {/* Hero Section */}
                         <div className="rounded-3xl shadow-sm overflow-hidden mb-8" style={{ background: C.surface1, border: `1px solid ${C.border}` }}>
@@ -559,57 +294,9 @@ export default function ChallengeDetail() {
 
                         <div className="lg:col-span-2">
 
-                            {/* Custom Action for "My Money in Action" Challenge */}
-                            {challengeId === '4544a365-a761-4678-a420-ccf59eadb9c7' && areTasksCompleted /* && !isTotallyCompletedSafe */ && (
-                                <div className="mt-6 mb-8">
-                                    <button
-                                        onClick={() => navigate('/challenges/my-money-action')}
-                                        className="w-full text-white font-bold py-4 px-6 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-3 text-lg animate-bounce-subtle"
-                                        style={{ background: C.red }}
-                                    >
-                                        <Play size={24} className="fill-current" />
-                                        Activa tu Reto 🎯
-                                    </button>
-                                    <p className="text-center text-sm mt-3 max-w-lg mx-auto" style={{ color: C.textMuted }}>
-                                        Haz clic aquí para iniciar tu plan de acción personalizado.
-                                    </p>
-                                </div>
-                            )}
-
-
-                            {/* Conditional Financial Assessment Button */}
-                            {/* Check for "En la Orilla" ID or Title match for "En la Orilla" or "En Nado" AND 100% Completion */}
+                            {/* Resultado financiero histórico (solo lectura) */}
                             {(challengeId === 'a3ae5adc-a689-4082-a691-4338000ced3a' || challenge?.title?.includes('En la Orilla') || challenge?.title?.includes('En Nado')) && isTotallyCompletedSafe && (
                                 <div className="mt-6 space-y-4">
-                                    <button
-                                        onClick={() => navigate(`/challenges/financial-assessment?challengeId=${challengeId}`)}
-                                        className="w-full text-white font-bold py-3 px-6 rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
-                                        style={{ background: C.red }}
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-                                        {hasFinancialDraft ? 'Continuar Evaluación' : (financialSubmissions.length > 0 ? 'Nueva Evaluación' : 'Realizar Evaluación Financiera')}
-                                    </button>
-
-                                    <div className="text-center">
-                                        <p className="text-sm" style={{ color: C.textMuted }}>
-                                            ¿No quieres registrar tus finanzas en la plataforma?{' '}
-                                            <a
-                                                href={(user as any)?.level === 'medio'
-                                                    ? "https://media.deepend.cloud/resources/2.%20%20En%20Nado%20-%20Plantila%20Registro%20Financiero%20Mensual%20-%20Show%20me%20the%20Money%20V1%20(1).xlsx"
-                                                    : "https://media.deepend.cloud/resources/1.%20%20En%20la%20Orilla%20-%20Plantila%20Registro%20Financiero%20Mensual%20-%20Show%20me%20the%20Money%20V1%20(2).xlsx"
-                                                }
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="font-medium hover:underline transition-colors"
-                                                style={{ color: C.green }}
-                                            >
-                                                Descarga la plantilla en Excel
-                                            </a>
-                                            {' '}para hacerlo en tu dispositivo.
-                                        </p>
-                                    </div>
-
-
                                     {/* Financial Summary Slider */}
                                     {financialSummary && (
                                         <div className="rounded-2xl p-6 shadow-sm" style={{ background: C.surface1, border: `1px solid ${C.border}` }}>
@@ -732,69 +419,33 @@ export default function ChallengeDetail() {
                                     ></div>
                                 </div>
 
-                                {/* Restart Challenge Button (Visible when complete) */}
-                                {/* {(challenge.status === 'completed' || isTotallyCompletedSafe) && (
-                                    <div className="mb-6 flex justify-end">
-                                        <button
-                                            onClick={() => setIsRestartDialogOpen(true)}
-                                            className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-emerald-600 transition-colors bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm hover:border-emerald-200 hover:shadow-emerald-100"
-                                        >
-                                            <RotateCcw size={16} />
-                                            Reiniciar Reto
-                                        </button>
-                                    </div>
-                                )} */}
-
-
-                                {/* Steps List */}
+                                {/* Steps List — solo lectura */}
                                 <div className="space-y-4">
-                                    {steps.map((step: any) => {
-                                        const isPending = toggleTaskMutation.isPending && toggleTaskMutation.variables === step.id;
-                                        return (
+                                    {steps.map((step: any) => (
+                                        <div
+                                            key={step.id}
+                                            className="p-4 rounded-xl border flex items-center gap-4"
+                                            style={{
+                                                background: step.completed ? C.surface1 : C.surface2,
+                                                borderColor: step.completed ? C.forest : C.border
+                                            }}
+                                        >
                                             <div
-                                                key={step.id}
-                                                onClick={() => !isPending && !step.completed && handleTaskClick(step)}
-                                                className={`p-4 rounded-xl border transition-all flex items-center gap-4 ${isPending ? 'opacity-70 cursor-wait' : step.completed ? 'cursor-default' : 'cursor-pointer'}`}
-                                                style={{
-                                                    background: step.completed ? C.surface1 : C.surface2,
-                                                    borderColor: step.completed ? C.forest : C.border
-                                                }}
+                                                className="flex-shrink-0 w-6 h-6 rounded flex items-center justify-center"
+                                                style={step.completed
+                                                    ? { background: C.forest, color: C.green }
+                                                    : { background: C.surface3, color: C.label }}
                                             >
-                                                <div
-                                                    className="flex-shrink-0 w-6 h-6 rounded flex items-center justify-center transition-colors"
-                                                    style={step.completed
-                                                        ? { background: C.forest, color: C.green }
-                                                        : { background: C.surface3, color: C.red }}
-                                                >
-                                                    {isPending ? (
-                                                        <Loader2 size={16} className="animate-spin" />
-                                                    ) : (
-                                                        <CheckCircle2 size={16} />
-                                                    )}
-                                                </div>
-                                                <div className="flex-1">
-                                                    <span
-                                                        className="text-sm font-medium transition-colors"
-                                                        style={{ color: step.completed ? C.label : C.text, textDecoration: step.completed ? 'line-through' : 'none' }}
-                                                    >
-                                                        {step.text}
-                                                    </span>
-                                                    {step.formSchema && !step.completed && (
-                                                        <span className="block text-xs font-bold mt-1" style={{ color: C.red }}>
-                                                            {challengeId === 'dcf4574f-8cd3-4925-b88f-c66df26ed8cc'
-                                                                ? 'Es importante definir tu punto de partida'
-                                                                : 'Requiere completar formulario'}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                {step.formSchema && (
-                                                    <div style={{ color: C.label }}>
-                                                        <FileText size={16} />
-                                                    </div>
-                                                )}
+                                                {step.completed ? <CheckCircle2 size={16} /> : <Circle size={16} />}
                                             </div>
-                                        );
-                                    })}
+                                            <span
+                                                className="flex-1 text-sm font-medium"
+                                                style={{ color: step.completed ? C.label : C.text, textDecoration: step.completed ? 'line-through' : 'none' }}
+                                            >
+                                                {step.text}
+                                            </span>
+                                        </div>
+                                    ))}
                                     {steps.length === 0 && <p className="text-sm" style={{ color: C.label }}>No hay pasos definidos para este reto aún.</p>}
                                 </div>
                             </div>
@@ -995,64 +646,6 @@ export default function ChallengeDetail() {
                     </div>
 
                 </div >
-
-                {/* MODAL FORM OVERLAY */}
-                {
-                    activeTaskForm && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                            <div className="rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200" style={{ background: C.surface1 }}>
-                                <div className="p-6 md:p-8 overflow-y-auto">
-                                    <DynamicForm
-                                        schema={activeTaskForm.schema}
-                                        onSubmit={(data, rawData) => submitFormMutation.mutate({ taskId: activeTaskForm.id, data, rawData })}
-                                        onCancel={() => setActiveTaskForm(null)}
-                                        isSubmitting={submitFormMutation.isPending}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    )
-                }
-
-                {/* Restart Confirmation Modal */}
-                {isRestartDialogOpen && (
-                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-                        <div className="rounded-3xl p-8 max-w-md w-full shadow-2xl relative" style={{ background: C.surface1 }}>
-                            <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4 mx-auto" style={{ background: C.surface2, color: C.amber }}>
-                                <RotateCcw size={24} />
-                            </div>
-                            <h3 className="text-xl font-bold text-center mb-2" style={{ color: C.text }}>
-                                ¿Reiniciar este reto?
-                            </h3>
-                            <p className="text-center mb-6" style={{ color: C.textMuted }}>
-                                Al reiniciar, volverás a tener el progreso en 0% para poder hacer todas las tareas nuevamente.
-                                Tus respuestas anteriores se guardarán en tu historial de forma segura.
-                            </p>
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => setIsRestartDialogOpen(false)}
-                                    className="flex-1 py-3 px-4 rounded-xl font-bold transition-colors"
-                                    style={{ color: C.textMuted, background: C.surface2 }}
-                                    disabled={restartChallengeMutation.isPending}
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    onClick={() => restartChallengeMutation.mutate()}
-                                    className="flex-1 py-3 px-4 text-white rounded-xl font-bold transition-all flex items-center justify-center disabled:opacity-50"
-                                    style={{ background: C.red }}
-                                    disabled={restartChallengeMutation.isPending}
-                                >
-                                    {restartChallengeMutation.isPending ? (
-                                        <Loader2 size={20} className="animate-spin" />
-                                    ) : (
-                                        'Sí, reiniciar'
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
             </main >
 
 

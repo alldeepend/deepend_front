@@ -194,10 +194,10 @@ export const DashboardContent = () => {
                 action={
                     <button
                         onClick={openChangelogTour}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold transition-opacity hover:opacity-90"
-                        style={{ background: C.surface2, border: `1px solid ${C.border}`, color: C.textSec }}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold transition-opacity hover:opacity-90 whats-new-glow"
+                        style={{ background: C.amber, border: `1px solid ${C.amber}`, color: '#231F20' }}
                     >
-                        <Sparkles size={14} style={{ color: C.amber }} />
+                        <Sparkles size={14} style={{ color: '#231F20' }} />
                         Ver novedades
                     </button>
                 }
