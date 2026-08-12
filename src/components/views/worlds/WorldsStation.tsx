@@ -8,7 +8,7 @@ import { C } from '../../../styles/colors'
 import WorldsRightSidebar, { badgesForJourney, badgeColorFor } from './WorldsRightSidebar'
 import { HomeSidebar } from '../../home/HomeSidebar'
 import { PhotoUploadField, AudioRecorderField, SkipCheckbox } from './EvidenceFields'
-import { parseBold, parseText, parseTextWithRecalls } from './textParsing'
+import { parseBold, parseLines, parseText, parseTextWithRecalls } from './textParsing'
 import { getRecalledAnswer, getRecalledGateAnswer, resolveRecallRef } from './recallUtils'
 
 const BLOCK_LABELS: Record<string, string> = {
@@ -541,7 +541,7 @@ export default function WorldsStation() {
 
 // ─── Response validation ──────────────────────────────────────────────────────
 
-function isResponseValid(blockType: string, response: any): boolean {
+function isResponseValid(blockType: string, response: any, content?: any): boolean {
     switch (blockType) {
         case 'punto_partida':
         case 'capsula':
@@ -554,7 +554,15 @@ function isResponseValid(blockType: string, response: any): boolean {
             if (v.skipped) return true
             if (v.selectedRoute) {
                 const answers: string[] = (v.allRouteAnswers ?? {})[v.selectedRoute] ?? []
-                return answers.length > 0 && answers.every(a => !!(a?.trim()))
+                const answersValid = answers.length > 0 && answers.every(a => !!(a?.trim()))
+                if (content?.arbolMultiSelectEnabled) {
+                    const route = (content.routes ?? []).find((r: any) => r.id === v.selectedRoute)
+                    if (route?.arbolMultiSelectApplies !== false) {
+                        const selections: string[] = (v.allRouteSelections ?? {})[v.selectedRoute] ?? []
+                        return selections.length > 0 && answersValid
+                    }
+                }
+                return answersValid
             }
             const mode = v.mode ?? 'text'
             if (mode === 'reescritura_guiada') {
@@ -661,7 +669,7 @@ function BlockPlayer({
     const [showLegacyRecall, setShowLegacyRecall] = useState(false)
 
     const isCierre = block.type === 'cierre'
-    const canSubmit = isResponseValid(block.type, response)
+    const canSubmit = isResponseValid(block.type, response, c)
 
     const showStation1Celebration = block.type === 'punto_partida' && station.orderIndex === 2
     const showLastStationCelebration = block.type === 'punto_partida' && isLastStation
@@ -751,13 +759,13 @@ function BlockPlayer({
             {block.type === 'punto_partida' && <PuntoPartida content={c} recalls={recalls} />}
             {block.type === 'capsula' && <Capsula content={c} recalls={recalls} />}
             {block.type === 'activacion' && (
-                <Activacion content={c} value={response} onChange={onResponse} disabled={locked} blockId={block.id} />
+                <Activacion content={c} value={response} onChange={onResponse} disabled={locked} blockId={block.id} recalls={recalls} />
             )}
             {block.type === 'opciones_respuesta' && (
                 <OpcionesRespuesta content={c} value={response} onChange={onResponse} disabled={locked} />
             )}
             {block.type === 'accion_real' && (
-                <AccionReal content={c} value={response} onChange={onResponse} disabled={locked} blockId={block.id} />
+                <AccionReal content={c} value={response} onChange={onResponse} disabled={locked} blockId={block.id} recalls={recalls} />
             )}
             {block.type === 'evidencia' && (
                 <Evidencia content={c} value={response} onChange={onResponse} disabled={locked} />
@@ -860,7 +868,7 @@ function PuntoPartida({ content, recalls }: { content: any; recalls: (string | n
                     className="border-l-4 pl-4 py-1 italic text-sm"
                     style={{ borderColor: C.red, color: C.textMuted, fontFamily: "'American Typewriter', Georgia, serif" }}
                 >
-                    "{parseBold(content.quote)}"
+                    "{parseLines(content.quote)}"
                     {content.quoteAuthor && (
                         <footer className="mt-1 not-italic text-xs" style={{ color: C.textMuted }}>
                             — {content.quoteAuthor}
@@ -916,11 +924,11 @@ function Capsula({ content, recalls }: { content: any; recalls: (string | null)[
                     >
                         {content.quoteSource && (
                             <p className="text-[10px] tracking-[0.16em] uppercase font-semibold" style={{ color: C.red }}>
-                                {parseBold(content.quoteSource)}
+                                {parseLines(content.quoteSource)}
                             </p>
                         )}
                         <p className="text-sm leading-relaxed" style={{ color: C.text, fontFamily: "'American Typewriter', Georgia, serif" }}>
-                            {parseBold(content.quote)}
+                            {parseLines(content.quote)}
                         </p>
                     </div>
                 )}
@@ -934,7 +942,7 @@ function Capsula({ content, recalls }: { content: any; recalls: (string | null)[
                             className="text-sm leading-relaxed italic"
                             style={{ color: C.text, fontFamily: "'American Typewriter', Georgia, serif" }}
                         >
-                            {parseBold(content.bridge)}
+                            {parseLines(content.bridge)}
                         </p>
                     </div>
                 )}
@@ -944,8 +952,8 @@ function Capsula({ content, recalls }: { content: any; recalls: (string | null)[
 }
 
 function Activacion({
-    content, value, onChange, disabled, blockId,
-}: { content: any; value: any; onChange: (v: any) => void; disabled: boolean; blockId: string }) {
+    content, value, onChange, disabled, blockId, recalls,
+}: { content: any; value: any; onChange: (v: any) => void; disabled: boolean; blockId: string; recalls: (string | null)[] }) {
     const [showRouteChangeWarning, setShowRouteChangeWarning] = useState(false)
     const question = content.question ?? content.prompt ?? ''
     const options: string[] = content.options ?? []
@@ -1007,9 +1015,7 @@ function Activacion({
         const responseMode = (mode === 'banco' || mode === 'texto') ? mode : 'banco'
         return (
             <div className="space-y-5">
-                {question && (
-                    <p className="text-base leading-relaxed" style={{ color: C.text }}>{parseBold(question)}</p>
-                )}
+                {question && parseTextWithRecalls(question, recalls, 'text-base leading-relaxed', { color: C.text })}
 
                 {/* Question list */}
                 <div className="rounded-xl p-4 space-y-3" style={{ background: C.surface1, border: `1px solid ${C.border}` }}>
@@ -1019,7 +1025,7 @@ function Activacion({
                     {pQuestions.map((q, i) => (
                         <div key={i} className="flex items-start gap-3">
                             <span className="text-sm font-bold shrink-0 mt-0.5" style={{ color: C.red }}>{i + 1}.</span>
-                            <p className="text-sm leading-relaxed" style={{ color: C.text }}>{parseBold(q.text)}</p>
+                            <p className="text-sm leading-relaxed" style={{ color: C.text }}>{parseLines(q.text)}</p>
                         </div>
                     ))}
                 </div>
@@ -1073,7 +1079,7 @@ function Activacion({
                                 className="text-[10px] tracking-[0.14em] uppercase font-semibold"
                                 style={{ color: isUnlocked ? C.textMuted : C.border }}
                             >
-                                {parseBold(q.text)}
+                                {parseLines(q.text)}
                             </p>
                             {isUnlocked ? (
                                 <div className="space-y-2">
@@ -1165,7 +1171,7 @@ function Activacion({
                 {!v.skipped && responseMode === 'texto' && pQuestions.map((q, i) => (
                     <div key={i} className="space-y-2">
                         <p className="text-xs leading-relaxed" style={{ color: C.textMuted }}>
-                            <span style={{ color: C.red, fontWeight: 700 }}>{i + 1}. </span>{parseBold(q.text)}
+                            <span style={{ color: C.red, fontWeight: 700 }}>{i + 1}. </span>{parseLines(q.text)}
                         </p>
                         <textarea
                             rows={4}
@@ -1194,7 +1200,7 @@ function Activacion({
 
     // ── Árbol de decisiones ──
     if (isArbol) {
-        const routes: { id: string; label: string; description: string; questions: (string | { isGuided: true; prefix: string })[] }[] = content.routes ?? []
+        const routes: { id: string; label: string; description: string; questions: (string | { isGuided: true; prefix: string })[]; multiSelectOptions?: string[]; arbolMultiSelectApplies?: boolean }[] = content.routes ?? []
         const selectedRoute: string | null = value?.selectedRoute ?? null
         // allRouteAnswers guarda respuestas por ruta: { A: [...], B: [...] }
         const allRouteAnswers: Record<string, string[]> = value?.allRouteAnswers ?? {}
@@ -1203,28 +1209,46 @@ function Activacion({
         const hasChangedRoute: boolean = value?.hasChangedRoute ?? false
         const skipped: boolean = typeof value === 'object' && value !== null ? !!value.skipped : false
 
+        // Selección múltiple opcional antes de abrir las preguntas de la ruta.
+        const arbolMultiSelectEnabled: boolean = !!content.arbolMultiSelectEnabled
+        const arbolMultiSelectShared: boolean = !!content.arbolMultiSelectShared
+        const arbolMultiSelectPrompt: string = content.arbolMultiSelectPrompt ?? ''
+        const activeRouteOptions: string[] = arbolMultiSelectShared
+            ? (content.arbolMultiSelectOptions ?? [])
+            : (activeRoute?.multiSelectOptions ?? [])
+        // allRouteSelections guarda lo marcado por ruta: { A: [...], B: [...] }
+        const allRouteSelections: Record<string, string[]> = value?.allRouteSelections ?? {}
+        const routeSelections: string[] = allRouteSelections[selectedRoute ?? ''] ?? []
+        // Por defecto la selección múltiple aplica a todas las rutas — el admin puede
+        // desmarcarla ruta por ruta (incluso dejarla activa en una sola).
+        const routeAppliesMultiSelect: boolean = arbolMultiSelectEnabled && activeRoute?.arbolMultiSelectApplies !== false
+        const questionsUnlocked: boolean = !routeAppliesMultiSelect || routeSelections.length > 0
+
         const selectRoute = (id: string) => {
             if (disabled || skipped) return
-            onChange({ selectedRoute: id, allRouteAnswers, hasChangedRoute })
+            onChange({ selectedRoute: id, allRouteAnswers, allRouteSelections, hasChangedRoute })
         }
         const setRouteAnswer = (i: number, text: string) => {
             const next = [...routeAnswers]
             while (next.length < (activeRoute?.questions.length ?? 0)) next.push('')
             next[i] = text
-            onChange({ selectedRoute, allRouteAnswers: { ...allRouteAnswers, [selectedRoute!]: next }, hasChangedRoute })
+            onChange({ selectedRoute, allRouteAnswers: { ...allRouteAnswers, [selectedRoute!]: next }, allRouteSelections, hasChangedRoute })
+        }
+        const toggleRouteSelection = (opt: string) => {
+            if (disabled) return
+            const next = routeSelections.includes(opt) ? routeSelections.filter(x => x !== opt) : [...routeSelections, opt]
+            onChange({ selectedRoute, allRouteAnswers, allRouteSelections: { ...allRouteSelections, [selectedRoute!]: next }, hasChangedRoute })
         }
 
         return (
             <div className="space-y-4">
-                {question && (
-                    <p className="text-base leading-relaxed" style={{ color: C.text }}>{parseBold(question)}</p>
-                )}
+                {question && parseTextWithRecalls(question, recalls, 'text-base leading-relaxed', { color: C.text })}
 
                 {content.allowSkip && (
                     <SkipCheckbox
                         checked={skipped}
                         label={content.skipLabel || 'Prefiero no responder esta pregunta'}
-                        onChange={next => onChange({ selectedRoute: next ? null : selectedRoute, allRouteAnswers, hasChangedRoute, skipped: next })}
+                        onChange={next => onChange({ selectedRoute: next ? null : selectedRoute, allRouteAnswers, allRouteSelections, hasChangedRoute, skipped: next })}
                         disabled={disabled}
                     />
                 )}
@@ -1262,7 +1286,7 @@ function Activacion({
                                         {parseBold(route.label)}
                                     </p>
                                 </button>
-                                {isSelected && route.description && (
+                                {isSelected && !(arbolMultiSelectEnabled && route.arbolMultiSelectApplies !== false) && route.description && (
                                     <div className="mt-1.5 px-1">
                                         {parseText(route.description, 'text-xs leading-relaxed', { color: C.textMuted })}
                                     </div>
@@ -1272,11 +1296,79 @@ function Activacion({
                     })}
                 </div>
 
-                {/* Questions for selected route */}
-                {activeRoute && activeRoute.questions.length > 0 && (
+                {/* Selección múltiple — antes de abrir las preguntas de la ruta */}
+                {activeRoute && routeAppliesMultiSelect && (
                     <div className="space-y-3 pt-1">
                         <div className="h-px" style={{ background: C.border }} />
+                        {arbolMultiSelectPrompt && (
+                            <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>{parseLines(arbolMultiSelectPrompt)}</p>
+                        )}
+                        <div className="space-y-2">
+                            {activeRouteOptions.map((opt, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => toggleRouteSelection(opt)}
+                                    disabled={disabled}
+                                    className="w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-200"
+                                    style={{
+                                        background: routeSelections.includes(opt) ? `${C.green}20` : C.surface2,
+                                        border: `1px solid ${routeSelections.includes(opt) ? C.green : C.border}`,
+                                        color: routeSelections.includes(opt) ? C.text : C.textMuted,
+                                        opacity: disabled && !routeSelections.includes(opt) ? 0.5 : 1,
+                                    }}
+                                >
+                                    <span
+                                        className="inline-flex w-5 h-5 rounded-full border items-center justify-center text-xs mr-3 shrink-0"
+                                        style={{
+                                            borderColor: routeSelections.includes(opt) ? C.green : C.border,
+                                            background: routeSelections.includes(opt) ? C.green : 'transparent',
+                                            color: '#fff',
+                                        }}
+                                    >
+                                        {routeSelections.includes(opt) ? '✓' : ''}
+                                    </span>
+                                    {opt}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Preguntas de la ruta seleccionada — bloqueadas hasta responder la selección múltiple, si aplica */}
+                {activeRoute && activeRoute.questions.length > 0 && !questionsUnlocked && (
+                    <div
+                        className="rounded-xl p-4 flex flex-col items-center gap-2 text-center"
+                        style={{ background: C.surface1, border: `1px dashed ${C.border}` }}
+                    >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: C.label }}>
+                            <rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" />
+                        </svg>
+                        <p className="text-xs" style={{ color: C.label }}>Elige al menos una opción para ver las preguntas de esta ruta.</p>
+                    </div>
+                )}
+                {activeRoute && activeRoute.questions.length > 0 && questionsUnlocked && (
+                    <div className="space-y-3 pt-1">
+                        <div className="h-px" style={{ background: C.border }} />
+                        {routeAppliesMultiSelect && activeRoute.description && (
+                            <div className="pb-1">
+                                {parseText(activeRoute.description, 'text-xs leading-relaxed', { color: C.textMuted })}
+                            </div>
+                        )}
                         {activeRoute.questions.map((q, i) => {
+                            const isUnlocked = i === 0 || routeAnswers.slice(0, i).every(a => !!(a?.trim()))
+                            if (!isUnlocked) {
+                                return (
+                                    <div
+                                        key={i}
+                                        className="rounded-xl p-4 text-center"
+                                        style={{ background: C.surface1, border: `1px dashed ${C.border}`, opacity: 0.45 }}
+                                    >
+                                        <p className="text-xs" style={{ color: C.textMuted }}>
+                                            Responde la pregunta {i} para desbloquear
+                                        </p>
+                                    </div>
+                                )
+                            }
                             const isGuidedQuestion = typeof q === 'object' && q !== null && (q as any).isGuided
                             if (isGuidedQuestion) {
                                 const prefix = (q as { prefix: string }).prefix
@@ -1315,7 +1407,7 @@ function Activacion({
                             }
                             return (
                                 <div key={i} className="space-y-1.5">
-                                    <p className="text-sm font-medium" style={{ color: C.text }}>{parseBold(q as string)}</p>
+                                    <p className="text-sm font-medium" style={{ color: C.text }}>{parseLines(q as string)}</p>
                                     <textarea
                                         rows={3}
                                         maxLength={400}
@@ -1372,7 +1464,7 @@ function Activacion({
                                     <div className="space-y-2">
                                         <button
                                             onClick={() => {
-                                                onChange({ selectedRoute: null, allRouteAnswers, hasChangedRoute: true })
+                                                onChange({ selectedRoute: null, allRouteAnswers, allRouteSelections, hasChangedRoute: true })
                                                 setShowRouteChangeWarning(false)
                                             }}
                                             className="w-full py-3 rounded-xl font-semibold text-sm"
@@ -1403,11 +1495,7 @@ function Activacion({
     if (isReescritura) {
         return (
             <div className="space-y-4">
-                {question && (
-                    <p className="text-base leading-relaxed" style={{ color: C.text }}>
-                        {parseBold(question)}
-                    </p>
-                )}
+                {question && parseTextWithRecalls(question, recalls, 'text-base leading-relaxed', { color: C.text })}
                 {content.allowSkip && (
                     <SkipCheckbox
                         checked={!!v.skipped}
@@ -1429,7 +1517,7 @@ function Activacion({
                                     className="text-sm leading-relaxed italic"
                                     style={{ color: C.textMuted, fontFamily: "'American Typewriter', Georgia, serif" }}
                                 >
-                                    {parseBold(prefix)}
+                                    {parseLines(prefix)}
                                 </p>
                             </div>
                             <div className="px-4 pb-3" style={{ background: C.surface1 }}>
@@ -1458,11 +1546,7 @@ function Activacion({
 
     return (
         <div className="space-y-4">
-            {question && (
-                <p className="text-base leading-relaxed" style={{ color: C.text }}>
-                    {parseBold(question)}
-                </p>
-            )}
+            {question && parseTextWithRecalls(question, recalls, 'text-base leading-relaxed', { color: C.text })}
 
             {/* Mode tabs */}
             <div className="flex gap-2">
@@ -1613,7 +1697,7 @@ function OpcionesRespuesta({
 
     return (
         <div className="space-y-4">
-            {prompt && <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>{parseBold(prompt)}</p>}
+            {prompt && <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>{parseLines(prompt)}</p>}
             {content.allowSkip && (
                 <SkipCheckbox
                     checked={skipped}
@@ -1655,8 +1739,8 @@ function OpcionesRespuesta({
 }
 
 function AccionReal({
-    content, value, onChange, disabled, blockId,
-}: { content: any; value: any; onChange: (v: any) => void; disabled: boolean; blockId: string }) {
+    content, value, onChange, disabled, blockId, recalls,
+}: { content: any; value: any; onChange: (v: any) => void; disabled: boolean; blockId: string; recalls: (string | null)[] }) {
     const phrase = content.phrase ?? ''
     const isSeleccion = content.actionType === 'seleccion'
 
@@ -1694,9 +1778,7 @@ function AccionReal({
 
         return (
             <div className="space-y-3">
-                {prompt && (
-                    <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>{parseBold(prompt)}</p>
-                )}
+                {prompt && parseTextWithRecalls(prompt, recalls, 'text-sm leading-relaxed', { color: C.textMuted })}
                 {content.allowSkip && (
                     <SkipCheckbox
                         checked={skipped}
@@ -1771,7 +1853,7 @@ function AccionReal({
                                         className="text-sm italic leading-relaxed"
                                         style={{ color: C.textMuted, fontFamily: "'American Typewriter', Georgia, serif" }}
                                     >
-                                        {parseBold(guidedPrefix)}
+                                        {parseLines(guidedPrefix)}
                                     </p>
                                 </div>
                                 <div className="px-4 pb-3" style={{ background: C.surface1 }}>
@@ -1814,7 +1896,7 @@ function AccionReal({
                             className="text-base leading-relaxed italic"
                             style={{ color: C.text, fontFamily: "'American Typewriter', Georgia, serif" }}
                         >
-                            {parseBold(instruction)}
+                            {parseLines(instruction)}
                         </p>
                     </div>
                 )}
@@ -1847,6 +1929,8 @@ function AccionReal({
 
     return (
         <div className="space-y-5">
+            {content.prompt && parseTextWithRecalls(content.prompt, recalls, 'text-sm leading-relaxed', { color: C.textMuted })}
+
             {/* Frase estática — siempre visible arriba */}
             {phrase && (
                 <div className="rounded-xl px-4 py-4" style={{ background: C.surface1, border: `1px solid ${C.border}` }}>
@@ -1857,7 +1941,7 @@ function AccionReal({
                         className="text-base leading-relaxed italic"
                         style={{ color: C.text, fontFamily: "'American Typewriter', Georgia, serif" }}
                     >
-                        {parseBold(`"${phrase}"`)}
+                        {parseLines(`"${phrase}"`)}
                     </p>
                 </div>
             )}
@@ -1913,7 +1997,7 @@ function AccionReal({
                                 className="text-sm leading-relaxed italic"
                                 style={{ color: `${C.textMuted}99`, fontFamily: "'American Typewriter', Georgia, serif" }}
                             >
-                                {parseBold(`"${phrase}"`)}
+                                {parseLines(`"${phrase}"`)}
                             </p>
                         </div>
                     )}
@@ -1971,7 +2055,7 @@ function Evidencia({
 
     return (
         <div className="space-y-4">
-            {prompt && <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>{parseBold(prompt)}</p>}
+            {prompt && <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>{parseLines(prompt)}</p>}
             {content.allowSkip && (
                 <SkipCheckbox
                     checked={skipped}
