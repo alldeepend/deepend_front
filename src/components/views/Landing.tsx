@@ -4,6 +4,7 @@ import { ArrowRight, HeartHandshake, Activity, Award, Quote, Fingerprint, Flame,
 import InterestForm from '../InterestForm'
 import ArchetypeTest from './ArchetypeTest'
 import { C } from '../../styles/colors'
+import { useAuth } from '../../store/useAuth'
 
 const heading = { fontFamily: "'American Typewriter', Georgia, serif", color: C.text }
 const body = { fontFamily: 'Montserrat, sans-serif', color: C.textMuted }
@@ -303,6 +304,7 @@ function TestimonialCarousel() {
 
 export default function Landing() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [hoveredBenefit, setHoveredBenefit] = useState<number | null>(null)
   const [hoveredPillar, setHoveredPillar] = useState<number | null>(null)
   const [testOpen, setTestOpen] = useState(false)
@@ -338,7 +340,10 @@ export default function Landing() {
           </div>
           <button
             onClick={() => {
-              
+              if (user) {
+                navigate('/dashboard')
+                return
+              }
               if (window.location.hostname === 'alldeepend.com') {
                 window.location.href = 'https://app.alldeepend.com/login'
               } else {
@@ -348,7 +353,7 @@ export default function Landing() {
             className="cursor-pointer text-sm font-bold px-5 py-2.5 rounded-full transition-opacity hover:opacity-90"
             style={{ background: C.green, color: C.bg }}
           >
-            Iniciar sesión
+            {user ? 'Ir a mi panel' : 'Iniciar sesión'}
           </button>
         </div>
       </header>
@@ -750,7 +755,7 @@ export default function Landing() {
       </section>
 
       {/* Prueba social */}
-      <section className="max-w-5xl mx-auto px-6 py-16 sm:py-24">
+      <section id="landing-testimonials" className="max-w-5xl mx-auto px-6 py-16 sm:py-24">
         <h2 className="text-2xl sm:text-3xl font-bold text-center" style={heading}>
           Lo que dice nuestra comunidad
         </h2>

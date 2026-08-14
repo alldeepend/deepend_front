@@ -61,14 +61,30 @@ export default function WhatsNewTour() {
 
         let cancelled = false;
         let attempts = 0;
-        
+
         setBox(null);
         const tryMeasure = () => {
             if (cancelled) return;
-            const b = measure(current.target!);
-            if (b) setBox(b);
-            else if (++attempts < 30) setTimeout(tryMeasure, 100);
-            
+            const el = document.querySelector(current.target!);
+            if (!el) {
+                if (++attempts < 30) setTimeout(tryMeasure, 100);
+                return;
+            }
+            const r = el.getBoundingClientRect();
+            if (r.width === 0 && r.height === 0) {
+                if (++attempts < 30) setTimeout(tryMeasure, 100);
+                return;
+            }
+            // El target existe pero está fuera de la vista (ej. más abajo en una
+            // página larga como /landing) — hay que llevarlo a la vista antes de
+            // medirlo, si no el spotlight queda posicionado fuera de pantalla.
+            const inView = r.top >= 0 && r.bottom <= window.innerHeight;
+            if (!inView) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(() => { if (!cancelled) setBox(measure(current.target!)); }, 400);
+                return;
+            }
+            setBox({ top: r.top, left: r.left, width: r.width, height: r.height });
         };
         tryMeasure();
 

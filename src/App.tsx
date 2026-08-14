@@ -49,6 +49,7 @@ function App() {
                         <Landing />
                     </PublicRoute>
                 } />
+                <Route path="/landing" element={<Landing />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/creditos" element={<Creditos />} />
                 <Route path="/dashboard" element={
