@@ -10,6 +10,7 @@ import { HomeSidebar } from '../../home/HomeSidebar'
 import { PhotoUploadField, AudioRecorderField, SkipCheckbox } from './EvidenceFields'
 import { parseBold, parseLines, parseText, parseTextWithRecalls } from './textParsing'
 import { getRecalledAnswer, getRecalledGateAnswer, resolveRecallRef } from './recallUtils'
+import { resolveConditionalRecall, type ResolvedConditionalRecall } from './conditionalRecall'
 
 const BLOCK_LABELS: Record<string, string> = {
     punto_partida:      'Punto de Partida',
@@ -118,6 +119,12 @@ export default function WorldsStation() {
     // admin puso el marcador {N} dentro del campo de texto del bloque.
     const recalls: (string | null)[] = (currentBlock?.content?.recallRefs ?? [])
         .map((ref: string) => resolveRecallRef(ref, data ?? null, gateStatus))
+    // Recuerdo condicional — feature nueva y separada, solo para Punto de Partida:
+    // prueba una cadena de candidatos en orden y cae a un texto de respaldo si
+    // ninguno tiene respuesta.
+    const conditionalRecall: ResolvedConditionalRecall | null = resolveConditionalRecall(
+        currentBlock?.content?.conditionalRecall, data ?? null, gateStatus
+    )
 
     const XP_EXCLUDED = ['punto_partida', 'cierre']
     const eligibleBlocks = blocks.filter(b => !XP_EXCLUDED.includes(b.type))
@@ -491,6 +498,7 @@ export default function WorldsStation() {
                         station={station}
                         legacyRecalledAnswer={legacyRecalledAnswer}
                         recalls={recalls}
+                        conditionalRecall={conditionalRecall}
                         response={responses[currentBlock.id]}
                         onResponse={val =>
                             setResponses(prev => ({ ...prev, [currentBlock.id]: val }))
@@ -626,6 +634,7 @@ function BlockPlayer({
     station,
     legacyRecalledAnswer,
     recalls,
+    conditionalRecall,
     response,
     onResponse,
     locked,
@@ -647,6 +656,7 @@ function BlockPlayer({
     station: Station
     legacyRecalledAnswer: string | null
     recalls: (string | null)[]
+    conditionalRecall: ResolvedConditionalRecall | null
     response: any
     onResponse: (val: any) => void
     locked: boolean
@@ -756,7 +766,7 @@ function BlockPlayer({
             )}
 
             {/* Type-specific content */}
-            {block.type === 'punto_partida' && <PuntoPartida content={c} recalls={recalls} />}
+            {block.type === 'punto_partida' && <PuntoPartida content={c} recalls={recalls} conditionalRecall={conditionalRecall} />}
             {block.type === 'capsula' && <Capsula content={c} recalls={recalls} />}
             {block.type === 'activacion' && (
                 <Activacion content={c} value={response} onChange={onResponse} disabled={locked} blockId={block.id} recalls={recalls} />
@@ -857,11 +867,29 @@ function BlockPlayer({
 
 // ─── Block type renderers ─────────────────────────────────────────────────────
 
-function PuntoPartida({ content, recalls }: { content: any; recalls: (string | null)[] }) {
+function PuntoPartida({ content, recalls, conditionalRecall }: { content: any; recalls: (string | null)[]; conditionalRecall: ResolvedConditionalRecall | null }) {
     return (
         <div className="space-y-4">
             {content.text && (
                 <div className="space-y-3">{parseTextWithRecalls(content.text, recalls, 'text-base leading-relaxed')}</div>
+            )}
+            {conditionalRecall && (
+                conditionalRecall.isFallback ? (
+                    <div className="rounded-xl px-4 py-3" style={{ border: `1px dashed ${C.border}` }}>
+                        <p className="text-sm leading-relaxed italic" style={{ color: C.textMuted }}>
+                            {conditionalRecall.text}
+                        </p>
+                    </div>
+                ) : (
+                    <div
+                        className="rounded-xl px-4 py-3"
+                        style={{ background: C.surface1, border: `1px solid ${C.green}40` }}
+                    >
+                        <p className="text-sm leading-relaxed italic" style={{ color: C.text }}>
+                            "{conditionalRecall.text}"
+                        </p>
+                    </div>
+                )
             )}
             {content.quote && (
                 <blockquote
