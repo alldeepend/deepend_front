@@ -105,8 +105,18 @@ export interface BlockInteraction {
     completedAt: string | null;
 }
 
+// Bloques de OTROS viajes (misma Colección) referenciados como "recuerdo" en
+// alguno de los bloques de este viaje — solo lo mínimo para resolverlos
+// (extractRecallText), no el árbol completo del viaje hermano.
+export interface CrossJourneyBlock {
+    id: string;
+    type: string;
+    content: any;
+}
+
 export interface JourneyDetailsResponse {
     journey: Journey;
+    crossJourneyBlocks: CrossJourneyBlock[];
     progress: {
         userJourney: UserJourneyProgress | null;
         stationProgress: StationProgress[];

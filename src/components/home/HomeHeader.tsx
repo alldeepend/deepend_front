@@ -1,5 +1,6 @@
 import React from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
+import { Home } from 'lucide-react';
 import { useAuth } from '../../store/useAuth';
 
 interface HomeHeaderProps {
@@ -8,6 +9,7 @@ interface HomeHeaderProps {
 
 export const HomeHeader = ({ action }: HomeHeaderProps) => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const displayName = user?.preferredName || user?.firstName || 'Usuario';
 
     return (
@@ -33,6 +35,15 @@ export const HomeHeader = ({ action }: HomeHeaderProps) => {
                         Hola, <span className="font-bold">{displayName}</span>
                     </h2>
                 </div>
+                <button
+                    onClick={() => navigate('/landing')}
+                    aria-label="Visitar la landing page"
+                    title="Visitar la landing page"
+                    className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-transform hover:scale-105"
+                    style={{ background: '#1E1A1B', border: '1px solid #333330', color: '#F5F0E8' }}
+                >
+                    <Home size={16} />
+                </button>
             </div>
             {action && <div>{action}</div>}
         </header>

@@ -11,6 +11,7 @@ import {
     Globe,
     Newspaper,
     CalendarDays,
+    Mic,
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../../store/useAuth';
@@ -19,7 +20,7 @@ import { C } from '../../styles/colors';
 import { useLegacyChallengesAccess } from '../../hooks/useLegacyChallengesAccess';
 
 interface HomeSidebarProps {
-    activeTab: 'Dashboard' | 'Mi Viaje' | 'Mis Retos' | 'Mis Recursos' | 'Perfil' | 'Mundos' | 'Noticias' | 'Reto Semanal';
+    activeTab: 'Dashboard' | 'Mi Viaje' | 'Mis Retos' | 'Mis Recursos' | 'Perfil' | 'Mundos' | 'Noticias' | 'Reto Semanal' | 'Testimonios';
     dark?: boolean;
 }
 
@@ -102,6 +103,13 @@ export const HomeSidebar = ({ activeTab, dark = true }: HomeSidebarProps) => {
                         label="Perfil"
                         active={activeTab === 'Perfil'}
                         onClick={() => navigate('/profile')}
+                        dark={dark}
+                    />
+                    <SidebarItem
+                        icon={Mic}
+                        label="Testimonios"
+                        active={activeTab === 'Testimonios'}
+                        onClick={() => navigate('/testimonials')}
                         dark={dark}
                     />
                 </nav>

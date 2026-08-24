@@ -30,6 +30,7 @@ import WhatsAppButton from './components/shared/WhatsAppButton';
 import WhatsNewTour from './components/shared/WhatsNewTour';
 import PwaUpdater from './components/shared/PwaUpdater';
 import News from './components/views/News';
+import Testimonials from './components/views/Testimonials';
 import RetoSemanal from './components/views/RetoSemanal';
 import PrivacyPolicy from './components/views/PrivacyPolicy';
 import Creditos from './components/views/Creditos';
@@ -94,6 +95,11 @@ function App() {
                 <Route path="/news" element={
                     <ProtectedRoute>
                         <News />
+                    </ProtectedRoute>
+                } />
+                <Route path="/testimonials" element={
+                    <ProtectedRoute>
+                        <Testimonials />
                     </ProtectedRoute>
                 } />
                 <Route path="/reto-semanal" element={

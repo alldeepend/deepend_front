@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router'
-import { ArrowRight, HeartHandshake, Activity, Award, Quote, Fingerprint, Flame, Play, Pause, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react'
+import { ArrowRight, HeartHandshake, Activity, Award, Fingerprint, Flame, ChevronDown } from 'lucide-react'
 import InterestForm from '../InterestForm'
 import ArchetypeTest from './ArchetypeTest'
+import { TestimonialCarousel } from '../shared/TestimonialCarousel'
 import { C } from '../../styles/colors'
 import { useAuth } from '../../store/useAuth'
 
@@ -85,222 +86,6 @@ const BENEFIT_LAYOUTS = [
   { col: 'sm:col-span-1', r: 'rounded-xl',  p: 'p-6 pb-8', iWH: 'w-11 h-11', iR: 'rounded-full', iSz: 22, featured: false, hz: false },
   { col: 'sm:col-span-1', r: 'rounded-2xl', p: 'p-7',      iWH: 'w-9 h-9',   iR: 'rounded-lg',   iSz: 16, featured: false, hz: false },
 ]
-
-const testimonials = [
-  {
-    name: 'Liliana Abril',
-    role: 'Usuaria DeepEnd',
-    text: 'Para mí, DeepEnd significa un lugar donde podemos aprender, crecer y llegar cada vez más lejos.',
-    img: '/Imagen_Testimonio.jpg',     
-    audio: '/audio/testimonials/liliana-abril.mp3',
-    color: '#52B788',
-  },
-  {
-    name: 'Cata Montoya',
-    role: 'Usuaria DeepEnd',
-    text: 'Después de todo este tiempo me he dado cuenta que la comunidad me ha entregado más a mí, están pendientes, te impulsan...',
-    img: '/Imagen_Testimonio.jpg',     // reemplazar con foto real
-    audio: '/audio/testimonials/cata-montoya.mp3',
-    color: '#3FC6D8',
-  },
-  {
-    name: 'Catalina Díaz',
-    role: 'Usuaria DeepEnd',
-    text: 'Pasamos mucho tiempo en piloto automático, sobreviviendo al caos que puede generar la rutina, pero para eso está DeepEnd.',
-    img: '/Imagen_Testimonio.jpg',     // reemplazar con foto real
-    audio: '/audio/testimonials/catalina-diaz.mp3',
-    color: '#B57BEE',
-  },
-  {
-    name: 'Liliana Moreno',
-    role: 'Usuaria DeepEnd',
-    text: 'Gracias a DeepEnd aprendí que lo importante no son los minutos acumulados, sino cumplir mi palabra y avanzar incluso en los días difíciles.',
-    img: '/Imagen_Testimonio.jpg',     // reemplazar con foto real
-    audio: '/audio/testimonials/liliana-moreno.mp3',
-    color: '#F4669B',
-  },
-  {
-    name: 'Susana Panqueva',
-    role: 'Usuaria DeepEnd',
-    text: 'Me parece muy bonito crecer en comunidad, con ayuda, con amor, y qué mejor que de la mano de la tribu.',
-    img: '/Imagen_Testimonio.jpg',     // reemplazar con foto real
-    audio: '/audio/testimonials/susana-panqueva.mp3',
-    color: '#5B9BF7',
-  },
-  {
-    name: 'Paola Vargas',
-    role: 'Usuaria DeepEnd',
-    text: 'Para mí, DeepEnd ha sido una comunidad que me ayudó en momentos difíciles y me acercó a gente que hoy considero mis amigos.',
-    img: '/Imagen_Testimonio.jpg',     // reemplazar con foto real
-    audio: '/audio/testimonials/paola-vargas.mp3',
-    color: '#E8C547',
-  },
-]
-
-function AudioPlayer({ src, color }: { src: string; color: string }) {
-  const ref = useRef<HTMLAudioElement>(null)
-  const [playing, setPlaying] = useState(false)
-  const [current, setCurrent] = useState(0)
-  const [duration, setDuration] = useState(0)
-
-  const toggle = () => {
-    const a = ref.current
-    if (!a) return
-    if (playing) { a.pause(); setPlaying(false) }
-    else { a.play().catch(() => {}); setPlaying(true) }
-  }
-
-  const seek = (e: React.MouseEvent<HTMLDivElement>) => {
-    const a = ref.current
-    if (!a || !a.duration) return
-    const rect = e.currentTarget.getBoundingClientRect()
-    a.currentTime = ((e.clientX - rect.left) / rect.width) * a.duration
-  }
-
-  const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
-  const pct  = duration ? (current / duration) * 100 : 0
-
-  return (
-    <div className="flex items-center gap-3 mt-4 pt-4 border-t" style={{ borderColor: color + '30' }}>
-      <audio
-        ref={ref}
-        src={src}
-        onTimeUpdate={e => setCurrent(e.currentTarget.currentTime)}
-        onLoadedMetadata={e => setDuration(e.currentTarget.duration)}
-        onEnded={() => { setPlaying(false); setCurrent(0) }}
-      />
-      <button
-        onClick={toggle}
-        className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-opacity hover:opacity-80"
-        style={{ background: color + '25' }}
-      >
-        {playing
-          ? <Pause size={13} style={{ color }} />
-          : <Play  size={13} style={{ color, marginLeft: 1 }} />
-        }
-      </button>
-      <div
-        className="flex-1 h-1 rounded-full cursor-pointer relative"
-        style={{ background: color + '25' }}
-        onClick={seek}
-      >
-        <div className="absolute inset-y-0 left-0 rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
-      </div>
-      <span className="text-[10px] tabular-nums flex-shrink-0" style={{ color: '#6B6460' }}>
-        {fmt(current)} / {fmt(duration)}
-      </span>
-    </div>
-  )
-}
-
-function TestimonialCarousel() {
-  const scrollerRef = useRef<HTMLDivElement>(null)
-  const [atStart, setAtStart] = useState(true)
-  const [atEnd, setAtEnd] = useState(false)
-  const pausedRef = useRef(false)
-
-  const stepBy = (dir: 1 | -1) => {
-    const el = scrollerRef.current
-    if (!el) return
-    const card = el.querySelector<HTMLElement>('[data-card]')
-    const step = (card?.offsetWidth ?? el.clientWidth) + 24
-    el.scrollBy({ left: step * dir, behavior: 'smooth' })
-  }
-
-  const goNext = () => {
-    const el = scrollerRef.current
-    if (!el) return
-    if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 4) {
-      el.scrollTo({ left: 0, behavior: 'smooth' })
-    } else {
-      stepBy(1)
-    }
-  }
-
-  useEffect(() => {
-    const el = scrollerRef.current
-    if (!el) return
-    const onScroll = () => {
-      setAtStart(el.scrollLeft <= 4)
-      setAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 4)
-    }
-    onScroll()
-    el.addEventListener('scroll', onScroll)
-    return () => el.removeEventListener('scroll', onScroll)
-  }, [])
-
-  useEffect(() => {
-    const interval = setInterval(() => { if (!pausedRef.current) goNext() }, 4500)
-    return () => clearInterval(interval)
-  }, [])
-
-  return (
-    <div
-      className="relative mt-12"
-      onMouseEnter={() => { pausedRef.current = true }}
-      onMouseLeave={() => { pausedRef.current = false }}
-    >
-      <div
-        ref={scrollerRef}
-        className="flex gap-6 overflow-x-auto no-scrollbar -mx-6 px-6"
-        style={{ scrollSnapType: 'x mandatory', scrollBehavior: 'smooth' }}
-      >
-        {testimonials.map(t => (
-          <div
-            key={t.name}
-            data-card
-            className="rounded-2xl border overflow-hidden flex flex-col flex-shrink-0 w-[260px] sm:w-[300px] lg:w-[310px]"
-            style={{ background: C.surface1, borderColor: C.border, scrollSnapAlign: 'start' }}
-          >
-            {/* Imagen */}
-            <div className="relative h-44 bg-surface2 flex-shrink-0" style={{ background: C.surface2 }}>
-              <img
-                src={t.img}
-                alt={t.name}
-                className="w-full h-full object-cover"
-                style={{ objectPosition: 'center 37%' }}
-                onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
-              />
-              {/* Gradiente para leer el texto encima si se superpone */}
-              <div className="absolute bottom-0 inset-x-0 h-10" style={{ background: `linear-gradient(to top, ${C.surface1}, transparent)` }} />
-            </div>
-
-            {/* Contenido */}
-            <div className="p-5 flex flex-col flex-1">
-              <Quote size={18} style={{ color: t.color }} />
-              <p className="text-sm mt-3 leading-relaxed flex-1" style={{ color: C.text + 'd9' }}>
-                "{t.text}"
-              </p>
-              <div className="mt-4">
-                <p className="text-sm font-bold" style={{ color: C.text }}>{t.name}</p>
-                <p className="text-xs" style={body}>{t.role}</p>
-              </div>
-              <AudioPlayer src={t.audio} color={t.color} />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <button
-        onClick={() => stepBy(-1)}
-        disabled={atStart}
-        aria-label="Testimonio anterior"
-        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-10 h-10 rounded-full border flex items-center justify-center transition-opacity hover:opacity-90 disabled:opacity-0 disabled:pointer-events-none"
-        style={{ background: C.surface1, borderColor: C.border, color: C.text }}
-      >
-        <ChevronLeft size={18} />
-      </button>
-      <button
-        onClick={() => (atEnd ? scrollerRef.current?.scrollTo({ left: 0, behavior: 'smooth' }) : stepBy(1))}
-        aria-label="Siguiente testimonio"
-        className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-10 h-10 rounded-full border flex items-center justify-center transition-opacity hover:opacity-90"
-        style={{ background: C.surface1, borderColor: C.border, color: C.text }}
-      >
-        <ChevronRight size={18} />
-      </button>
-    </div>
-  )
-}
 
 export default function Landing() {
   const navigate = useNavigate()
@@ -398,6 +183,36 @@ export default function Landing() {
             <ChevronDown size={18} style={{ color: C.text }} />
           </span>
         </button>
+      </section>
+
+      {/* Prueba social */}
+      <section id="landing-testimonials" className="relative overflow-hidden py-16 sm:py-24 px-6">
+        {/* Textura decorativa — resplandor radial muy sutil a los lados */}
+        <div
+          className="absolute pointer-events-none select-none rounded-full"
+          style={{
+            left: '-12%', top: '50%', width: 420, height: 420,
+            transform: 'translateY(-50%)',
+            background: `radial-gradient(circle, ${C.green}30, transparent 70%)`,
+            filter: 'blur(50px)',
+          }}
+        />
+        <div
+          className="absolute pointer-events-none select-none rounded-full"
+          style={{
+            right: '-12%', top: '50%', width: 420, height: 420,
+            transform: 'translateY(-50%)',
+            background: `radial-gradient(circle, ${C.green}30, transparent 70%)`,
+            filter: 'blur(50px)',
+          }}
+        />
+
+        <div className="relative max-w-5xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center" style={heading}>
+            Lo que dice nuestra comunidad
+          </h2>
+          <TestimonialCarousel />
+        </div>
       </section>
 
       {/* Propuesta de valor — Ruta metro */}
@@ -752,14 +567,6 @@ export default function Landing() {
             El cambio empieza desde aquí, por ti.
           </p>
         </div>
-      </section>
-
-      {/* Prueba social */}
-      <section id="landing-testimonials" className="max-w-5xl mx-auto px-6 py-16 sm:py-24">
-        <h2 className="text-2xl sm:text-3xl font-bold text-center" style={heading}>
-          Lo que dice nuestra comunidad
-        </h2>
-        <TestimonialCarousel />
       </section>
 
       {/* Formulario de interés / CTA final */}

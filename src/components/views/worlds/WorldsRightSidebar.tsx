@@ -126,7 +126,11 @@ export default function WorldsRightSidebar({ mode, journeyTitle: _journeyTitle, 
                             Mi Arquetipo
                         </p>
                         {archetypeInfo ? (
-                            <div className="rounded-2xl p-4 border" style={{ background: C.surface1, borderColor: C.border }}>
+                            <Link
+                                to="/test"
+                                className="block rounded-2xl p-4 border transition-opacity hover:opacity-80"
+                                style={{ background: C.surface1, borderColor: C.border }}
+                            >
                                 <div className="flex items-center gap-3 mb-3">
                                     <div
                                         className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
@@ -149,7 +153,7 @@ export default function WorldsRightSidebar({ mode, journeyTitle: _journeyTitle, 
                                 <p className="text-xs leading-relaxed mb-3" style={{ color: C.textMuted }}>
                                     {archetypeInfo.variant}
                                 </p>
-                                <div className="flex flex-wrap gap-1.5">
+                                <div className="flex flex-wrap gap-1.5 mb-3">
                                     {archetypeInfo.traits.map(t => (
                                         <span
                                             key={t}
@@ -160,7 +164,10 @@ export default function WorldsRightSidebar({ mode, journeyTitle: _journeyTitle, 
                                         </span>
                                     ))}
                                 </div>
-                            </div>
+                                <span className="text-[11px] font-bold" style={{ color: C.amber }}>
+                                    Ver resultado completo →
+                                </span>
+                            </Link>
                         ) : (
                             <Link
                                 to="/test"

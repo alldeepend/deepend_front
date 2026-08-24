@@ -96,6 +96,8 @@ export const WeeklyChallengeProgressCard = () => {
     const pct = percentage ?? 0;
     const barWidth = Math.min(100, pct);
     const exceeded = pct > 100;
+    // Rojo al arrancar, ámbar a mitad de camino, verde al completar la meta.
+    const progressColor = pct >= 100 ? C.green : pct >= 50 ? C.amber : C.red;
 
     return (
         <div className="lg:col-span-4 p-6 rounded-2xl shadow-sm border flex flex-col justify-center gap-4 relative overflow-hidden" style={{ background: '#1E1A1B', borderColor: '#333330' }}>
@@ -112,11 +114,11 @@ export const WeeklyChallengeProgressCard = () => {
 
             <div className="relative z-10 space-y-3">
                 <div className="flex items-end justify-between">
-                    <span className="text-4xl font-bold" style={{ color: exceeded ? C.red : '#F5F0E8' }}>
+                    <span className="text-4xl font-bold" style={{ color: progressColor }}>
                         {pct}%
                     </span>
                     {exceeded && (
-                        <span className="text-xs font-semibold px-2 py-1 rounded-full mb-1" style={{ color: C.red, background: '#EE2A2822' }}>
+                        <span className="text-xs font-semibold px-2 py-1 rounded-full mb-1" style={{ color: C.green, background: `${C.green}22` }}>
                             ¡Meta superada!
                         </span>
                     )}
@@ -125,16 +127,16 @@ export const WeeklyChallengeProgressCard = () => {
                 <div className="w-full h-3 rounded-full overflow-hidden" style={{ background: '#252020' }}>
                     <div
                         className="h-full rounded-full transition-all duration-500"
-                        style={{ width: `${barWidth}%`, background: C.red }}
+                        style={{ width: `${barWidth}%`, background: progressColor }}
                     />
                 </div>
 
                 <div className="flex justify-between text-sm" style={{ color: '#A8A29E' }}>
                     <span>
-                        <span className="font-semibold" style={{ color: C.red }}>{minutesThisWeek} min</span> registrados
+                        <span className="font-semibold" style={{ color: progressColor }}>{minutesThisWeek} min</span> registrados
                     </span>
                     {goalMinutes && (
-                        <span>Meta: <span className="font-semibold" style={{ color: C.red }}>{goalMinutes} min</span></span>
+                        <span>Meta: <span className="font-semibold" style={{ color: C.green }}>{goalMinutes} min</span></span>
                     )}
                 </div>
 
@@ -145,7 +147,7 @@ export const WeeklyChallengeProgressCard = () => {
                                 key={i}
                                 className="w-6 h-6 rounded-md text-[10px] font-bold flex items-center justify-center transition-colors"
                                 style={i < (activeDays ?? 0)
-                                    ? { background: C.red, color: '#fff' }
+                                    ? { background: C.green, color: '#fff' }
                                     : { background: '#252020', color: '#666' }}
                             >
                                 {i + 1}

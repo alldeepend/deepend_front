@@ -390,7 +390,11 @@ export default function Perfil() {
                                         </div>
 
                                         {progress.archetypeInfo ? (
-                                            <div className="rounded-2xl p-4 border flex items-center gap-3" style={{ background: C.surface1, borderColor: C.border }}>
+                                            <button
+                                                onClick={() => navigate('/test')}
+                                                className="rounded-2xl p-4 flex items-center gap-3 text-left border transition-opacity hover:opacity-80"
+                                                style={{ background: C.surface1, borderColor: C.border }}
+                                            >
                                                 <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: `${C.amber}22` }}>
                                                     <Brain size={18} style={{ color: C.amber }} />
                                                 </div>
@@ -399,8 +403,9 @@ export default function Perfil() {
                                                     <p className="text-sm font-bold leading-tight" style={{ fontFamily: "'American Typewriter', Georgia, serif", color: C.text }}>
                                                         {progress.archetypeInfo.name}
                                                     </p>
+                                                    <p className="text-[10px] font-bold mt-0.5" style={{ color: C.amber }}>Ver resultado completo →</p>
                                                 </div>
-                                            </div>
+                                            </button>
                                         ) : (
                                             <button
                                                 onClick={() => navigate('/test')}

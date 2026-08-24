@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router'
-import { ArrowRight, ChevronLeft, RotateCcw, X, Fingerprint, Lock, Play, Pause, Mail, Check } from 'lucide-react'
+import { Link, useNavigate } from 'react-router'
+import { ArrowLeft, ArrowRight, ChevronLeft, RotateCcw, X, Fingerprint, Lock, Play, Pause, Mail, Check } from 'lucide-react'
 import { C } from '../../styles/colors'
 import {
   BLOCK0, BLOCK1, BLOCK2,
@@ -195,6 +195,7 @@ interface ResultData {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}) {
+  const navigate = useNavigate()
   const [phase, setPhase] = useState<Phase>('intro')
   const [currentQ, setCurrentQ] = useState(0)
   const [answers, setAnswers] = useState<Record<number, string | number>>({})
@@ -202,7 +203,10 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
   const [unlockedSections, setUnlockedSections] = useState<number[]>([0])
   const [emailInput, setEmailInput] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
+  const [confirmEmailInput, setConfirmEmailInput] = useState('')
+  const [confirmEmailError, setConfirmEmailError] = useState<string | null>(null)
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [viewingSavedResult, setViewingSavedResult] = useState(false)
 
   const serif = "'American Typewriter', Georgia, serif"
   const isLoggedIn = !!localStorage.getItem('token')
@@ -211,18 +215,42 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
     setAnswers(prev => ({ ...prev, [questionId]: value }))
   }
 
-  // Usuario logueado: guarda el resultado automáticamente, ligado a su cuenta.
+  // Entrando por la ruta /test (no como modal desde la landing) con una cuenta
+  // que ya tiene un resultado guardado: lo mostramos directo en vez de forzar
+  // a repetir las 18 preguntas solo para volver a verlo. "Hacer el test de
+  // nuevo" sigue disponible para quien sí quiera repetirlo.
   useEffect(() => {
-    if (phase !== 'result' || !result || !isLoggedIn || saveState !== 'idle') return
+    if (onClose || !isLoggedIn) return
+    archetypeApi.getMyResult()
+      .then(res => {
+        if (!res.result) return
+        const secondaryNum = res.result.secondaryNum as ArchNum
+        setResult({
+          dominantKey: res.result.dominantKey,
+          secondaryNum,
+          secondaryName: ARCHETYPE_NAMES[secondaryNum],
+        })
+        setViewingSavedResult(true)
+        setPhase('result')
+      })
+      .catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Usuario logueado: guarda el resultado automáticamente, ligado a su cuenta.
+  // No aplica cuando solo estamos mostrando un resultado ya guardado (arriba).
+  useEffect(() => {
+    if (phase !== 'result' || !result || !isLoggedIn || saveState !== 'idle' || viewingSavedResult) return
     setSaveState('saving')
     archetypeApi.submitResult({ dominantKey: result.dominantKey, secondaryNum: result.secondaryNum, answers })
       .then(() => setSaveState('saved'))
       .catch(() => setSaveState('error'))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, result])
+  }, [phase, result, viewingSavedResult])
 
   // Visitante anónimo: guarda el resultado asociado al correo que deje.
-  // Se valida formato + dominio (rechaza correos desechables) antes de enviar.
+  // Se valida formato + dominio (rechaza correos desechables), y que la
+  // confirmación coincida exactamente, antes de enviar.
   function saveWithEmail() {
     if (!result || saveState === 'saving') return
     const check = validateEmail(emailInput)
@@ -230,7 +258,12 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
       setEmailError(check.reason ?? 'Correo inválido.')
       return
     }
+    if (emailInput.trim().toLowerCase() !== confirmEmailInput.trim().toLowerCase()) {
+      setConfirmEmailError('Los correos no coinciden.')
+      return
+    }
     setEmailError(null)
+    setConfirmEmailError(null)
     setSaveState('saving')
     archetypeApi.submitResult({ dominantKey: result.dominantKey, secondaryNum: result.secondaryNum, answers, email: emailInput.trim().toLowerCase() })
       .then(() => setSaveState('saved'))
@@ -274,7 +307,10 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
     setUnlockedSections([0])
     setEmailInput('')
     setEmailError(null)
+    setConfirmEmailInput('')
+    setConfirmEmailError(null)
     setSaveState('idle')
+    setViewingSavedResult(false)
   }
 
   function unlockSection(index: number) {
@@ -362,6 +398,20 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
       <Wrapper phase={phase} onClose={onClose}>
         <div className="flex-1 flex flex-col items-center py-12 px-6">
           <div className="w-full max-w-lg">
+            {/* Sin onClose estamos en la ruta /test como página propia (no como
+                modal de la landing) — sin esto no hay forma de volver al resto
+                de la app desde acá. */}
+            {!onClose && (
+              <button
+                onClick={() => navigate(isLoggedIn ? '/dashboard' : '/')}
+                className="flex items-center text-sm mb-6 transition-colors group"
+                style={{ color: C.label }}
+              >
+                <ArrowLeft size={16} className="mr-1 group-hover:-translate-x-1 transition-transform" />
+                {isLoggedIn ? 'Dashboard' : 'Inicio'}
+              </button>
+            )}
+
             {/* Contenido del resultado — bloqueado con candado hasta dejar el correo (visitantes anónimos) */}
             {(() => {
               const locked = !isLoggedIn && saveState !== 'saved'
@@ -454,7 +504,11 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
                           <input
                             type="email"
                             value={emailInput}
-                            onChange={e => { setEmailInput(e.target.value); if (emailError) setEmailError(null) }}
+                            onChange={e => {
+                              setEmailInput(e.target.value)
+                              if (emailError) setEmailError(null)
+                              if (confirmEmailError) setConfirmEmailError(null)
+                            }}
                             onBlur={() => {
                               if (!emailInput.trim()) return
                               const check = validateEmail(emailInput)
@@ -466,14 +520,37 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
                             style={{ color: C.text }}
                           />
                         </div>
+                        <div
+                          className="flex items-center gap-2 px-4 rounded-xl border"
+                          style={{ borderColor: confirmEmailError ? C.red : C.border, background: C.surface1 }}
+                        >
+                          <Mail size={16} style={{ color: C.label }} />
+                          <input
+                            type="email"
+                            value={confirmEmailInput}
+                            onChange={e => { setConfirmEmailInput(e.target.value); if (confirmEmailError) setConfirmEmailError(null) }}
+                            onBlur={() => {
+                              if (!confirmEmailInput.trim()) return
+                              setConfirmEmailError(
+                                confirmEmailInput.trim().toLowerCase() === emailInput.trim().toLowerCase()
+                                  ? null
+                                  : 'Los correos no coinciden.'
+                              )
+                            }}
+                            onKeyDown={e => { if (e.key === 'Enter') saveWithEmail() }}
+                            placeholder="Confirma tu correo"
+                            className="flex-1 py-3 bg-transparent outline-none text-sm"
+                            style={{ color: C.text }}
+                          />
+                        </div>
                         <button
                           onClick={saveWithEmail}
-                          disabled={!emailInput.trim() || saveState === 'saving'}
+                          disabled={!emailInput.trim() || !confirmEmailInput.trim() || saveState === 'saving'}
                           className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-opacity hover:opacity-90"
                           style={{
-                            background: !emailInput.trim() ? C.surface2 : C.green,
-                            color: !emailInput.trim() ? C.disabled : '#fff',
-                            cursor: !emailInput.trim() ? 'not-allowed' : 'pointer',
+                            background: (!emailInput.trim() || !confirmEmailInput.trim()) ? C.surface2 : C.green,
+                            color: (!emailInput.trim() || !confirmEmailInput.trim()) ? C.disabled : '#fff',
+                            cursor: (!emailInput.trim() || !confirmEmailInput.trim()) ? 'not-allowed' : 'pointer',
                           }}
                         >
                           {saveState === 'saving' ? 'Revelando...' : <><Lock size={14} /> Revelar mi arquetipo</>}
@@ -484,7 +561,12 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
                           {emailError}
                         </p>
                       )}
-                      {!emailError && saveState === 'error' && (
+                      {!emailError && confirmEmailError && (
+                        <p className="text-xs mt-3" style={{ color: C.red }}>
+                          {confirmEmailError}
+                        </p>
+                      )}
+                      {!emailError && !confirmEmailError && saveState === 'error' && (
                         <p className="text-xs mt-3" style={{ color: C.red }}>
                           No pudimos guardar tu resultado. Intenta de nuevo.
                         </p>
@@ -650,13 +732,13 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
                   onClick={() => selectAnswer(q.id, val)}
                   className="flex flex-col items-center gap-2 py-4 rounded-2xl border transition-all"
                   style={{
-                    background: selected === val ? `${C.red}18` : C.surface1,
-                    borderColor: selected === val ? C.red : C.border,
-                    color: selected === val ? C.red : C.textMuted,
+                    background: selected === val ? `${C.green}18` : C.surface1,
+                    borderColor: selected === val ? C.green : C.border,
+                    color: selected === val ? C.green : C.textMuted,
                   }}
                 >
                   <span className="text-2xl font-bold">{val}</span>
-                  <span className="text-[9px] font-bold text-center leading-tight px-1" style={{ color: selected === val ? C.red : C.label }}>
+                  <span className="text-[9px] font-bold text-center leading-tight px-1" style={{ color: selected === val ? C.green : C.label }}>
                     {likertLabels[val - 1]}
                   </span>
                 </button>
@@ -697,7 +779,7 @@ function QuestionHeader({
         <div className="h-1.5 rounded-full overflow-hidden" style={{ background: C.surface2 }}>
           <div
             className="h-full rounded-full transition-all duration-500"
-            style={{ width: `${progress}%`, background: C.red }}
+            style={{ width: `${progress}%`, background: C.green }}
           />
         </div>
       </div>
@@ -726,14 +808,14 @@ function OptionButton({
       onClick={onClick}
       className="flex items-start gap-4 w-full text-left px-5 py-4 rounded-2xl border transition-all"
       style={{
-        background: selected ? `${C.red}18` : C.surface1,
-        borderColor: selected ? C.red : C.border,
+        background: selected ? `${C.green}18` : C.surface1,
+        borderColor: selected ? C.green : C.border,
       }}
     >
       <span
         className="text-[11px] font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
         style={{
-          background: selected ? C.red : C.surface2,
+          background: selected ? C.green : C.surface2,
           color: selected ? '#fff' : C.label,
         }}
       >

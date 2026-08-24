@@ -11,6 +11,10 @@ export function findBlockById(data: JourneyDetailsResponse, blockId: string): Bl
             if (b) return b
         }
     }
+    // No está en este viaje — puede ser un recuerdo de un viaje hermano de la
+    // misma Colección, que el backend ya trajo aparte en crossJourneyBlocks.
+    const cross = data.crossJourneyBlocks?.find(b => b.id === blockId)
+    if (cross) return { ...cross, stationId: '', title: '', description: null, orderIndex: 0 }
     return null
 }
 

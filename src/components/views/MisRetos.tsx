@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, ArrowRight, CheckCircle2, Circle, Star } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { HomeSidebar } from '../home/HomeSidebar';
 import { useQuery } from '@tanstack/react-query';
 import { C } from '../../styles/colors';
+import WorldsRightSidebar, { earnedBadgesFromAreas, totalXpFromAreas } from './worlds/WorldsRightSidebar';
+import { journeyApi } from '../../services/journey';
+import type { Area } from '../../types/journey';
 
 const host = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/api\/?$/, '');
 
@@ -67,6 +70,13 @@ import Header from '../../components/shared/Header';
 export default function MisRetos() {
     const navigate = useNavigate();
     const [categoryFilter, setCategoryFilter] = useState('Todas');
+    const [areas, setAreas] = useState<Area[]>([]);
+
+    useEffect(() => {
+        journeyApi.getAvailableJourneys()
+            .then(d => setAreas(d.areas))
+            .catch(() => setAreas([]));
+    }, []);
 
     const { data: challenges, isLoading } = useQuery<ChallengeCardData[]>({
         queryKey: ['challenges'],
@@ -186,6 +196,8 @@ export default function MisRetos() {
                     </div>
                 </div>
             </main>
+
+            <WorldsRightSidebar mode="home" badges={earnedBadgesFromAreas(areas)} totalXp={totalXpFromAreas(areas)} />
         </div>
     );
 }

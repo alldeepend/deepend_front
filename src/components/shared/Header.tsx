@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../store/useAuth';
-import { LogOut, Bell, Check, X, Loader2, Menu, LayoutDashboard, Compass, Flag, BookOpen, User, Globe, Newspaper, CalendarDays } from 'lucide-react';
+import { LogOut, Bell, Check, X, Loader2, Menu, LayoutDashboard, Compass, Flag, BookOpen, User, Globe, Newspaper, CalendarDays, Mic } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { C } from '../../styles/colors';
 import { useLegacyChallengesAccess } from '../../hooks/useLegacyChallengesAccess';
@@ -311,6 +311,17 @@ export default function Header({ dark = true }: { dark?: boolean }) {
                     >
                       <User size={20} />
                       <span className="font-medium">Perfil</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/testimonials"
+                      onClick={() => setShowMobileMenu(false)}
+                      className="flex items-center gap-3 w-full text-left px-4 py-3 transition-colors"
+                      style={{ color: dark ? muted : '#44403c' }}
+                    >
+                      <Mic size={20} />
+                      <span className="font-medium">Testimonios</span>
                     </Link>
                   </li>
                   <li>
