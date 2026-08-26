@@ -326,7 +326,7 @@ export default function RetoSemanal() {
                                     onClick={() => setTab('actual')}
                                     className="px-4 py-2 rounded-full text-sm font-semibold transition-colors"
                                     style={tab === 'actual'
-                                        ? { background: C.red, color: '#fff' }
+                                        ? { background: C.green, color: '#fff' }
                                         : { background: C.surface2, color: C.textMuted, border: `1px solid ${C.border}` }}
                                 >
                                     Ciclo actual
@@ -335,7 +335,7 @@ export default function RetoSemanal() {
                                     onClick={() => setTab('historial')}
                                     className="px-4 py-2 rounded-full text-sm font-semibold transition-colors"
                                     style={tab === 'historial'
-                                        ? { background: C.red, color: '#fff' }
+                                        ? { background: C.green, color: '#fff' }
                                         : { background: C.surface2, color: C.textMuted, border: `1px solid ${C.border}` }}
                                 >
                                     Historial

@@ -13,13 +13,16 @@ const STATUS_ICON: Record<WeekProgress['status'], typeof Lock> = {
 const STATUS_COLOR: Record<WeekProgress['status'], string> = {
     locked: C.label,
     current: C.amber,
-    superada: C.red,
+    superada: C.green,
     cumplida: C.green,
     semana_ligera: C.textMuted,
 };
 
 export default function WeeklyChallengeGrid({ history }: { history: Pick<ProgressHistory, 'weeks' | 'totals'> }) {
     const current = history.weeks.find(w => w.status === 'current');
+    const currentPct = current?.percentage ?? 0;
+    // Rojo al arrancar, ámbar a mitad de camino, verde al completar la meta.
+    const progressColor = currentPct >= 100 ? C.green : currentPct >= 50 ? C.amber : C.red;
 
     return (
         <div className="space-y-5">
@@ -35,11 +38,11 @@ export default function WeeklyChallengeGrid({ history }: { history: Pick<Progres
 
                     <div className="relative z-10 space-y-3">
                         <div className="flex items-end justify-between">
-                            <span className="text-4xl font-bold" style={{ color: (current.percentage ?? 0) > 100 ? C.red : C.text }}>
-                                {current.percentage ?? 0}%
+                            <span className="text-4xl font-bold" style={{ color: progressColor }}>
+                                {currentPct}%
                             </span>
-                            {(current.percentage ?? 0) > 100 && (
-                                <span className="text-xs font-semibold px-2 py-1 rounded-full mb-1" style={{ color: C.red, background: `${C.red}22` }}>
+                            {currentPct > 100 && (
+                                <span className="text-xs font-semibold px-2 py-1 rounded-full mb-1" style={{ color: C.green, background: `${C.green}22` }}>
                                     ¡Meta superada!
                                 </span>
                             )}
@@ -47,13 +50,13 @@ export default function WeeklyChallengeGrid({ history }: { history: Pick<Progres
                         <div className="w-full h-3 rounded-full overflow-hidden" style={{ background: C.surface3 }}>
                             <div
                                 className="h-full rounded-full transition-all duration-500"
-                                style={{ width: `${Math.min(100, current.percentage ?? 0)}%`, background: C.red }}
+                                style={{ width: `${Math.min(100, currentPct)}%`, background: progressColor }}
                             />
                         </div>
                         <div className="flex justify-between text-sm" style={{ color: C.textMuted }}>
-                            <span><span className="font-semibold" style={{ color: C.red }}>{current.minutesLogged} min</span> registrados</span>
+                            <span><span className="font-semibold" style={{ color: progressColor }}>{current.minutesLogged} min</span> registrados</span>
                             {current.goalMinutes && (
-                                <span>Meta: <span className="font-semibold" style={{ color: C.red }}>{current.goalMinutes} min</span></span>
+                                <span>Meta: <span className="font-semibold" style={{ color: C.green }}>{current.goalMinutes} min</span></span>
                             )}
                         </div>
                     </div>
