@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router';
-import { Home } from 'lucide-react';
+import { Home, Newspaper, Bell } from 'lucide-react';
 import { useAuth } from '../../store/useAuth';
 
 interface HomeHeaderProps {
@@ -45,7 +45,26 @@ export const HomeHeader = ({ action }: HomeHeaderProps) => {
                     <Home size={16} />
                 </button>
             </div>
-            {action && <div>{action}</div>}
+            <div className="flex items-center gap-2">
+                <Link
+                    to="/news"
+                    aria-label="Noticias"
+                    title="Noticias"
+                    className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-transform hover:scale-105"
+                    style={{ background: '#1E1A1B', border: '1px solid #333330', color: '#F5F0E8' }}
+                >
+                    <Newspaper size={16} />
+                </Link>
+                <button
+                    aria-label="Notificaciones"
+                    title="Notificaciones"
+                    className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-transform hover:scale-105"
+                    style={{ background: '#1E1A1B', border: '1px solid #333330', color: '#F5F0E8' }}
+                >
+                    <Bell size={16} />
+                </button>
+                {action}
+            </div>
         </header>
     );
 };

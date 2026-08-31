@@ -14,6 +14,7 @@ type User = {
   ciudad_residencia: string | null;
   createdAt: string;
   membership: string;
+  emailVerified?: boolean;
   role?: string;
   financeDisclaimerAccepted?: boolean;
 }

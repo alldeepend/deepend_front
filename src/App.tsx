@@ -13,6 +13,7 @@ import Perfil from './components/views/Perfil';
 import ChallengeDetail from './components/views/ChallengeDetail';
 import ForgotPassword from './components/views/ForgotPassword';
 import ResetPassword from './components/views/ResetPassword';
+import VerifyEmail from './components/views/VerifyEmail';
 import FinancialAssessment from './components/views/FinancialAssessment';
 import ActivityHistory from './components/views/ActivityHistory';
 import ChallengeLogs from './components/views/ChallengeLogs';
@@ -154,6 +155,7 @@ function App() {
                         <ResetPassword />
                     </PublicRoute>
                 } />
+                <Route path="/verify-email" element={<VerifyEmail />} />
 
                 <Route path="/worlds" element={
                     <WorldsRoute>

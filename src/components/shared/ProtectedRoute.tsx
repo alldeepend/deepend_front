@@ -15,6 +15,12 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/" replace />;
   }
 
+  // Sin correo verificado, el backend rechaza cualquier acción real —
+  // se manda a la pantalla de verificación en vez de un dashboard roto.
+  if (user.emailVerified === false) {
+    return <Navigate to="/verify-email" replace />;
+  }
+
   return (
     <>
       <PasaporteReminder />
