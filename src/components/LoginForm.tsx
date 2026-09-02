@@ -36,6 +36,9 @@ export default function LoginForm() {
             path: '/login'
           })
         });
+        // Evita que usePageTracking mande un segundo "LOGIN" al montar /dashboard
+        // creyendo que es una sesión reanudada — este login activo ya cuenta.
+        sessionStorage.setItem('deepend_session_started', '1');
       } catch (err) {
         console.error("Failed to track login:", err);
       }

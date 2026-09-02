@@ -1,11 +1,15 @@
-import { Navigate } from 'react-router';
+import { Navigate, useSearchParams } from 'react-router';
 import { useLegacyChallengesAccess } from '../../hooks/useLegacyChallengesAccess';
 import { C } from '../../styles/colors';
 
 // Protege /challenges, /challenges/detail y /challenge-logs — el archivo de retos
 // legacy solo sigue siendo accesible para cuentas que ya existían antes del corte.
+// Excepción: el Pasaporte (id pasado por query string en /challenges/detail) sigue
+// activo para cualquier cuenta.
 export default function LegacyChallengesRoute({ children }: { children: React.ReactNode }) {
-    const { data, isLoading } = useLegacyChallengesAccess();
+    const [searchParams] = useSearchParams();
+    const challengeId = searchParams.get('id');
+    const { data, isLoading } = useLegacyChallengesAccess(challengeId);
 
     if (isLoading) {
         return (

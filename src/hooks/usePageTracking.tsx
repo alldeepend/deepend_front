@@ -11,6 +11,9 @@ const getApiUrl = () => {
     return 'http://localhost:3000/api';
 };
 
+
+const SESSION_FLAG = 'deepend_session_started';
+
 export const usePageTracking = () => {
     const location = useLocation();
 
@@ -18,7 +21,7 @@ export const usePageTracking = () => {
         const token = localStorage.getItem('token');
         if (!token) return; // Sólo rastrear usuarios autenticados
 
-        const trackPageView = async () => {
+        const track = async (action: 'LOGIN' | 'PAGE_VIEW', path: string) => {
             try {
                 const API_URL = getApiUrl();
                 await fetch(`${API_URL}/analytics/track`, {
@@ -27,17 +30,22 @@ export const usePageTracking = () => {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({
-                        action: 'PAGE_VIEW',
-                        path: location.pathname + location.search
-                    })
+                    body: JSON.stringify({ action, path })
                 });
-                console.log(`[TRACKING] Sent ${location.pathname + location.search}`);
+                console.log(`[TRACKING] Sent ${action} ${path}`);
             } catch (error) {
-                console.error("Failed to track page view:", error);
+                console.error(`Failed to track ${action}:`, error);
             }
         };
 
-        trackPageView();
+        // Si esta pestaña todavía no registró su entrada (sesión reanudada con
+        // un token ya guardado, sin pasar por el formulario de login), la
+        // registramos una sola vez antes del primer PAGE_VIEW.
+        if (!sessionStorage.getItem(SESSION_FLAG)) {
+            sessionStorage.setItem(SESSION_FLAG, '1');
+            track('LOGIN', location.pathname + location.search);
+        }
+
+        track('PAGE_VIEW', location.pathname + location.search);
     }, [location.pathname, location.search]);
 };

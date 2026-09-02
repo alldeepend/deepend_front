@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Trophy, Circle, FileText, Download, Video, Link, ChevronUp, ChevronDown, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Trophy, Circle, FileText, Download, Video, Link, ChevronUp, ChevronDown, CheckCircle2, Loader2 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { HomeSidebar } from '../home/HomeSidebar';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Header from '../../components/shared/Header';
+import DynamicForm from '../shared/DynamicForm';
+import { useAuth } from '../../store/useAuth';
 import { C } from '../../styles/colors';
 import WeeklyProgressSection from '../shared/WeeklyProgressSection';
 import { getYouTubeEmbedUrl } from '../../utils/youtube';
@@ -14,6 +16,7 @@ interface ChallengeStep {
     id: string;
     text: string;
     completed: boolean;
+    formSchema?: any;
 }
 
 interface ContentBlock {
@@ -37,6 +40,7 @@ interface ChallengeDetail {
     requerimientos?: string;
     content_blocks?: ContentBlock[];
     disclaimerAccepted?: boolean;
+    isPassport?: boolean;
 }
 
 const AccordionSection = ({ title, content }: { title: string, content: string }) => {
@@ -106,8 +110,11 @@ export default function ChallengeDetail() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const challengeId = searchParams.get('id');
+    const queryClient = useQueryClient();
+    const { user } = useAuth();
     const [currentFinancialIndex, setCurrentFinancialIndex] = useState(0);
     const [currentResponseIndex, setCurrentResponseIndex] = useState(0);
+    const [activeTaskForm, setActiveTaskForm] = useState<{ id: string, schema: any } | null>(null);
 
     // Fetch the full 8-week breakdown (meta vs. registrado) para este participante — solo lectura.
     const { data: progressHistory } = useQuery({
@@ -143,6 +150,66 @@ export default function ChallengeDetail() {
         },
         enabled: !!challengeId
     });
+
+    const isPassportChallenge = challenge?.isPassport === true;
+
+    // Solo se usan para el Pasaporte — el resto del archivo legacy sigue de
+    // solo lectura (ver LEGACY_CHALLENGES_CUTOFF en el backend).
+    const toggleTaskMutation = useMutation({
+        mutationFn: async (taskId: string) => {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${host}/api/challenges/${challengeId}/tasks/${taskId}/toggle`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error('Failed to toggle task');
+            return await res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['challenge', challengeId] });
+            queryClient.invalidateQueries({ queryKey: ['passport-current', user?.id] });
+        }
+    });
+
+    const submitFormMutation = useMutation({
+        mutationFn: async ({ taskId, data, rawData }: { taskId: string, data: any, rawData?: any }) => {
+            const token = localStorage.getItem('token');
+
+            const resSub = await fetch(`${host}/api/challenges/${challengeId}/submissions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    responses: { taskId, ...rawData, ordered: data }
+                })
+            });
+            if (!resSub.ok) throw new Error('Failed to save submission');
+
+            const resToggle = await fetch(`${host}/api/challenges/${challengeId}/tasks/${taskId}/toggle`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!resToggle.ok) throw new Error('Failed to complete task');
+
+            return { success: true };
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['challenge', challengeId] });
+            queryClient.invalidateQueries({ queryKey: ['passport-current', user?.id] });
+            setActiveTaskForm(null);
+        }
+    });
+
+    const handleTaskClick = (task: any) => {
+        if (!isPassportChallenge || task.completed || toggleTaskMutation.isPending) return;
+        if (task.formSchema) {
+            setActiveTaskForm({ id: task.id, schema: task.formSchema });
+        } else {
+            toggleTaskMutation.mutate(task.id);
+        }
+    };
 
     const stepsSafe = challenge?.tasks || [];
     const areTasksCompleted = stepsSafe.length > 0 && stepsSafe.every((s: any) => s.completed);
@@ -231,12 +298,14 @@ export default function ChallengeDetail() {
                                 <ArrowLeft size={16} className="mr-1 group-hover:-translate-x-1 transition-transform" />
                                 Volver al archivo
                             </button>
-                            <span
-                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide"
-                                style={{ background: `${C.green}1F`, border: `1px solid ${C.green}59`, color: C.green }}
-                            >
-                                Solo lectura
-                            </span>
+                            {!isPassportChallenge && (
+                                <span
+                                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide"
+                                    style={{ background: `${C.green}1F`, border: `1px solid ${C.green}59`, color: C.green }}
+                                >
+                                    Solo lectura
+                                </span>
+                            )}
                         </div>
 
                         {/* Hero Section */}
@@ -419,33 +488,50 @@ export default function ChallengeDetail() {
                                     ></div>
                                 </div>
 
-                                {/* Steps List — solo lectura */}
+                                {/* Steps List — interactiva solo para el Pasaporte, resto de solo lectura */}
                                 <div className="space-y-4">
-                                    {steps.map((step: any) => (
-                                        <div
-                                            key={step.id}
-                                            className="p-4 rounded-xl border flex items-center gap-4"
-                                            style={{
-                                                background: step.completed ? C.surface1 : C.surface2,
-                                                borderColor: step.completed ? C.forest : C.border
-                                            }}
-                                        >
+                                    {steps.map((step: any) => {
+                                        const isPending = isPassportChallenge && toggleTaskMutation.isPending && toggleTaskMutation.variables === step.id;
+                                        const clickable = isPassportChallenge && !step.completed && !isPending;
+                                        return (
                                             <div
-                                                className="flex-shrink-0 w-6 h-6 rounded flex items-center justify-center"
-                                                style={step.completed
-                                                    ? { background: C.forest, color: C.green }
-                                                    : { background: C.surface3, color: C.label }}
+                                                key={step.id}
+                                                onClick={() => clickable && handleTaskClick(step)}
+                                                className={`p-4 rounded-xl border flex items-center gap-4 transition-all ${clickable ? 'cursor-pointer' : isPending ? 'opacity-70 cursor-wait' : 'cursor-default'}`}
+                                                style={{
+                                                    background: step.completed ? C.surface1 : C.surface2,
+                                                    borderColor: step.completed ? C.forest : C.border
+                                                }}
                                             >
-                                                {step.completed ? <CheckCircle2 size={16} /> : <Circle size={16} />}
+                                                <div
+                                                    className="flex-shrink-0 w-6 h-6 rounded flex items-center justify-center"
+                                                    style={step.completed
+                                                        ? { background: C.forest, color: C.green }
+                                                        : { background: C.surface3, color: C.label }}
+                                                >
+                                                    {isPending ? <Loader2 size={16} className="animate-spin" /> : step.completed ? <CheckCircle2 size={16} /> : <Circle size={16} />}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <span
+                                                        className="text-sm font-medium"
+                                                        style={{ color: step.completed ? C.label : C.text, textDecoration: step.completed ? 'line-through' : 'none' }}
+                                                    >
+                                                        {step.text}
+                                                    </span>
+                                                    {isPassportChallenge && step.formSchema && !step.completed && (
+                                                        <span className="block text-xs font-bold mt-1" style={{ color: C.red }}>
+                                                            Requiere completar formulario
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {isPassportChallenge && step.formSchema && (
+                                                    <div style={{ color: C.label }}>
+                                                        <FileText size={16} />
+                                                    </div>
+                                                )}
                                             </div>
-                                            <span
-                                                className="flex-1 text-sm font-medium"
-                                                style={{ color: step.completed ? C.label : C.text, textDecoration: step.completed ? 'line-through' : 'none' }}
-                                            >
-                                                {step.text}
-                                            </span>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                     {steps.length === 0 && <p className="text-sm" style={{ color: C.label }}>No hay pasos definidos para este reto aún.</p>}
                                 </div>
                             </div>
@@ -648,7 +734,21 @@ export default function ChallengeDetail() {
                 </div >
             </main >
 
-
+            {/* Modal del formulario — solo aplica a pasos de Pasaporte con formSchema */}
+            {activeTaskForm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200" style={{ background: C.surface1 }}>
+                        <div className="p-6 md:p-8 overflow-y-auto">
+                            <DynamicForm
+                                schema={activeTaskForm.schema}
+                                onSubmit={(data, rawData) => submitFormMutation.mutate({ taskId: activeTaskForm.id, data, rawData })}
+                                onCancel={() => setActiveTaskForm(null)}
+                                isSubmitting={submitFormMutation.isPending}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </div >
     );
