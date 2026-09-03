@@ -31,6 +31,7 @@ import WhatsAppButton from './components/shared/WhatsAppButton';
 import WhatsNewTour from './components/shared/WhatsNewTour';
 import PwaUpdater from './components/shared/PwaUpdater';
 import News from './components/views/News';
+import SubscriptionResult from './components/views/SubscriptionResult';
 import Testimonials from './components/views/Testimonials';
 import RetoSemanal from './components/views/RetoSemanal';
 import PrivacyPolicy from './components/views/PrivacyPolicy';
@@ -91,6 +92,11 @@ function App() {
                 <Route path="/profile" element={
                     <ProtectedRoute>
                         <Perfil />
+                    </ProtectedRoute>
+                } />
+                <Route path="/subscription/resultado" element={
+                    <ProtectedRoute>
+                        <SubscriptionResult />
                     </ProtectedRoute>
                 } />
                 <Route path="/news" element={

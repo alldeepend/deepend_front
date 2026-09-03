@@ -17,6 +17,8 @@ type User = {
   emailVerified?: boolean;
   role?: string;
   financeDisclaimerAccepted?: boolean;
+  lifecycleStage?: string;
+  subscriptionExpiresAt?: string | null;
 }
 
 type AppComment = {
