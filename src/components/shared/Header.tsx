@@ -4,6 +4,7 @@ import { LogOut, Bell, Check, X, Loader2, Menu, LayoutDashboard, Compass, Flag, 
 import { Link, useLocation, useNavigate } from 'react-router';
 import { C } from '../../styles/colors';
 import { useLegacyChallengesAccess } from '../../hooks/useLegacyChallengesAccess';
+import NotificationBell from './NotificationBell';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -216,9 +217,7 @@ export default function Header({ dark = true }: { dark?: boolean }) {
             <Link to="/news" aria-label="Noticias" style={{ color: text }}>
               <Newspaper size={22} />
             </Link>
-            <button aria-label="Notificaciones" className="relative" style={{ color: text }}>
-              <Bell size={22} />
-            </button>
+            <NotificationBell variant="plain" />
             <div className="relative" ref={mobileMenuRef}>
               <button
                 onClick={() => setShowMobileMenu(!showMobileMenu)}
