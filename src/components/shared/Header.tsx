@@ -4,6 +4,7 @@ import { LogOut, Bell, Check, X, Loader2, Menu, LayoutDashboard, Compass, Flag, 
 import { Link, useLocation, useNavigate } from 'react-router';
 import { C } from '../../styles/colors';
 import { useLegacyChallengesAccess } from '../../hooks/useLegacyChallengesAccess';
+import NotificationBell from './NotificationBell';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -111,6 +112,15 @@ export default function Header({ dark = true }: { dark?: boolean }) {
             </Link>
           </li>
           <li>
+            <Link
+              to="/news"
+              className="relative text-stone-800 hover:text-accent-green transition-colors p-2 rounded-full"
+              title="Noticias"
+            >
+              <Newspaper size={24} />
+            </Link>
+          </li>
+          <li>
             <div className="relative" ref={notificationRef}>
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
@@ -203,20 +213,25 @@ export default function Header({ dark = true }: { dark?: boolean }) {
               alt=""
             />
           </Link>
-          <div className="relative" ref={mobileMenuRef}>
-            <button
-              onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="transition-colors"
-              style={{ color: C.green }}
-              aria-label="Menú"
-            >
-              <Menu size={24} />
-              {notifications.length > 0 && (
-                <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2" style={{ borderColor: bg }}></span>
-              )}
-            </button>
+          <div className="flex items-center gap-4">
+            <Link to="/news" aria-label="Noticias" style={{ color: text }}>
+              <Newspaper size={22} />
+            </Link>
+            <NotificationBell variant="plain" />
+            <div className="relative" ref={mobileMenuRef}>
+              <button
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="transition-colors"
+                style={{ color: C.green }}
+                aria-label="Menú"
+              >
+                <Menu size={24} />
+                {notifications.length > 0 && (
+                  <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2" style={{ borderColor: bg }}></span>
+                )}
+              </button>
 
-            {showMobileMenu && (
+              {showMobileMenu && (
               <div className="absolute right-0 mt-2 w-64 rounded-xl shadow-xl border py-2 z-50" style={{ background: surface, borderColor: border }}>
                 <div className="px-4 py-3 border-b" style={{ borderColor: border }}>
                   <h3 className="font-bold" style={{ color: text }}>Menú</h3>
@@ -424,6 +439,7 @@ export default function Header({ dark = true }: { dark?: boolean }) {
               </div>
             )}
           </div>
+            </div>
         </div>
       </nav>
     </header>

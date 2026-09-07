@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { Home } from 'lucide-react';
+import { Home, Sparkles } from 'lucide-react';
 import { useAuth } from '../../store/useAuth';
+import PaywallModal from '../subscription/PaywallModal';
 
 interface HomeHeaderProps {
     action?: React.ReactNode;
@@ -10,7 +11,9 @@ interface HomeHeaderProps {
 export const HomeHeader = ({ action }: HomeHeaderProps) => {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const [showPaywall, setShowPaywall] = useState(false);
     const displayName = user?.preferredName || user?.firstName || 'Usuario';
+    const isPremium = user?.lifecycleStage === 'paid';
 
     return (
         <header className="flex flex-wrap justify-between items-center gap-3 mb-8">
@@ -45,7 +48,21 @@ export const HomeHeader = ({ action }: HomeHeaderProps) => {
                     <Home size={16} />
                 </button>
             </div>
-            {action && <div>{action}</div>}
+            <div className="flex items-center gap-2">
+                {!isPremium && (
+                    <button
+                        onClick={() => setShowPaywall(true)}
+                        aria-haspopup="dialog"
+                        className="flex items-center gap-1.5 pl-2.5 pr-3 h-9 rounded-full flex-shrink-0 font-bold text-xs transition-transform hover:scale-105"
+                        style={{ background: 'linear-gradient(135deg, #EF9F27, #d97e0a)', color: '#201400' }}
+                    >
+                        <Sparkles size={13} />
+                        Premium
+                    </button>
+                )}
+                {action}
+            </div>
+            <PaywallModal isOpen={showPaywall} onClose={() => setShowPaywall(false)} />
         </header>
     );
 };

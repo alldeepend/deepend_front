@@ -13,6 +13,7 @@ import Perfil from './components/views/Perfil';
 import ChallengeDetail from './components/views/ChallengeDetail';
 import ForgotPassword from './components/views/ForgotPassword';
 import ResetPassword from './components/views/ResetPassword';
+import VerifyEmail from './components/views/VerifyEmail';
 import FinancialAssessment from './components/views/FinancialAssessment';
 import ActivityHistory from './components/views/ActivityHistory';
 import ChallengeLogs from './components/views/ChallengeLogs';
@@ -30,6 +31,7 @@ import WhatsAppButton from './components/shared/WhatsAppButton';
 import WhatsNewTour from './components/shared/WhatsNewTour';
 import PwaUpdater from './components/shared/PwaUpdater';
 import News from './components/views/News';
+import SubscriptionResult from './components/views/SubscriptionResult';
 import Testimonials from './components/views/Testimonials';
 import RetoSemanal from './components/views/RetoSemanal';
 import PrivacyPolicy from './components/views/PrivacyPolicy';
@@ -90,6 +92,11 @@ function App() {
                 <Route path="/profile" element={
                     <ProtectedRoute>
                         <Perfil />
+                    </ProtectedRoute>
+                } />
+                <Route path="/subscription/resultado" element={
+                    <ProtectedRoute>
+                        <SubscriptionResult />
                     </ProtectedRoute>
                 } />
                 <Route path="/news" element={
@@ -154,6 +161,7 @@ function App() {
                         <ResetPassword />
                     </PublicRoute>
                 } />
+                <Route path="/verify-email" element={<VerifyEmail />} />
 
                 <Route path="/worlds" element={
                     <WorldsRoute>

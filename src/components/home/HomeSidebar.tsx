@@ -13,10 +13,11 @@ import {
     CalendarDays,
     Mic,
 } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { useAuth } from '../../store/useAuth';
 import { SidebarItem } from './SidebarItem';
 import { C } from '../../styles/colors';
+import NotificationBell from '../shared/NotificationBell';
 import { useLegacyChallengesAccess } from '../../hooks/useLegacyChallengesAccess';
 
 interface HomeSidebarProps {
@@ -117,6 +118,18 @@ export const HomeSidebar = ({ activeTab, dark = true }: HomeSidebarProps) => {
 
             {/* Footer Sidebar */}
             <div className="p-6" style={{ borderTop: `1px solid ${border}` }}>
+                <div className="flex justify-center gap-3 mb-2">
+                    <Link
+                        to="/news"
+                        aria-label="Noticias"
+                        title="Noticias"
+                        className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-transform hover:scale-105"
+                        style={{ background: userBg, border: `1px solid ${border}`, color: text }}
+                    >
+                        <Newspaper size={16} />
+                    </Link>
+                    <NotificationBell />
+                </div>
                 <div className="flex flex-col items-center mb-4">
                     {/* Avatar flotando sobre el card */}
                     <div
