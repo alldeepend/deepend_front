@@ -34,7 +34,7 @@ export interface WeeklyChallengeProgress {
     goalMinutes?: number | null;
     minutesThisWeek?: number;
     percentage?: number | null;
-    activeDays?: number;
+    logTimestamps?: string[];
 }
 
 export interface WeeklyChallengeActivateResult {

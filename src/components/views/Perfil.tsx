@@ -6,8 +6,7 @@ import { useAuth } from '../../store/useAuth';
 import Header from '../../components/shared/Header';
 import { C } from '../../styles/colors';
 import { journeyApi } from '../../services/journey';
-import { archetypeApi } from '../../services/archetype';
-import { RESULTS, type ArchetypeResult } from '../../data/archetypeData';
+import { archetypeApi, type ArchetypeResultContent } from '../../services/archetype';
 import { earnedBadgesFromAreas, totalXpFromAreas, badgeColorFor, type SidebarBadge } from './worlds/WorldsRightSidebar';
 
 // Helper to get API URL
@@ -47,15 +46,22 @@ export default function Perfil() {
     // XP, arquetipo e insignias — antes solo visibles en el sidebar derecho de
     // escritorio (Dashboard/Mundos); en celular ese sidebar está oculto, así que
     // se muestran acá para que también sean visibles ahí.
-    const [progress, setProgress] = useState<{ totalXp: number; badges: SidebarBadge[]; archetypeInfo: ArchetypeResult | null } | null>(null);
+    const [progress, setProgress] = useState<{ totalXp: number; badges: SidebarBadge[]; archetypeInfo: ArchetypeResultContent | null } | null>(null);
 
     useEffect(() => {
-        Promise.all([journeyApi.getAvailableJourneys(), archetypeApi.getMyResult()])
-            .then(([{ areas }, archRes]) => {
+        // El arquetipo se pide aparte y con su propio catch — si /archetype/config
+        // falla no debe borrar el XP ni las insignias, que no dependen de él.
+        Promise.all([
+            journeyApi.getAvailableJourneys(),
+            Promise.all([archetypeApi.getMyResult(), archetypeApi.getConfig()])
+                .then(([archRes, config]) => archRes.result?.dominantVariantId ? (config.results[archRes.result.dominantVariantId] ?? null) : null)
+                .catch(() => null),
+        ])
+            .then(([{ areas }, archetypeInfo]) => {
                 setProgress({
                     totalXp: totalXpFromAreas(areas),
                     badges: earnedBadgesFromAreas(areas),
-                    archetypeInfo: archRes.result ? (RESULTS[archRes.result.dominantKey] ?? null) : null,
+                    archetypeInfo,
                 });
             })
             .catch(() => {});
@@ -401,7 +407,7 @@ export default function Perfil() {
                                                 <div>
                                                     <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: C.label }}>Mi Arquetipo</p>
                                                     <p className="text-sm font-bold leading-tight" style={{ fontFamily: "'American Typewriter', Georgia, serif", color: C.text }}>
-                                                        {progress.archetypeInfo.name}
+                                                        {progress.archetypeInfo.familyName}
                                                     </p>
                                                     <p className="text-[10px] font-bold mt-0.5" style={{ color: C.amber }}>Ver resultado completo →</p>
                                                 </div>

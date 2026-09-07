@@ -2,49 +2,58 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { ArrowLeft, ArrowRight, ChevronLeft, RotateCcw, X, Fingerprint, Lock, Play, Pause, Mail, Check } from 'lucide-react'
 import { C } from '../../styles/colors'
-import {
-  BLOCK0, BLOCK1, BLOCK2,
-  RESULTS, ARCHETYPE_NAMES,
-  type ArchNum,
-} from '../../data/archetypeData'
-import { archetypeApi } from '../../services/archetype'
+import { archetypeApi, type ArchetypeConfig } from '../../services/archetype'
+import { useArchetypeConfig } from '../../hooks/useArchetypeConfig'
 import { validateEmail } from '../../utils/validateEmail'
 
 // ─── Scoring ─────────────────────────────────────────────────────────────────
+// Misma mecánica de siempre (sumar puntaje de block1+block2, tomar el
+// arquetipo dominante y el secundario, desempatar la variante A/B del
+// dominante por su propio sub-puntaje) — pero ahora corre sobre las
+// preguntas/opciones/puntajes que vienen del admin, no sobre constantes fijas.
 
-function computeResult(answers: Record<number, string | number>) {
-  const totals: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0 }
-  const variants: Record<number, { A: number; B: number }> = {}
-  for (let i = 1; i <= 7; i++) variants[i] = { A: 0, B: 0 }
+function familyNameFromConfig(config: ArchetypeConfig, familyId: string): string {
+  return Object.values(config.results).find(r => r.familyId === familyId)?.familyName ?? ''
+}
 
-  for (const q of BLOCK1) {
-    const answer = answers[q.id] as string
-    if (!answer) continue
-    const option = q.options.find(o => o.label === answer)
+function computeResult(answers: Record<string, string | number>, config: ArchetypeConfig) {
+  const totals = new Map<string, number>()
+  const variantTotals = new Map<string, number>()
+
+  for (const q of config.block1) {
+    const optionId = answers[q.id] as string | undefined
+    if (!optionId) continue
+    const option = q.options.find(o => o.id === optionId)
     if (!option) continue
-    for (const s of option.scores) {
-      totals[s.arch] += 2
-      if (s.variant === 'A') variants[s.arch].A += 2
-      if (s.variant === 'B') variants[s.arch].B += 2
+    for (const t of option.scoreTargets) {
+      totals.set(t.familyId, (totals.get(t.familyId) ?? 0) + t.points)
+      if (t.variantId) variantTotals.set(t.variantId, (variantTotals.get(t.variantId) ?? 0) + t.points)
     }
   }
 
-  for (const q of BLOCK2) {
-    const value = answers[q.id] as number
+  for (const q of config.block2) {
+    const value = answers[q.id] as number | undefined
     if (!value) continue
-    for (const arch of q.archs) totals[arch] += value
+    for (const t of q.likertTargets) {
+      totals.set(t.familyId, (totals.get(t.familyId) ?? 0) + value * t.multiplier)
+    }
   }
 
-  const sorted = (Object.entries(totals) as [string, number][]).sort((a, b) => b[1] - a[1])
-  const dominantNum = Number(sorted[0][0]) as ArchNum
-  const secondaryNum = Number(sorted[1][0]) as ArchNum
-  const vScores = variants[dominantNum]
-  const variant = vScores.B > vScores.A ? 'B' : 'A'
+  const sorted = [...totals.entries()].sort((a, b) => b[1] - a[1])
+  const dominantFamilyId = sorted[0]?.[0]
+  const secondaryFamilyId = sorted[1]?.[0]
+
+  // Entre las variantes de la familia dominante, la de mayor sub-puntaje gana
+  // — en empate (o si ninguna sumó nada) se prefiere la letra 'A', igual que
+  // el default de siempre.
+  const dominantVariants = Object.entries(config.results).filter(([, r]) => r.familyId === dominantFamilyId)
+  dominantVariants.sort((a, b) => (variantTotals.get(b[0]) ?? 0) - (variantTotals.get(a[0]) ?? 0) || (a[1].letter < b[1].letter ? -1 : 1))
+  const dominantVariantId = dominantVariants[0]?.[0]
 
   return {
-    dominantKey: `${dominantNum}${variant}`,
-    secondaryNum,
-    secondaryName: ARCHETYPE_NAMES[secondaryNum],
+    dominantVariantId,
+    secondaryFamilyId,
+    secondaryName: secondaryFamilyId ? familyNameFromConfig(config, secondaryFamilyId) : '',
   }
 }
 
@@ -123,7 +132,7 @@ function Wrapper({
 
 // ─── Result audio player ────────────────────────────────────────────────────
 
-function ResultAudioPlayer({ audioKey }: { audioKey: string }) {
+function ResultAudioPlayer({ audioUrl }: { audioUrl: string }) {
   const audioRef = useRef<HTMLAudioElement>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -131,7 +140,7 @@ function ResultAudioPlayer({ audioKey }: { audioKey: string }) {
   useEffect(() => {
     setIsPlaying(false)
     setProgress(0)
-  }, [audioKey])
+  }, [audioUrl])
 
   function togglePlay() {
     const audio = audioRef.current
@@ -170,7 +179,7 @@ function ResultAudioPlayer({ audioKey }: { audioKey: string }) {
       </div>
       <audio
         ref={audioRef}
-        src={`/audio/archetypes/${audioKey}.mp3`}
+        src={audioUrl}
         preload="none"
         onEnded={() => { setIsPlaying(false); setProgress(0) }}
         onTimeUpdate={(e) => {
@@ -187,8 +196,8 @@ function ResultAudioPlayer({ audioKey }: { audioKey: string }) {
 type Phase = 'intro' | 'block0' | 'block1' | 'block2' | 'result'
 
 interface ResultData {
-  dominantKey: string
-  secondaryNum: ArchNum
+  dominantVariantId: string
+  secondaryFamilyId: string
   secondaryName: string
 }
 
@@ -196,9 +205,10 @@ interface ResultData {
 
 export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}) {
   const navigate = useNavigate()
+  const { data: config } = useArchetypeConfig()
   const [phase, setPhase] = useState<Phase>('intro')
   const [currentQ, setCurrentQ] = useState(0)
-  const [answers, setAnswers] = useState<Record<number, string | number>>({})
+  const [answers, setAnswers] = useState<Record<string, string | number>>({})
   const [result, setResult] = useState<ResultData | null>(null)
   const [unlockedSections, setUnlockedSections] = useState<number[]>([0])
   const [emailInput, setEmailInput] = useState('')
@@ -211,7 +221,7 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
   const serif = "'American Typewriter', Georgia, serif"
   const isLoggedIn = !!localStorage.getItem('token')
 
-  function selectAnswer(questionId: number, value: string | number) {
+  function selectAnswer(questionId: string, value: string | number) {
     setAnswers(prev => ({ ...prev, [questionId]: value }))
   }
 
@@ -223,12 +233,11 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
     if (onClose || !isLoggedIn) return
     archetypeApi.getMyResult()
       .then(res => {
-        if (!res.result) return
-        const secondaryNum = res.result.secondaryNum as ArchNum
+        if (!res.result?.dominantVariantId || !res.result.secondaryFamilyId) return
         setResult({
-          dominantKey: res.result.dominantKey,
-          secondaryNum,
-          secondaryName: ARCHETYPE_NAMES[secondaryNum],
+          dominantVariantId: res.result.dominantVariantId,
+          secondaryFamilyId: res.result.secondaryFamilyId,
+          secondaryName: res.result.secondaryNameSnapshot ?? '',
         })
         setViewingSavedResult(true)
         setPhase('result')
@@ -242,7 +251,7 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
   useEffect(() => {
     if (phase !== 'result' || !result || !isLoggedIn || saveState !== 'idle' || viewingSavedResult) return
     setSaveState('saving')
-    archetypeApi.submitResult({ dominantKey: result.dominantKey, secondaryNum: result.secondaryNum, answers })
+    archetypeApi.submitResult({ dominantVariantId: result.dominantVariantId, secondaryFamilyId: result.secondaryFamilyId, answers })
       .then(() => setSaveState('saved'))
       .catch(() => setSaveState('error'))
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -265,37 +274,39 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
     setEmailError(null)
     setConfirmEmailError(null)
     setSaveState('saving')
-    archetypeApi.submitResult({ dominantKey: result.dominantKey, secondaryNum: result.secondaryNum, answers, email: emailInput.trim().toLowerCase() })
+    archetypeApi.submitResult({ dominantVariantId: result.dominantVariantId, secondaryFamilyId: result.secondaryFamilyId, answers, email: emailInput.trim().toLowerCase() })
       .then(() => setSaveState('saved'))
       .catch(() => setSaveState('error'))
   }
 
   function advance() {
+    if (!config) return
     if (phase === 'block0') {
-      if (currentQ < BLOCK0.length - 1) setCurrentQ(c => c + 1)
+      if (currentQ < config.block0.length - 1) setCurrentQ(c => c + 1)
       else { setCurrentQ(0); setPhase('block1') }
     } else if (phase === 'block1') {
-      if (currentQ < BLOCK1.length - 1) setCurrentQ(c => c + 1)
+      if (currentQ < config.block1.length - 1) setCurrentQ(c => c + 1)
       else { setCurrentQ(0); setPhase('block2') }
     } else if (phase === 'block2') {
-      if (currentQ < BLOCK2.length - 1) setCurrentQ(c => c + 1)
+      if (currentQ < config.block2.length - 1) setCurrentQ(c => c + 1)
       else {
-        setResult(computeResult(answers))
+        setResult(computeResult(answers, config))
         setPhase('result')
       }
     }
   }
 
   function goBack() {
+    if (!config) return
     if (phase === 'block0') {
       if (currentQ > 0) setCurrentQ(c => c - 1)
       else setPhase('intro')
     } else if (phase === 'block1') {
       if (currentQ > 0) setCurrentQ(c => c - 1)
-      else { setCurrentQ(BLOCK0.length - 1); setPhase('block0') }
+      else { setCurrentQ(config.block0.length - 1); setPhase('block0') }
     } else if (phase === 'block2') {
       if (currentQ > 0) setCurrentQ(c => c - 1)
-      else { setCurrentQ(BLOCK1.length - 1); setPhase('block1') }
+      else { setCurrentQ(config.block1.length - 1); setPhase('block1') }
     }
   }
 
@@ -353,9 +364,44 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
     </Wrapper>
   )
 
+  // El cuestionario y el contenido de resultado ahora vienen de la API — sin
+  // esto cargado no hay nada que mostrar en block0/1/2/result (intro sí se ve
+  // de una, no depende del fetch).
+  if (!config) {
+    return (
+      <Wrapper phase={phase} onClose={onClose}>
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-sm" style={{ color: C.textMuted }}>Cargando...</p>
+        </div>
+      </Wrapper>
+    )
+  }
+
   // ── RESULT ─────────────────────────────────────────────────────────────────
   if (phase === 'result' && result) {
-    const res = RESULTS[result.dominantKey]
+    const res = config.results[result.dominantVariantId]
+
+    // Puede faltar si el admin archivó ese arquetipo justo después de que se
+    // calculó el resultado, o si un resultado guardado antes apunta a algo
+    // que ya no existe — sin este guard, `res.familyName` revienta la pantalla.
+    if (!res) {
+      return (
+        <Wrapper phase={phase} onClose={onClose}>
+          <div className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-4">
+            <p className="text-sm" style={{ color: C.textMuted }}>
+              No pudimos cargar tu resultado. Intenta de nuevo.
+            </p>
+            <button
+              onClick={restart}
+              className="px-5 py-3 rounded-2xl font-bold text-sm"
+              style={{ background: C.red, color: '#fff' }}
+            >
+              Reintentar
+            </button>
+          </div>
+        </Wrapper>
+      )
+    }
 
     const Section = ({ title, body, index }: { title: string; body: string; index: number }) => {
       const unlocked = unlockedSections.includes(index)
@@ -435,13 +481,13 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
                       className="text-3xl sm:text-4xl font-bold leading-tight mb-1"
                       style={{ fontFamily: serif, color: C.text }}
                     >
-                      {res.name}
+                      {res.familyName}
                     </h1>
                     <p className="text-sm italic mb-8" style={{ color: C.textMuted }}>
-                      {res.variant}
+                      {res.variantLabel}
                     </p>
 
-                    <ResultAudioPlayer audioKey={result.dominantKey} />
+                    {res.audioUrl && <ResultAudioPlayer audioUrl={res.audioUrl} />}
 
                     <div className="border-t" style={{ borderColor: C.border }} />
 
@@ -637,16 +683,16 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
 
   // ── QUESTIONS (block0, block1, block2) ─────────────────────────────────────
 
-  const totalQuestions = BLOCK0.length + BLOCK1.length + BLOCK2.length
+  const totalQuestions = config.block0.length + config.block1.length + config.block2.length
   const answeredSoFar = phase === 'block0'
     ? currentQ
     : phase === 'block1'
-    ? BLOCK0.length + currentQ
-    : BLOCK0.length + BLOCK1.length + currentQ
+    ? config.block0.length + currentQ
+    : config.block0.length + config.block1.length + currentQ
   const progress = Math.round((answeredSoFar / totalQuestions) * 100)
 
   if (phase === 'block0') {
-    const q = BLOCK0[currentQ]
+    const q = config.block0[currentQ]
     const selected = answers[q.id] as string | undefined
     const canAdvance = !!selected
 
@@ -664,11 +710,11 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
             <div className="flex flex-col gap-3">
               {q.options.map(opt => (
                 <OptionButton
-                  key={opt.label}
+                  key={opt.id}
                   label={opt.label}
                   text={opt.text}
-                  selected={selected === opt.label}
-                  onClick={() => selectAnswer(q.id, opt.label)}
+                  selected={selected === opt.id}
+                  onClick={() => selectAnswer(q.id, opt.id)}
                 />
               ))}
             </div>
@@ -680,12 +726,12 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
   }
 
   if (phase === 'block1') {
-    const q = BLOCK1[currentQ]
+    const q = config.block1[currentQ]
     const selected = answers[q.id] as string | undefined
 
     return (
       <Wrapper phase={phase} onClose={onClose}>
-        <QuestionHeader progress={progress} onBack={goBack} totalQ={BLOCK1.length} currentIdx={currentQ} label="Diagnóstico" onClose={onClose} />
+        <QuestionHeader progress={progress} onBack={goBack} totalQ={config.block1.length} currentIdx={currentQ} label="Diagnóstico" onClose={onClose} />
         <div className="flex-1 flex flex-col items-center px-6 py-8">
           <div className="w-full max-w-lg">
             <h2 className="text-xl font-bold leading-snug mb-8" style={{ fontFamily: serif, color: C.text }}>
@@ -694,11 +740,11 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
             <div className="flex flex-col gap-3">
               {q.options.map(opt => (
                 <OptionButton
-                  key={opt.label}
+                  key={opt.id}
                   label={opt.label}
                   text={opt.text}
-                  selected={selected === opt.label}
-                  onClick={() => selectAnswer(q.id, opt.label)}
+                  selected={selected === opt.id}
+                  onClick={() => selectAnswer(q.id, opt.id)}
                 />
               ))}
             </div>
@@ -710,13 +756,13 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
   }
 
   if (phase === 'block2') {
-    const q = BLOCK2[currentQ]
+    const q = config.block2[currentQ]
     const selected = answers[q.id] as number | undefined
     const likertLabels = ['No me describe', 'Un poco', 'Bastante', 'Me describe completamente']
 
     return (
       <Wrapper phase={phase} onClose={onClose}>
-        <QuestionHeader progress={progress} onBack={goBack} totalQ={BLOCK2.length} currentIdx={currentQ} label="Casi listo" onClose={onClose} />
+        <QuestionHeader progress={progress} onBack={goBack} totalQ={config.block2.length} currentIdx={currentQ} label="Casi listo" onClose={onClose} />
         <div className="flex-1 flex flex-col items-center px-6 py-8">
           <div className="w-full max-w-lg">
             <p className="text-[10px] font-bold tracking-[0.18em] uppercase mb-6" style={{ color: C.label }}>
@@ -747,7 +793,7 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
             <NextButton
               disabled={selected === undefined}
               onClick={advance}
-              label={currentQ === BLOCK2.length - 1 ? 'Ver mi resultado' : 'Siguiente'}
+              label={currentQ === config.block2.length - 1 ? 'Ver mi resultado' : 'Siguiente'}
             />
           </div>
         </div>

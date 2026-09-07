@@ -92,7 +92,13 @@ export const WeeklyChallengeProgressCard = () => {
         );
     }
 
-    const { weekNumber, minutesThisWeek, goalMinutes, percentage, activeDays } = progress;
+    const { weekNumber, minutesThisWeek, goalMinutes, percentage, logTimestamps } = progress;
+    // Se cuenta por fecha local del dispositivo, no por fecha del servidor — así
+    // un registro a las 8pm en Bogotá, México o donde sea cuenta para el día
+    // correcto en vez de correrse a "mañana" por el huso horario del servidor.
+    // Cerca de UTC+13/-12, el rango de 7 días del servidor puede pisar 8 fechas
+    // locales distintas — se topa en 7 para no mostrar "8 de 7 días".
+    const activeDays = Math.min(7, new Set((logTimestamps ?? []).map(ts => new Date(ts).toDateString())).size);
     const pct = percentage ?? 0;
     const barWidth = Math.min(100, pct);
     const exceeded = pct > 100;

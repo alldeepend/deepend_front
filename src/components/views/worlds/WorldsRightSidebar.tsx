@@ -3,8 +3,7 @@ import { Link } from 'react-router'
 import { Award, Brain, Fingerprint, Lock, Zap } from 'lucide-react'
 import { C } from '../../../styles/colors'
 import type { Area, Journey, UserJourneyProgress } from '../../../types/journey'
-import { archetypeApi } from '../../../services/archetype'
-import { RESULTS } from '../../../data/archetypeData'
+import { archetypeApi, type ArchetypeResultContent } from '../../../services/archetype'
 
 const BADGE_COLORS = ['#52B788', '#5B9BF7', '#E8C547', '#B57BEE', '#818CF8', '#3FC6D8', '#F4669B']
 
@@ -79,17 +78,25 @@ export default function WorldsRightSidebar({ mode, journeyTitle: _journeyTitle, 
     const earned  = badges.filter(b => b.earned)
     const pending = mode === 'journey' ? badges.filter(b => !b.earned) : []
 
-    const [archetype, setArchetype] = useState<{ dominantKey: string } | null | undefined>(undefined)
+    const [archetypeInfo, setArchetypeInfo] = useState<ArchetypeResultContent | null | undefined>(undefined)
 
     useEffect(() => {
         let cancelled = false
         archetypeApi.getMyResult()
-            .then(res => { if (!cancelled) setArchetype(res.result ? { dominantKey: res.result.dominantKey } : null) })
-            .catch(() => { if (!cancelled) setArchetype(null) })
+            .then(res => {
+                if (cancelled) return
+                if (!res.result?.dominantVariantId) { setArchetypeInfo(null); return }
+                const variantId = res.result.dominantVariantId
+                // Si sí hay resultado pero /config falla, se deja en `undefined`
+                // (la sección completa no se muestra) en vez de `null` — mostrar
+                // "aún no has hecho el test" sería engañoso para alguien que sí lo hizo.
+                archetypeApi.getConfig()
+                    .then(config => { if (!cancelled) setArchetypeInfo(config.results[variantId] ?? null) })
+                    .catch(() => {})
+            })
+            .catch(() => { if (!cancelled) setArchetypeInfo(null) })
         return () => { cancelled = true }
     }, [])
-
-    const archetypeInfo = archetype ? RESULTS[archetype.dominantKey] : null
 
     return (
         <aside
@@ -120,7 +127,7 @@ export default function WorldsRightSidebar({ mode, journeyTitle: _journeyTitle, 
                 </div>
 
                 {/* Archetype */}
-                {archetype !== undefined && (
+                {archetypeInfo !== undefined && (
                     <div id="tour-target-archetype">
                         <p className="text-[10px] font-bold tracking-widest uppercase mb-3" style={{ color: C.label }}>
                             Mi Arquetipo
@@ -146,12 +153,12 @@ export default function WorldsRightSidebar({ mode, journeyTitle: _journeyTitle, 
                                             className="text-sm font-bold leading-tight"
                                             style={{ fontFamily: "'American Typewriter', Georgia, serif", color: C.text }}
                                         >
-                                            {archetypeInfo.name}
+                                            {archetypeInfo.familyName}
                                         </p>
                                     </div>
                                 </div>
                                 <p className="text-xs leading-relaxed mb-3" style={{ color: C.textMuted }}>
-                                    {archetypeInfo.variant}
+                                    {archetypeInfo.variantLabel}
                                 </p>
                                 <div className="flex flex-wrap gap-1.5 mb-3">
                                     {archetypeInfo.traits.map(t => (
