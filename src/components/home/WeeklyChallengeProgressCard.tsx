@@ -3,8 +3,47 @@ import { useQuery } from '@tanstack/react-query';
 import { C } from '../../styles/colors';
 import { weeklyChallengeApi } from '../../services/weeklyChallenge';
 
+// Los 4 estados "sin progreso que mostrar todavía" comparten el mismo molde
+// (blob de acento, eyebrow, título, descripción opcional, un botón) — solo
+// cambian el color y el texto.
+function ChallengeCtaCard({ accentColor, eyebrow, title, description, buttonLabel, buttonTextColor, onClick }: {
+    accentColor: string
+    eyebrow: string
+    title: string
+    description?: string
+    buttonLabel: string
+    buttonTextColor?: string
+    onClick: () => void
+}) {
+    return (
+        <div
+            className="lg:col-span-4 p-6 rounded-2xl shadow-sm border flex flex-col items-center justify-center gap-3 text-center relative overflow-hidden"
+            style={{ background: '#1E1A1B', borderColor: '#333330' }}
+        >
+            <div className="absolute top-0 right-0 w-24 h-24 rounded-bl-full -mr-6 -mt-6 opacity-20" style={{ background: accentColor }} />
+            <p className="text-xs font-semibold uppercase tracking-wide relative z-10" style={{ color: accentColor }}>{eyebrow}</p>
+            <h3 className="text-lg font-bold relative z-10" style={{ color: '#F5F0E8', fontFamily: "'American Typewriter', Georgia, serif" }}>
+                {title}
+            </h3>
+            {description && (
+                <p className="text-sm leading-relaxed relative z-10" style={{ color: '#A8A29E' }}>
+                    {description}
+                </p>
+            )}
+            <button
+                onClick={onClick}
+                className="relative z-10 mt-1 px-5 py-2.5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90"
+                style={{ background: accentColor, color: buttonTextColor ?? '#fff' }}
+            >
+                {buttonLabel}
+            </button>
+        </div>
+    );
+}
+
 export const WeeklyChallengeProgressCard = () => {
     const navigate = useNavigate();
+    const goToReto = () => navigate('/reto-semanal');
 
     const { data: me, isLoading } = useQuery({
         queryKey: ['weekly-challenge-me'],
@@ -21,74 +60,58 @@ export const WeeklyChallengeProgressCard = () => {
 
     if (!me?.isParticipant) {
         return (
-            <div
-                className="lg:col-span-4 p-6 rounded-2xl shadow-sm border flex flex-col items-center justify-center gap-3 text-center relative overflow-hidden"
-                style={{ background: '#1E1A1B', borderColor: '#333330' }}
-            >
-                <div className="absolute top-0 right-0 w-24 h-24 rounded-bl-full -mr-6 -mt-6 opacity-20" style={{ background: C.red }} />
-                <p className="text-xs font-semibold uppercase tracking-wide relative z-10" style={{ color: C.red }}>Reto Semanal</p>
-                <h3 className="text-lg font-bold relative z-10" style={{ color: '#F5F0E8', fontFamily: "'American Typewriter', Georgia, serif" }}>
-                    A tu ritmo, sin fecha de cierre
-                </h3>
-                <p className="text-sm leading-relaxed relative z-10" style={{ color: '#A8A29E' }}>
-                    Ponte una meta semanal y registra tu movimiento. Cada 12 semanas, revisas tu punto de partida de nuevo.
-                </p>
-                <button
-                    onClick={() => navigate('/reto-semanal')}
-                    className="relative z-10 mt-1 px-5 py-2.5 rounded-xl font-semibold text-sm text-white transition-opacity hover:opacity-90"
-                    style={{ background: C.red }}
-                >
-                    Comenzar mi reto
-                </button>
-            </div>
+            <ChallengeCtaCard
+                accentColor={C.red}
+                eyebrow="Reto Semanal"
+                title="A tu ritmo, sin fecha de cierre"
+                description="Ponte una meta semanal y registra tu movimiento. Cada 12 semanas, revisas tu punto de partida de nuevo."
+                buttonLabel="Comenzar mi reto"
+                onClick={goToReto}
+            />
         );
     }
 
     // Arrancó un ciclo global nuevo — hay que responder el cuestionario de nuevo
     if (me.needsIntro && me.isRetake) {
         return (
-            <div
-                className="lg:col-span-4 p-6 rounded-2xl shadow-sm border flex flex-col items-center justify-center gap-3 text-center relative overflow-hidden"
-                style={{ background: '#1E1A1B', borderColor: '#333330' }}
-            >
-                <div className="absolute top-0 right-0 w-24 h-24 rounded-bl-full -mr-6 -mt-6 opacity-20" style={{ background: '#EF9F27' }} />
-                <p className="text-xs font-semibold uppercase tracking-wide relative z-10" style={{ color: '#EF9F27' }}>Reto Semanal · Ciclo {me.cycleNumber}</p>
-                <h3 className="text-lg font-bold relative z-10" style={{ color: '#F5F0E8', fontFamily: "'American Typewriter', Georgia, serif" }}>
-                    Empezó un nuevo ciclo de 12 semanas
-                </h3>
-                <p className="text-sm leading-relaxed relative z-10" style={{ color: '#A8A29E' }}>
-                    Responde de nuevo tu punto de partida para seguir.
-                </p>
-                <button
-                    onClick={() => navigate('/reto-semanal')}
-                    className="relative z-10 mt-1 px-5 py-2.5 rounded-xl font-semibold text-sm text-white transition-opacity hover:opacity-90"
-                    style={{ background: '#EF9F27', color: '#161211' }}
-                >
-                    Empezar el siguiente ciclo
-                </button>
-            </div>
+            <ChallengeCtaCard
+                accentColor="#EF9F27"
+                eyebrow={`Reto Semanal · Ciclo ${me.cycleNumber}`}
+                title="Empezó un nuevo ciclo de 12 semanas"
+                description="Responde de nuevo tu punto de partida para seguir."
+                buttonLabel="Empezar el siguiente ciclo"
+                buttonTextColor="#161211"
+                onClick={goToReto}
+            />
+        );
+    }
+
+    // Activó el reto pero nunca respondió el cuestionario de punto de partida
+    // (needsIntro && isRetake ya se cubrió arriba — esto es la primera vez).
+    if (me.needsIntro) {
+        return (
+            <ChallengeCtaCard
+                accentColor="#EF9F27"
+                eyebrow="Reto Semanal"
+                title="Falta tu punto de partida"
+                description="Responde el cuestionario inicial para empezar a registrar tu progreso."
+                buttonLabel="Responder el cuestionario"
+                buttonTextColor="#161211"
+                onClick={goToReto}
+            />
         );
     }
 
     if (me.showGoalPopup || !progress?.isParticipant) {
         return (
-            <div
-                className="lg:col-span-4 p-6 rounded-2xl shadow-sm border flex flex-col items-center justify-center gap-3 text-center relative overflow-hidden"
-                style={{ background: '#1E1A1B', borderColor: '#333330' }}
-            >
-                <div className="absolute top-0 right-0 w-24 h-24 rounded-bl-full -mr-6 -mt-6 opacity-20" style={{ background: '#EF9F27' }} />
-                <p className="text-xs font-semibold uppercase tracking-wide relative z-10" style={{ color: '#EF9F27' }}>Reto Semanal · Semana {me.weekNumber}</p>
-                <h3 className="text-lg font-bold relative z-10" style={{ color: '#F5F0E8', fontFamily: "'American Typewriter', Georgia, serif" }}>
-                    Falta confirmar tu meta
-                </h3>
-                <button
-                    onClick={() => navigate('/reto-semanal')}
-                    className="relative z-10 mt-1 px-5 py-2.5 rounded-xl font-semibold text-sm text-white transition-opacity hover:opacity-90"
-                    style={{ background: '#EF9F27', color: '#161211' }}
-                >
-                    Poner mi meta
-                </button>
-            </div>
+            <ChallengeCtaCard
+                accentColor="#EF9F27"
+                eyebrow={`Reto Semanal · Semana ${me.weekNumber}`}
+                title="Falta confirmar tu meta"
+                buttonLabel="Poner mi meta"
+                buttonTextColor="#161211"
+                onClick={goToReto}
+            />
         );
     }
 
@@ -113,7 +136,7 @@ export const WeeklyChallengeProgressCard = () => {
                 <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: C.red }}>
                     Reto Semanal · Semana {weekNumber} de 12
                 </p>
-                <button onClick={() => navigate('/reto-semanal')} className="text-left">
+                <button onClick={goToReto} className="text-left">
                     <h3 className="text-xl font-bold" style={{ color: '#F5F0E8', fontFamily: "'American Typewriter', Georgia, serif" }}>Tu progreso semanal</h3>
                 </button>
             </div>

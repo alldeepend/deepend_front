@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { C } from '../../styles/colors';
 import { HomeHeader } from './HomeHeader';
 import { StatsCard } from './StatsCard';
-import { SocialProfileCard } from './SocialProfileCard';
-import { ActiveChallenges } from './ActiveChallenges';
 import ActivityLogModal from '../shared/ActivityLogModal';
 import RecognitionChestModal from '../shared/RecognitionChestModal';
 import { RecentActivities } from './RecentActivities';
@@ -14,6 +12,18 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useChangelogTour } from '../../store/useChangelogTour';
 
 const host = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/api\/?$/, '');
+
+// Mismo fetch autenticado que usan las 3 queries de abajo, solo cambia el path
+// y qué hacer con un 404/401 (throw vs null).
+async function fetchWithAuth(path: string, onErrorReturnNull = false) {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${host}${path}`, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) {
+        if (onErrorReturnNull) return null;
+        throw new Error(`Failed to fetch ${path}`);
+    }
+    return res.json();
+}
 
 export const DashboardContent = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -29,48 +39,27 @@ export const DashboardContent = () => {
 
     const { data: challenges } = useQuery({
         queryKey: ['challenges'],
-        queryFn: async () => {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${host}/api/challenges`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (!res.ok) throw new Error('Failed to fetch challenges');
-            return await res.json();
-        }
+        queryFn: () => fetchWithAuth('/api/challenges'),
     });
 
     const { data: taskStatus } = useQuery({
         queryKey: ['task-status', targetTaskId],
-        queryFn: async () => {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${host}/api/tasks/${targetTaskId}/status`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (!res.ok) throw new Error('Failed to fetch task status');
-            return await res.json();
-        }
+        queryFn: () => fetchWithAuth(`/api/tasks/${targetTaskId}/status`),
     });
 
     const { data: challengePhysical } = useQuery({
         queryKey: ['challenge-me'],
-        queryFn: async () => {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${host}/api/challenge/me`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (!res.ok) return null;
-            return await res.json();
-        },
+        queryFn: () => fetchWithAuth('/api/challenge/me', true),
     });
 
     React.useEffect(() => {
-        if (challengePhysical?.showGoalPopup) {
+        if (challengePhysical?.isParticipant && challengePhysical?.showGoalPopup) {
             setGoalPopupVisible(true);
             if (challengePhysical?.goalMinutes) {
                 setGoalInput(String(challengePhysical.goalMinutes));
             }
         }
-    }, [challengePhysical?.showGoalPopup, challengePhysical?.goalMinutes]);
+    }, [challengePhysical?.isParticipant, challengePhysical?.showGoalPopup, challengePhysical?.goalMinutes]);
 
     const goalMutation = useMutation({
         mutationFn: async (goalMinutes: number) => {
@@ -97,9 +86,19 @@ export const DashboardContent = () => {
         goalMutation.mutate(val);
     };
 
-    const hasActiveChallenge = challenges?.some((c: any) => c.status === 'active' && c.id === targetChallengeId);
+    const hasActiveChallenge = useMemo(
+        () => challenges?.some((c: any) => c.status === 'active' && c.id === targetChallengeId),
+        [challenges, targetChallengeId]
+    );
     const isTaskCompleted = taskStatus?.completed === true;
-    const showGoalPopup = challengePhysical?.isParticipant && challengePhysical?.showGoalPopup;
+
+    const goalPopupSubtitle = useMemo(() => {
+        const w = challengePhysical?.weekNumber ?? 1;
+        const blockStart = Math.floor((w - 1) / 3) * 3 + 1;
+        if (blockStart === 7) return 'Semana 7 y 8 - ¿Quieres mantenerla o ajustarla? (¿Te animas a retarte estas últimas 2 semanas con un 10% más❓ 💪🏻)';
+        if (blockStart === 4) return 'Semana 4 a la 6 - ¿Quieres mantenerla o ajustarla? (Escucha y Observa tu cuerpo 👂👀 )';
+        return 'Semana 1 a la 3 - ¿Quieres mantenerla o ajustarla?';
+    }, [challengePhysical?.weekNumber]);
 
     return (
         <>
@@ -119,13 +118,7 @@ export const DashboardContent = () => {
                                 {modifyingGoal ? 'Ajusta tu meta' : 'Tu meta'}
                             </h3>
                             <p className="text-sm mt-1" style={{ color: C.textMuted }}>
-                                {modifyingGoal ? 'Ingresa los minutos que quieres lograr en este bloque' : (() => {
-                                    const w = challengePhysical?.weekNumber ?? 1;
-                                    const blockStart = Math.floor((w - 1) / 3) * 3 + 1;
-                                    if (blockStart === 7) return 'Semana 7 y 8 - ¿Quieres mantenerla o ajustarla? (¿Te animas a retarte estas últimas 2 semanas con un 10% más❓ 💪🏻)';
-                                    if (blockStart === 4) return 'Semana 4 a la 6 - ¿Quieres mantenerla o ajustarla? (Escucha y Observa tu cuerpo 👂👀 )';
-                                    return 'Semana 1 a la 3 - ¿Quieres mantenerla o ajustarla?';
-                                })()}
+                                {modifyingGoal ? 'Ingresa los minutos que quieres lograr en este bloque' : goalPopupSubtitle}
                             </p>
                         </div>
                         {!modifyingGoal ? (
@@ -207,7 +200,6 @@ export const DashboardContent = () => {
                 <StatsCard />
                 <WeeklyChallengeProgressCard />
                 <CurrentJourneyCard />
-                {/* <SocialProfileCard /> */}
             </div>
 
             {hasActiveChallenge && isTaskCompleted && (
@@ -229,8 +221,6 @@ export const DashboardContent = () => {
             )}
 
             <RecentActivities onAddActivity={() => setIsModalOpen(true)} />
-
-            {/* <ActiveChallenges /> */}
 
             <ActivityLogModal
                 isOpen={isModalOpen}

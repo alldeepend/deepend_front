@@ -57,7 +57,12 @@ async function resolveActiveJourney(): Promise<ActiveJourneyInfo | null> {
         });
 
         let currentWorldIdx = worldNodes.findIndex(n => n.state === 'current');
-        if (currentWorldIdx < 0) currentWorldIdx = Math.max(0, worldNodes.findIndex(n => n.state !== 'done'));
+        if (currentWorldIdx < 0) {
+            // Todos los mundos ya están "done" pero el journey todavía no marcó
+            // status "completado" — se muestra el último, no "Mundo 1".
+            const firstNotDone = worldNodes.findIndex(n => n.state !== 'done');
+            currentWorldIdx = firstNotDone >= 0 ? firstNotDone : worldNodes.length - 1;
+        }
         const currentWorld = sortedWorlds[currentWorldIdx] ?? sortedWorlds[0];
 
         const xpMax = sortedWorlds.reduce((s, w) => w.stations.reduce((ss, st) => ss + (st.xp || 0), s), 0);
@@ -103,14 +108,18 @@ async function resolveActiveJourney(): Promise<ActiveJourneyInfo | null> {
     return null;
 }
 
+const NODE_STYLES: Record<NodeState, { dot: string; border: string; line: string }> = {
+    done: { dot: C.green, border: C.green, line: C.green },
+    current: { dot: C.red, border: C.red, line: '#4A4442' },
+    future: { dot: 'transparent', border: '#4A4442', line: '#4A4442' },
+};
+
 function RouteLine({ nodes }: { nodes: { state: NodeState }[] }) {
     return (
         <div className="flex items-center relative z-10">
             {nodes.map((n, i) => {
                 const isLast = i === nodes.length - 1;
-                const dotColor = n.state === 'done' ? C.green : n.state === 'current' ? C.red : 'transparent';
-                const borderColor = n.state === 'done' ? C.green : n.state === 'current' ? C.red : '#4A4442';
-                const lineColor = n.state === 'done' ? C.green : '#4A4442';
+                const { dot, border, line } = NODE_STYLES[n.state];
                 return (
                     <div key={i} className={`flex items-center ${isLast ? '' : 'flex-1'}`}>
                         <div
@@ -118,13 +127,13 @@ function RouteLine({ nodes }: { nodes: { state: NodeState }[] }) {
                             style={{
                                 width: n.state === 'current' ? 12 : 8,
                                 height: n.state === 'current' ? 12 : 8,
-                                background: dotColor,
-                                border: `2px solid ${borderColor}`,
+                                background: dot,
+                                border: `2px solid ${border}`,
                                 boxShadow: n.state === 'current' ? `0 0 0 4px ${C.red}2E` : undefined,
                             }}
                         />
                         {!isLast && (
-                            <div className="flex-1 h-[2px] mx-0.5" style={{ background: lineColor }} />
+                            <div className="flex-1 h-[2px] mx-0.5" style={{ background: line }} />
                         )}
                     </div>
                 );

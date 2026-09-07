@@ -6,8 +6,8 @@ import { useAuth } from '../../store/useAuth';
 import Header from '../../components/shared/Header';
 import { C } from '../../styles/colors';
 import { journeyApi } from '../../services/journey';
-import { archetypeApi, type ArchetypeResultContent } from '../../services/archetype';
 import { earnedBadgesFromAreas, totalXpFromAreas, badgeColorFor, type SidebarBadge } from './worlds/WorldsRightSidebar';
+import { useArchetypeInfo } from '../../hooks/useArchetypeInfo';
 
 // Helper to get API URL
 const getApiUrl = () => {
@@ -43,26 +43,16 @@ export default function Perfil() {
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-    // XP, arquetipo e insignias — antes solo visibles en el sidebar derecho de
-    // escritorio (Dashboard/Mundos); en celular ese sidebar está oculto, así que
-    // se muestran acá para que también sean visibles ahí.
-    const [progress, setProgress] = useState<{ totalXp: number; badges: SidebarBadge[]; archetypeInfo: ArchetypeResultContent | null } | null>(null);
+    // XP e insignias — antes solo visibles en el sidebar derecho de escritorio
+    // (Dashboard/Mundos); en celular ese sidebar está oculto, así que se
+    // muestran acá para que también sean visibles ahí.
+    const [progress, setProgress] = useState<{ totalXp: number; badges: SidebarBadge[] } | null>(null);
+    const archetypeInfo = useArchetypeInfo();
 
     useEffect(() => {
-        // El arquetipo se pide aparte y con su propio catch — si /archetype/config
-        // falla no debe borrar el XP ni las insignias, que no dependen de él.
-        Promise.all([
-            journeyApi.getAvailableJourneys(),
-            Promise.all([archetypeApi.getMyResult(), archetypeApi.getConfig()])
-                .then(([archRes, config]) => archRes.result?.dominantVariantId ? (config.results[archRes.result.dominantVariantId] ?? null) : null)
-                .catch(() => null),
-        ])
-            .then(([{ areas }, archetypeInfo]) => {
-                setProgress({
-                    totalXp: totalXpFromAreas(areas),
-                    badges: earnedBadgesFromAreas(areas),
-                    archetypeInfo,
-                });
+        journeyApi.getAvailableJourneys()
+            .then(({ areas }) => {
+                setProgress({ totalXp: totalXpFromAreas(areas), badges: earnedBadgesFromAreas(areas) });
             })
             .catch(() => {});
     }, []);
@@ -99,7 +89,6 @@ export default function Perfil() {
 
             if (response.ok) {
                 const data = await response.json();
-                console.log("Perfil data fetched:", data); // DEBUG LOG
 
                 // Format date for input field (YYYY-MM-DD)
                 let formattedDate = '';
@@ -120,7 +109,6 @@ export default function Perfil() {
                     estado_civil: data.estado_civil || '',
                     hobbies: data.hobbies || ''
                 };
-                console.log("Setting form data:", newData); // DEBUG LOG
 
                 setFormData(newData);
             }
@@ -155,11 +143,10 @@ export default function Perfil() {
             if (response.ok) {
                 const updatedUser = await response.json();
                 setIsEditing(false);
-                // Update global user state if needed, though useAuth might need a refresh logic
-                // For now, we rely on the fact that we just fetched the updated data or have it in state
-                // Optionally update local storage user if useAuth relies on it
                 const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-                localStorage.setItem('user', JSON.stringify({ ...storedUser, ...updatedUser }));
+                const mergedUser = { ...storedUser, ...updatedUser };
+                localStorage.setItem('user', JSON.stringify(mergedUser));
+                setUser(mergedUser);
             } else {
                 console.error('Failed to update profile');
             }
@@ -324,7 +311,7 @@ export default function Perfil() {
                                             ) : user?.avatar ? (
                                                 <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover transition-transform group-hover:scale-110 rounded-full" />
                                             ) : (
-                                                formData.firstName?.[0] || formData.username?.[1] || 'U'
+                                                formData.firstName?.[0] || formData.username?.[0] || 'U'
                                             )}
 
                                             {isEditing && (
@@ -360,9 +347,6 @@ export default function Perfil() {
                                         </h3>
                                         <p className="font-medium text-sm mb-4" style={{ color: C.textMuted }}>{user?.email}</p>
                                         <div className="flex flex-wrap justify-center md:justify-start gap-2">
-                                            {/* <span className="px-3 py-1 rounded-full bg-white/10 text-xs font-medium backdrop-blur-sm border border-white/10">
-                                                Viajero
-                                            </span> */}
                                             {formData.ciudad_residencia && (
                                                 <span className="px-3 py-1 rounded-full bg-white/10 text-xs font-medium backdrop-blur-sm border border-white/10 flex items-center gap-1">
                                                     <MapPin size={10} />
@@ -395,7 +379,7 @@ export default function Perfil() {
                                             </div>
                                         </div>
 
-                                        {progress.archetypeInfo ? (
+                                        {archetypeInfo ? (
                                             <button
                                                 onClick={() => navigate('/test')}
                                                 className="rounded-2xl p-4 flex items-center gap-3 text-left border transition-opacity hover:opacity-80"
@@ -407,7 +391,7 @@ export default function Perfil() {
                                                 <div>
                                                     <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: C.label }}>Mi Arquetipo</p>
                                                     <p className="text-sm font-bold leading-tight" style={{ fontFamily: "'American Typewriter', Georgia, serif", color: C.text }}>
-                                                        {progress.archetypeInfo.familyName}
+                                                        {archetypeInfo.familyName}
                                                     </p>
                                                     <p className="text-[10px] font-bold mt-0.5" style={{ color: C.amber }}>Ver resultado completo →</p>
                                                 </div>

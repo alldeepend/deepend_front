@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useMemo } from 'react'
 import { Link } from 'react-router'
 import { Award, Brain, Fingerprint, Lock, Zap } from 'lucide-react'
 import { C } from '../../../styles/colors'
 import type { Area, Journey, UserJourneyProgress } from '../../../types/journey'
-import { archetypeApi, type ArchetypeResultContent } from '../../../services/archetype'
+import { useArchetypeInfo } from '../../../hooks/useArchetypeInfo'
 
 const BADGE_COLORS = ['#52B788', '#5B9BF7', '#E8C547', '#B57BEE', '#818CF8', '#3FC6D8', '#F4669B']
 
@@ -70,33 +70,15 @@ interface Props {
     totalXp: number
 }
 
-export default function WorldsRightSidebar({ mode, journeyTitle: _journeyTitle, badges: allBadges, totalXp }: Props) {
-    const badges = mode === 'journey'
-        ? allBadges
-        : allBadges.filter(b => b.earned)
+export default function WorldsRightSidebar({ mode, journeyTitle, badges: allBadges, totalXp }: Props) {
+    const badges = useMemo(
+        () => mode === 'journey' ? allBadges : allBadges.filter(b => b.earned),
+        [mode, allBadges]
+    )
+    const earned = useMemo(() => badges.filter(b => b.earned), [badges])
+    const pending = useMemo(() => mode === 'journey' ? badges.filter(b => !b.earned) : [], [mode, badges])
 
-    const earned  = badges.filter(b => b.earned)
-    const pending = mode === 'journey' ? badges.filter(b => !b.earned) : []
-
-    const [archetypeInfo, setArchetypeInfo] = useState<ArchetypeResultContent | null | undefined>(undefined)
-
-    useEffect(() => {
-        let cancelled = false
-        archetypeApi.getMyResult()
-            .then(res => {
-                if (cancelled) return
-                if (!res.result?.dominantVariantId) { setArchetypeInfo(null); return }
-                const variantId = res.result.dominantVariantId
-                // Si sí hay resultado pero /config falla, se deja en `undefined`
-                // (la sección completa no se muestra) en vez de `null` — mostrar
-                // "aún no has hecho el test" sería engañoso para alguien que sí lo hizo.
-                archetypeApi.getConfig()
-                    .then(config => { if (!cancelled) setArchetypeInfo(config.results[variantId] ?? null) })
-                    .catch(() => {})
-            })
-            .catch(() => { if (!cancelled) setArchetypeInfo(null) })
-        return () => { cancelled = true }
-    }, [])
+    const archetypeInfo = useArchetypeInfo()
 
     return (
         <aside
@@ -104,6 +86,12 @@ export default function WorldsRightSidebar({ mode, journeyTitle: _journeyTitle, 
             style={{ background: C.bg, borderColor: C.border, fontFamily: 'Montserrat, sans-serif', height: '100dvh' }}
         >
             <div className="p-6 flex flex-col gap-6">
+
+                {mode === 'journey' && journeyTitle && (
+                    <p className="text-xs font-bold uppercase tracking-wide truncate" style={{ color: C.label }}>
+                        {journeyTitle}
+                    </p>
+                )}
 
                 {/* XP total */}
                 <div id="tour-target-xp" className="rounded-2xl p-4 border flex items-center gap-3" style={{ background: C.surface1, borderColor: C.border }}>

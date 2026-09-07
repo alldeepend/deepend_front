@@ -77,6 +77,23 @@ const FINGERPRINT_TEXTURE: {
   { side: 'right', offset: '-3%', top: '88%', rotate: 20, opacity: 0.16, size: 260 },
 ]
 
+// Set aparte para celular: pocas, chicas y metidas en las esquinas — el
+// contenido llena casi todo el ancho, así que solo cabe algo discreto sin
+// cruzar el texto.
+const FINGERPRINT_TEXTURE_MOBILE: {
+  side: 'left' | 'right'
+  offset: string
+  vertical: 'top' | 'bottom'
+  verticalOffset: string
+  rotate: number
+  opacity: number
+  size: number
+}[] = [
+  { side: 'left', offset: '-12%', vertical: 'top', verticalOffset: '1%', rotate: -16, opacity: 0.14, size: 150 },
+  { side: 'right', offset: '-14%', vertical: 'top', verticalOffset: '4%', rotate: 14, opacity: 0.12, size: 170 },
+  { side: 'right', offset: '-10%', vertical: 'bottom', verticalOffset: '2%', rotate: 18, opacity: 0.14, size: 160 },
+]
+
 function Wrapper({
   phase, onClose, children,
 }: {
@@ -97,14 +114,34 @@ function Wrapper({
         }}
       />
 
-      {/* Textura decorativa — huellas tenues a los lados, mismo tema del "Espejo" */}
+      {/* Textura decorativa — huellas tenues a los lados, mismo tema del "Espejo".
+          Oculta en pantallas angostas: ahí el ancho no alcanza para que quede en
+          los bordes y termina cruzando justo por encima del texto. */}
       {FINGERPRINT_TEXTURE.map((fp, i) => (
         <div
           key={i}
-          className="absolute pointer-events-none select-none"
+          className="hidden sm:block absolute pointer-events-none select-none"
           style={{
             [fp.side]: fp.offset,
             top: fp.top,
+            transform: `rotate(${fp.rotate}deg)`,
+            color: C.red,
+            opacity: fp.opacity,
+          }}
+        >
+          <Fingerprint size={fp.size} strokeWidth={0.7} />
+        </div>
+      ))}
+
+      {/* Mismo espíritu, versión chica para celular — solo en las esquinas,
+          donde queda espacio vacío arriba/abajo del bloque de texto. */}
+      {FINGERPRINT_TEXTURE_MOBILE.map((fp, i) => (
+        <div
+          key={i}
+          className="sm:hidden absolute pointer-events-none select-none"
+          style={{
+            [fp.side]: fp.offset,
+            [fp.vertical]: fp.verticalOffset,
             transform: `rotate(${fp.rotate}deg)`,
             color: C.red,
             opacity: fp.opacity,
@@ -333,9 +370,7 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
     <Wrapper phase={phase} onClose={onClose}>
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-16">
         <div className="w-full max-w-lg">
-          <p className="text-[11px] font-bold tracking-[0.2em] uppercase mb-8" style={{ color: C.red }}>
-            DeepEnd · Test
-          </p>
+          <img src="/Logo_DeepEnd_Elespejo.png" alt="DeepEnd" className="h-36 w-auto mb-3" />
           <h1
             className="text-4xl sm:text-5xl font-bold leading-tight mb-4"
             style={{ fontFamily: serif, color: C.text }}
@@ -357,7 +392,7 @@ export default function ArchetypeTest({ onClose }: { onClose?: () => void } = {}
             Comenzar <ArrowRight size={18} />
           </button>
           <p className="mt-6 text-[11px]" style={{ color: C.disabled }}>
-            Aproximadamente 5 minutos · Anónimo
+            Aproximadamente 5 minutos 
           </p>
         </div>
       </div>
