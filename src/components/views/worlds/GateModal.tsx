@@ -5,6 +5,7 @@ import type { GateDayStatus, GateEvidenceType, GateInfo, GateStatus } from '../.
 import { C } from '../../../styles/colors'
 import { PhotoUploadField, AudioRecorderField, SkipCheckbox } from './EvidenceFields'
 import { parseLines } from './textParsing'
+import PaywallModal from '../../subscription/PaywallModal'
 
 type Step = 'portada' | 'mapa' | 'dia' | 'recompensa' | 'celebracion'
 
@@ -15,9 +16,11 @@ export default function GateModal({
     const [step, setStep] = useState<Step>(initialStatus.activated ? 'mapa' : 'portada')
     const [activating, setActivating] = useState(false)
     const [selectedDay, setSelectedDay] = useState<GateDayStatus | null>(null)
-    const [lastReward, setLastReward] = useState<{ xpEarned: number; gateCompleted: boolean } | null>(null)
+    const [lastReward, setLastReward] = useState<{ xpEarned: number; gateCompleted: boolean; isLastFreeDay: boolean } | null>(null)
+    const [showPaywall, setShowPaywall] = useState(false)
 
     const days = status.days ?? []
+    const hasLockedDays = days.some(d => d.state === 'locked')
 
     const refreshStatus = async () => {
         const updated = await journeyApi.getGateStatus(journeyId)
@@ -44,13 +47,14 @@ export default function GateModal({
         setStep('dia')
     }
 
-    const handleDaySubmitted = async (result: { xpEarned: number; gateCompleted: boolean }) => {
+    const handleDaySubmitted = async (result: { xpEarned: number; gateCompleted: boolean; isLastFreeDay: boolean }) => {
         await refreshStatus()
         setLastReward(result)
         setStep(result.gateCompleted ? 'celebracion' : 'recompensa')
     }
 
     return (
+        <>
         <div
             className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6"
             style={{ background: 'rgba(35,31,32,0.85)', backdropFilter: 'blur(4px)' }}
@@ -90,6 +94,8 @@ export default function GateModal({
                             currentDay={status.currentDay}
                             totalXpEarned={status.totalXpEarned}
                             onOpenDay={openDay}
+                            hasLockedDays={hasLockedDays}
+                            onLockedClick={() => setShowPaywall(true)}
                         />
                     )}
                     {step === 'dia' && selectedDay && (
@@ -101,7 +107,12 @@ export default function GateModal({
                         />
                     )}
                     {step === 'recompensa' && lastReward && (
-                        <RecompensaStep xpEarned={lastReward.xpEarned} onContinue={() => setStep('mapa')} />
+                        <RecompensaStep
+                            xpEarned={lastReward.xpEarned}
+                            lastFreeDay={lastReward.isLastFreeDay}
+                            onContinue={() => setStep('mapa')}
+                            onUpgrade={() => setShowPaywall(true)}
+                        />
                     )}
                     {step === 'celebracion' && (
                         <CelebracionStep
@@ -113,6 +124,8 @@ export default function GateModal({
                 </div>
             </div>
         </div>
+        <PaywallModal isOpen={showPaywall} onClose={() => setShowPaywall(false)} />
+        </>
     )
 }
 
@@ -149,8 +162,9 @@ function PortadaStep({ gate, onActivate, activating }: { gate: GateInfo; onActiv
 
 // ─── Mapa de días ─────────────────────────────────────────────────────────────
 
-function MapaStep({ days, currentDay, totalXpEarned, onOpenDay }: {
+function MapaStep({ days, currentDay, totalXpEarned, onOpenDay, hasLockedDays, onLockedClick }: {
     days: GateDayStatus[]; currentDay?: number; totalXpEarned?: number; onOpenDay: (day: GateDayStatus) => void
+    hasLockedDays?: boolean; onLockedClick?: () => void
 }) {
     const [infoOpen, setInfoOpen] = useState(false)
     return (
@@ -185,22 +199,23 @@ function MapaStep({ days, currentDay, totalXpEarned, onOpenDay }: {
                 {days.map((day, idx) => {
                     const clickable = day.state === 'today' || day.state === 'pending'
                     const completed = day.state === 'completed'
+                    const locked = day.state === 'locked'
                     const label =
                         day.state === 'tomorrow' ? 'Mañana' :
-                        day.state === 'future' ? `Día ${day.dayNumber}` :
+                        (day.state === 'future' || locked) ? `Día ${day.dayNumber}` :
                         (day.anchorLabel || `Día ${day.dayNumber}`)
                     const isLast = idx === days.length - 1
-                    const nodeColor = completed ? C.green : day.state === 'today' ? C.amber : C.border
+                    const nodeColor = completed ? C.green : day.state === 'today' ? C.amber : locked ? C.amber : C.border
                     const lineColor = completed ? C.green : C.border
 
                     return (
                         <button
                             key={day.dayNumber}
                             type="button"
-                            onClick={() => onOpenDay(day)}
-                            disabled={!clickable}
+                            onClick={() => locked ? onLockedClick?.() : onOpenDay(day)}
+                            disabled={!clickable && !locked}
                             className="w-full flex items-stretch gap-3 text-left"
-                            style={{ cursor: clickable ? 'pointer' : 'default' }}
+                            style={{ cursor: (clickable || locked) ? 'pointer' : 'default' }}
                         >
                             {/* Track: línea punteada + nodo, igual estilo que el mapa de mundos */}
                             <div className="flex flex-col items-center" style={{ width: 28, flexShrink: 0 }}>
@@ -210,12 +225,12 @@ function MapaStep({ days, currentDay, totalXpEarned, onOpenDay }: {
                                 <span
                                     className="w-7 h-7 rounded-full flex items-center justify-center text-xs shrink-0 font-semibold"
                                     style={{
-                                        background: completed ? `${C.green}25` : day.state === 'today' ? `${C.amber}20` : C.surface2,
+                                        background: completed ? `${C.green}25` : day.state === 'today' ? `${C.amber}20` : locked ? `${C.amber}15` : C.surface2,
                                         border: `1.5px solid ${nodeColor}`,
-                                        color: completed ? C.green : day.state === 'today' ? C.amber : C.textMuted,
+                                        color: completed ? C.green : (day.state === 'today' || locked) ? C.amber : C.textMuted,
                                     }}
                                 >
-                                    {completed ? '✓' : day.state === 'future' ? <Lock size={11} /> : day.dayNumber}
+                                    {completed ? '✓' : (day.state === 'future' || locked) ? <Lock size={11} /> : day.dayNumber}
                                 </span>
                                 {!isLast && (
                                     <div className="flex-1" style={{ width: 2, minHeight: 18, borderLeft: `2px dashed ${lineColor}` }} />
@@ -223,16 +238,21 @@ function MapaStep({ days, currentDay, totalXpEarned, onOpenDay }: {
                             </div>
 
                             {/* Etiqueta del día */}
-                            <div className="flex-1 py-2">
+                            <div className="flex-1 py-2 flex items-center gap-1.5">
                                 <span
                                     className="text-sm"
                                     style={{
-                                        color: completed ? C.green : day.state === 'today' ? C.text : C.textMuted,
+                                        color: completed ? C.green : (day.state === 'today' || locked) ? C.text : C.textMuted,
                                         fontWeight: completed || day.state === 'today' ? 600 : 400,
                                     }}
                                 >
                                     {label}
                                 </span>
+                                {locked && (
+                                    <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: C.amber }}>
+                                        Premium
+                                    </span>
+                                )}
                             </div>
                         </button>
                     )
@@ -241,6 +261,16 @@ function MapaStep({ days, currentDay, totalXpEarned, onOpenDay }: {
             <p className="text-center text-xs" style={{ color: C.amber, fontFamily: "'DM Mono', monospace" }}>
                 {totalXpEarned ?? 0} XP acumulado
             </p>
+            {hasLockedDays && (
+                <button
+                    type="button"
+                    onClick={onLockedClick}
+                    className="w-full text-center text-xs underline decoration-dotted"
+                    style={{ color: C.amber }}
+                >
+                    Con Premium sigues tu recorrido completo
+                </button>
+            )}
         </div>
     )
 }
@@ -249,7 +279,7 @@ function MapaStep({ days, currentDay, totalXpEarned, onOpenDay }: {
 
 function DiaStep({ journeyId, day, onBack, onSubmitted }: {
     journeyId: string; day: GateDayStatus; onBack: () => void
-    onSubmitted: (result: { xpEarned: number; gateCompleted: boolean }) => void
+    onSubmitted: (result: { xpEarned: number; gateCompleted: boolean; isLastFreeDay: boolean }) => void
 }) {
     const [tab, setTab] = useState<GateEvidenceType>(day.checkOnly ? 'check' : 'texto')
     const [text, setText] = useState('')
@@ -438,8 +468,10 @@ function CheckWithText({ checked, onCheckedChange, text, onTextChange, disabled 
 
 // ─── Recompensa diaria ──────────────────────────────────────────────────────
 
-function RecompensaStep({ xpEarned, onContinue }: { xpEarned: number; onContinue: () => void }) {
-    
+function RecompensaStep({ xpEarned, lastFreeDay, onContinue, onUpgrade }: {
+    xpEarned: number; lastFreeDay?: boolean; onContinue: () => void; onUpgrade?: () => void
+}) {
+
     const [flashing, setFlashing] = useState(true)
     useEffect(() => {
         const t = setTimeout(() => setFlashing(false), 1400)
@@ -453,9 +485,28 @@ function RecompensaStep({ xpEarned, onContinue }: { xpEarned: number; onContinue
             >
                 +{xpEarned} XP
             </p>
-            <p className="text-sm" style={{ color: C.textSec, fontFamily: "'American Typewriter', Georgia, serif" }}>
-                Este día cierra así. Mañana, o cuando quieras, te espera tu siguiente pregunta. Vas a tu ritmo.
-            </p>
+            {lastFreeDay ? (
+                <>
+                    <p className="text-sm font-semibold" style={{ color: C.text, fontFamily: "'American Typewriter', Georgia, serif" }}>
+                        ¡Completaste tus 3 días gratis de la Puerta!
+                    </p>
+                    <p className="text-sm" style={{ color: C.textSec }}>
+                        Con Premium sigues tu recorrido completo, hasta el día 7.
+                    </p>
+                    <button
+                        type="button"
+                        onClick={onUpgrade}
+                        className="w-full py-3 rounded-xl text-sm font-semibold"
+                        style={{ background: `linear-gradient(135deg, ${C.amber}, #d97e0a)`, color: '#201400' }}
+                    >
+                        Ver Premium
+                    </button>
+                </>
+            ) : (
+                <p className="text-sm" style={{ color: C.textSec, fontFamily: "'American Typewriter', Georgia, serif" }}>
+                    Este día cierra así. Mañana, o cuando quieras, te espera tu siguiente pregunta. Vas a tu ritmo.
+                </p>
+            )}
             <p className="text-xs" style={{ color: C.textMuted }}>
                 Si quieres, comparte tu experiencia con la tribu, puedes inspirar a alguien más en su camino.
             </p>

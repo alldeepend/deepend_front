@@ -138,7 +138,7 @@ export interface BlockInteractResult {
 
 export type GateEvidenceType = 'texto' | 'audio' | 'foto' | 'check';
 
-export type GateDayState = 'completed' | 'today' | 'pending' | 'tomorrow' | 'future';
+export type GateDayState = 'completed' | 'today' | 'pending' | 'tomorrow' | 'future' | 'locked';
 
 export interface GateDayResponse {
     evidenceType: GateEvidenceType;
@@ -176,6 +176,7 @@ export interface GateStatus {
     currentDay?: number;
     totalXpEarned?: number;
     completed?: boolean;
+    paid?: boolean;
     days?: GateDayStatus[];
 }
 
@@ -189,4 +190,5 @@ export interface GateRespondResult {
     xpEarned: number;
     totalXpEarned: number;
     gateCompleted: boolean;
+    isLastFreeDay: boolean;
 }

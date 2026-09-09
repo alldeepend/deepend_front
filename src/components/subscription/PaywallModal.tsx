@@ -16,21 +16,53 @@ const BOLD_MESSAGE_ORIGINS = [
     window.location.origin,
 ];
 
-type PlanId = 'quarterly' | 'semiannual';
-
-const PLANS: { id: PlanId; label: string; price: string; period: string; monthly: string; badge?: string; savings?: string }[] = [
-    { id: 'quarterly', label: 'Trimestral', price: '$21.99', period: 'cada 3 meses', monthly: '$7.33 USD/mes' },
-    {
-        id: 'semiannual', label: 'Semestral', price: '$41.99', period: 'cada 6 meses', monthly: '$7.00 USD/mes',
-        badge: 'Mejor valor', savings: 'Ahorras $1.99 vs. dos trimestres',
-    },
-];
+interface RawPlan {
+    id: string;
+    amount: string;
+    currency: string;
+    periodDays: number;
+    label: string;
+}
 
 const BENEFITS = [
     'Mundos y estaciones sin límite',
     'Reto semanal sin restricciones',
     'Tu progreso guardado para siempre',
 ];
+
+// El backend solo manda id/monto/período — el copy de la card (texto del
+// período, equivalente mensual, badge de "mejor valor") se arma acá para no
+// tener que tocar el backend cada vez que cambia una frase.
+function periodLabel(days: number) {
+    if (days >= 150) return 'cada 6 meses';
+    if (days >= 60) return 'cada 3 meses';
+    return `cada ${days} días`;
+}
+
+function monthlyEquivalent(amount: string, days: number) {
+    const months = days / 30;
+    return `$${(parseFloat(amount) / months).toFixed(2)} USD/mes`;
+}
+
+// El badge de "mejor valor" y el ahorro solo tienen sentido cuando el usuario
+// tiene más de un plan entre los cuales comparar (pioneros con trimestral y
+// semestral) — con un solo plan (usuarios nuevos) no hay nada que comparar.
+function describePlan(plan: RawPlan, allPlans: RawPlan[]) {
+    const cheaper = allPlans.find(p => p.periodDays < plan.periodDays);
+    const isBestValue = allPlans.length > 1 && plan.periodDays === Math.max(...allPlans.map(p => p.periodDays));
+    const savings = isBestValue && cheaper
+        ? parseFloat(cheaper.amount) * (plan.periodDays / cheaper.periodDays) - parseFloat(plan.amount)
+        : null;
+
+    return {
+        ...plan,
+        price: `$${plan.amount}`,
+        period: periodLabel(plan.periodDays),
+        monthly: monthlyEquivalent(plan.amount, plan.periodDays),
+        badge: isBestValue ? 'Mejor valor' : undefined,
+        savings: savings && savings > 0 ? `Ahorras $${savings.toFixed(2)} vs. pagar por separado` : undefined,
+    };
+}
 
 declare global {
     interface Window {
@@ -80,7 +112,10 @@ export default function PaywallModal({
     description = 'Con Premium completas mundos, avanzas tu reto semanal sin límites y guardas todo tu progreso.',
 }: PaywallModalProps) {
     const { setUser } = useAuth();
-    const [selectedPlan, setSelectedPlan] = useState<PlanId | null>(null);
+    const [plans, setPlans] = useState<RawPlan[]>([]);
+    const [plansError, setPlansError] = useState('');
+    const [plansRetryKey, setPlansRetryKey] = useState(0);
+    const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
     const [checkout, setCheckout] = useState<CheckoutData | null>(null);
     const [libraryReady, setLibraryReady] = useState(false);
     const [error, setError] = useState('');
@@ -96,6 +131,29 @@ export default function PaywallModal({
             setError('');
         }
     }, [isOpen]);
+
+    // Qué planes ve este usuario (pionero: trimestral+semestral, nuevo: uno
+    // solo) lo decide el backend según su fecha de registro.
+    useEffect(() => {
+        if (!isOpen) return;
+        let cancelled = false;
+        setPlansError('');
+        const token = localStorage.getItem('token');
+        fetch(`${API_URL}/v2/subscription/plans`, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+            .then(res => {
+                if (!res.ok) throw new Error('No pudimos cargar los planes.');
+                return res.json();
+            })
+            .then(data => {
+                if (cancelled) return;
+                if (!data.plans?.length) throw new Error('No pudimos cargar los planes.');
+                setPlans(data.plans);
+            })
+            .catch(err => !cancelled && setPlansError(err.message || 'No pudimos cargar los planes.'));
+        return () => { cancelled = true; };
+    }, [isOpen, plansRetryKey]);
 
     // Pide la orden al backend en cuanto se elige un plan.
     useEffect(() => {
@@ -191,7 +249,9 @@ export default function PaywallModal({
 
     if (!isOpen) return null;
 
-    const activePlan = PLANS.find(p => p.id === selectedPlan);
+    const describedPlans = plans.map(p => describePlan(p, plans));
+    const activePlan = describedPlans.find(p => p.id === selectedPlan);
+    const canPickAnother = plans.length > 1;
 
     // Portal a <body>: un `transform` en HomePage rompe `position: fixed` para
     // cualquier cosa anidada adentro.
@@ -225,7 +285,7 @@ export default function PaywallModal({
                 ) : (
                     <>
                         <div className="flex items-center justify-between px-6 pt-5 pb-1">
-                            {selectedPlan ? (
+                            {selectedPlan && canPickAnother ? (
                                 <button
                                     onClick={() => setSelectedPlan(null)}
                                     disabled={phase === 'checking'}
@@ -234,7 +294,7 @@ export default function PaywallModal({
                                 >
                                     <ChevronLeft size={14} /> Cambiar plan
                                 </button>
-                            ) : (
+                            ) : !selectedPlan ? (
                                 <div className="relative w-11 h-11 mb-2">
                                     <div
                                         className="absolute inset-[-10px] rounded-full blur-lg opacity-40"
@@ -247,7 +307,7 @@ export default function PaywallModal({
                                         <Sparkles size={20} color={C.bg} />
                                     </div>
                                 </div>
-                            )}
+                            ) : null}
                             <button
                                 onClick={onClose}
                                 aria-label="Cerrar"
@@ -286,8 +346,20 @@ export default function PaywallModal({
                                         ))}
                                     </ul>
 
+                                    {plansError && describedPlans.length === 0 ? (
+                                        <div className="text-center py-4">
+                                            <p className="text-sm mb-3" style={{ color: C.red }}>{plansError}</p>
+                                            <button
+                                                onClick={() => setPlansRetryKey(k => k + 1)}
+                                                className="text-xs font-semibold underline"
+                                                style={{ color: C.textMuted }}
+                                            >
+                                                Reintentar
+                                            </button>
+                                        </div>
+                                    ) : (
                                     <div className="flex flex-col gap-3 mb-2">
-                                        {PLANS.map(p => (
+                                        {describedPlans.map(p => (
                                             <button
                                                 key={p.id}
                                                 onClick={() => setSelectedPlan(p.id)}
@@ -332,6 +404,7 @@ export default function PaywallModal({
                                             </button>
                                         ))}
                                     </div>
+                                    )}
                                 </>
                             ) : (
                                 <>

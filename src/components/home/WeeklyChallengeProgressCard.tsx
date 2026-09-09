@@ -1,12 +1,15 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
+import { Lock } from 'lucide-react';
 import { C } from '../../styles/colors';
 import { weeklyChallengeApi } from '../../services/weeklyChallenge';
+import PaywallModal from '../subscription/PaywallModal';
 
 // Los 4 estados "sin progreso que mostrar todavía" comparten el mismo molde
 // (blob de acento, eyebrow, título, descripción opcional, un botón) — solo
 // cambian el color y el texto.
-function ChallengeCtaCard({ accentColor, eyebrow, title, description, buttonLabel, buttonTextColor, onClick }: {
+function ChallengeCtaCard({ accentColor, eyebrow, title, description, buttonLabel, buttonTextColor, onClick, locked }: {
     accentColor: string
     eyebrow: string
     title: string
@@ -14,6 +17,7 @@ function ChallengeCtaCard({ accentColor, eyebrow, title, description, buttonLabe
     buttonLabel: string
     buttonTextColor?: string
     onClick: () => void
+    locked?: boolean
 }) {
     return (
         <div
@@ -21,7 +25,10 @@ function ChallengeCtaCard({ accentColor, eyebrow, title, description, buttonLabe
             style={{ background: '#1E1A1B', borderColor: '#333330' }}
         >
             <div className="absolute top-0 right-0 w-24 h-24 rounded-bl-full -mr-6 -mt-6 opacity-20" style={{ background: accentColor }} />
-            <p className="text-xs font-semibold uppercase tracking-wide relative z-10" style={{ color: accentColor }}>{eyebrow}</p>
+            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide relative z-10" style={{ color: accentColor }}>
+                {locked && <Lock size={12} />}
+                {eyebrow}
+            </p>
             <h3 className="text-lg font-bold relative z-10" style={{ color: '#F5F0E8', fontFamily: "'American Typewriter', Georgia, serif" }}>
                 {title}
             </h3>
@@ -44,6 +51,7 @@ function ChallengeCtaCard({ accentColor, eyebrow, title, description, buttonLabe
 export const WeeklyChallengeProgressCard = () => {
     const navigate = useNavigate();
     const goToReto = () => navigate('/reto-semanal');
+    const [showPaywall, setShowPaywall] = useState(false);
 
     const { data: me, isLoading } = useQuery({
         queryKey: ['weekly-challenge-me'],
@@ -57,6 +65,24 @@ export const WeeklyChallengeProgressCard = () => {
     });
 
     if (isLoading) return null;
+
+    if (me?.locked) {
+        return (
+            <>
+                <ChallengeCtaCard
+                    accentColor={C.amber}
+                    eyebrow="Reto Semanal"
+                    title="Tu Reto Semanal te espera"
+                    description="Desbloquea seguimiento semanal, metas y check-ins con Premium."
+                    buttonLabel="Ver Premium"
+                    buttonTextColor="#161211"
+                    onClick={() => setShowPaywall(true)}
+                    locked
+                />
+                <PaywallModal isOpen={showPaywall} onClose={() => setShowPaywall(false)} />
+            </>
+        );
+    }
 
     if (!me?.isParticipant) {
         return (

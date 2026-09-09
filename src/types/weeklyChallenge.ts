@@ -17,6 +17,7 @@ export interface ProgressHistory {
 
 export interface WeeklyChallengeMe {
     isParticipant: boolean;
+    locked?: boolean;
     cycleNumber?: number;
     weekNumber?: number;
     goalMinutes?: number | null;

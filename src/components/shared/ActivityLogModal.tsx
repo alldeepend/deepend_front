@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Upload, Clock, Activity, Loader2, CheckCircle2 } from 'lucide-react';
+import { X, Upload, Clock, Activity, Loader2, CheckCircle2, Lock } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import AlertModal from './AlertModal';
+import PaywallModal from '../subscription/PaywallModal';
 
 interface ActivityLogModalProps {
     isOpen: boolean;
@@ -24,10 +25,26 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
     const [checkinResponse, setCheckinResponse] = useState('');
     const [formError, setFormError] = useState('');
     const [uploadError, setUploadError] = useState('');
+    const [showPaywall, setShowPaywall] = useState(false);
+    const [showLastFreeMessage, setShowLastFreeMessage] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const queryClient = useQueryClient();
     const host = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/api\/?$/, '');
+
+    const { data: limitStatus } = useQuery({
+        queryKey: ['activity-log-limit-status'],
+        queryFn: async () => {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${host}/api/activity-log/limit-status`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) return null;
+            return await res.json() as { paid: boolean; used: number; limit: number };
+        },
+        enabled: isOpen,
+    });
+    const isLocked = !!limitStatus && !limitStatus.paid && limitStatus.used >= limitStatus.limit;
 
     const { data: challengeData } = useQuery({
         queryKey: ['challenge-me'],
@@ -122,15 +139,16 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
 
             if (!res.ok) {
                 const error = await res.json().catch(() => ({}));
-                throw new Error(error.error || 'Error al guardar actividad');
+                throw Object.assign(new Error(error.error || 'Error al guardar actividad'), { code: error.code });
             }
             return await res.json();
         },
-        onSuccess: async () => {
+        onSuccess: async (data: any) => {
             queryClient.invalidateQueries({ queryKey: ['recent-activities'] });
             queryClient.invalidateQueries({ queryKey: ['all-activities'] });
             queryClient.invalidateQueries({ queryKey: ['challenge-progress'] });
             queryClient.invalidateQueries({ queryKey: ['weekly-challenge-progress'] });
+            queryClient.invalidateQueries({ queryKey: ['activity-log-limit-status'] });
 
             // Save check-in if provided (reto viejo "Desde Aquí" y/o Reto Semanal, el que aplique)
             if (checkinResponse && challengeData?.isParticipant && (!challengeData?.hasCheckedInThisWeek || !challengeData?.checkinResponse)) {
@@ -140,11 +158,19 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
                 try { await weeklyChallengeCheckinMutation.mutateAsync(checkinResponse); } catch {}
             }
 
-            onClose();
             resetForm();
-            alert('Actividad registrada con éxito!');
+            if (data?.isLastFreeAction) {
+                setShowLastFreeMessage(true);
+            } else {
+                onClose();
+                alert('Actividad registrada con éxito!');
+            }
         },
         onError: (err: any) => {
+            if (err.code === 'PAYWALL') {
+                queryClient.invalidateQueries({ queryKey: ['activity-log-limit-status'] });
+                return;
+            }
             setUploadError(err.message === "Unexpected token '<', \"<html>...\" is not valid JSON"
                 ? 'Error de conexión o archivo demasiado grande. Por favor intenta de nuevo.'
                 : err.message);
@@ -242,6 +268,58 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
                         </button>
                     </div>
 
+                    {showLastFreeMessage ? (
+                        <div className="p-6 flex flex-col items-center text-center gap-3">
+                            <div
+                                className="w-12 h-12 rounded-full flex items-center justify-center"
+                                style={{ background: '#52B78826', color: '#52B788' }}
+                            >
+                                <CheckCircle2 size={22} />
+                            </div>
+                            <h4 className="font-bold text-base" style={{ color: '#F5F0E8' }}>
+                                ¡Completaste tus 3 actividades físicas gratis!
+                            </h4>
+                            <p className="text-sm" style={{ color: '#A8A29E' }}>
+                                Con Premium sigues registrando tu movimiento sin límites.
+                            </p>
+                            <button
+                                onClick={() => setShowPaywall(true)}
+                                className="w-full mt-2 py-3 rounded-xl font-bold text-sm"
+                                style={{ background: 'linear-gradient(135deg, #EF9F27, #d97e0a)', color: '#201400' }}
+                            >
+                                Ver Premium
+                            </button>
+                            <button
+                                onClick={() => { setShowLastFreeMessage(false); onClose(); }}
+                                className="w-full py-2.5 rounded-xl font-semibold text-sm"
+                                style={{ color: '#A8A29E' }}
+                            >
+                                Entendido
+                            </button>
+                        </div>
+                    ) : isLocked ? (
+                        <div className="p-6 flex flex-col items-center text-center gap-3">
+                            <div
+                                className="w-12 h-12 rounded-full flex items-center justify-center"
+                                style={{ background: '#EF9F2726', color: '#EF9F27' }}
+                            >
+                                <Lock size={22} />
+                            </div>
+                            <h4 className="font-bold text-base" style={{ color: '#F5F0E8' }}>
+                                Ya registraste tus primeras actividades
+                            </h4>
+                            <p className="text-sm" style={{ color: '#A8A29E' }}>
+                                Con Premium sigues registrando tu movimiento sin límites.
+                            </p>
+                            <button
+                                onClick={() => setShowPaywall(true)}
+                                className="w-full mt-2 py-3 rounded-xl font-bold text-sm"
+                                style={{ background: 'linear-gradient(135deg, #EF9F27, #d97e0a)', color: '#201400' }}
+                            >
+                                Ver Premium
+                            </button>
+                        </div>
+                    ) : (
                     <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto">
                         {/* Check-in semanal — participantes que aún no han respondido esta semana */}
                         {showCheckin && (
@@ -341,6 +419,7 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
                             )}
                         </button>
                     </form>
+                    )}
                 </div>
             </div>
 
@@ -350,6 +429,7 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
                 message={uploadError}
                 onConfirm={() => setUploadError('')}
             />
+            <PaywallModal isOpen={showPaywall} onClose={() => setShowPaywall(false)} />
         </>,
         document.body
     );
