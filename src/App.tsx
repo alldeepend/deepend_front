@@ -36,12 +36,23 @@ import Testimonials from './components/views/Testimonials';
 import RetoSemanal from './components/views/RetoSemanal';
 import PrivacyPolicy from './components/views/PrivacyPolicy';
 import Creditos from './components/views/Creditos';
+import { useEffect } from 'react';
+import { useAuth } from './store/useAuth';
 
 function App() {
     const host = window.location.hostname;
     const isApp = host.includes('app.');
 
     usePageTracking();
+
+    // Una vez por carga de la app (no en cada navegación interna): refresca al
+    // usuario contra el servidor, para no quedarse con datos desactualizados
+    // de un login viejo (ej. lifecycleStage cambiado por fuera de la app).
+    const refreshUser = useAuth(state => state.refreshUser);
+    useEffect(() => {
+        refreshUser();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
         <>

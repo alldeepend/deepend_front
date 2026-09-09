@@ -28,6 +28,7 @@ type AuthState = {
   error: string | null;
   login: (email: string, password: string) => Promise<{ success: boolean }>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 // Función para cargar el usuario desde localStorage
@@ -107,6 +108,25 @@ export const useAuth = create<AuthState>((set) => ({
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       }).catch(() => {});
+    }
+  },
+  // Trae el perfil actual del servidor y actualiza la sesión local — para que
+  // cambios hechos por fuera de la app (lifecycleStage por un backfill, el
+  // cron de inactividad, un admin editando desde el panel) no se queden
+  // pegados en lo que se guardó en el último login.
+  refreshUser: async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      const response = await fetch(`${API_URL}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+      saveUserToStorage(data.user, token);
+      set({ user: data.user });
+    } catch {
+      // silencioso: si falla, se queda con lo que ya tenía en localStorage
     }
   },
 }))
