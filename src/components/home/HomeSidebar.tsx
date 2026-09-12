@@ -65,7 +65,7 @@ export const HomeSidebar = ({ activeTab, dark = true }: HomeSidebarProps) => {
                         // disabled={true}
                         onClick={() => navigate('/journey')}
                     /> */}
-                    {['test', 'worldtest1', 'worldtest2', 'active'].includes(user?.membership ?? '') && (
+                    {user?.lifecycleStage === 'paid' && (
                         <SidebarItem
                             icon={Globe}
                             label="Viajes & Mundos"
@@ -147,7 +147,7 @@ export const HomeSidebar = ({ activeTab, dark = true }: HomeSidebarProps) => {
                             {user?.preferredName || user?.firstName || 'Usuario'}
                         </p>
                         <p className="text-[10px] uppercase tracking-wider font-medium mt-0.5" style={{ color: muted }}>
-                            {user?.membership?.replace('_', ' ') || 'Free'}
+                            {user?.lifecycleStage || 'free'}
                         </p>
                     </div>
                 </div>

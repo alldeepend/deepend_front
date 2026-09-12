@@ -262,7 +262,7 @@ export default function Header({ dark = true }: { dark?: boolean }) {
                       <span className="font-medium">Noticias</span>
                     </Link>
                   </li>
-                  {['test', 'worldtest1', 'worldtest2', 'active'].includes(user?.membership ?? '') && (
+                  {user?.lifecycleStage === 'paid' && (
                     <li>
                       <Link
                         to="/worlds"

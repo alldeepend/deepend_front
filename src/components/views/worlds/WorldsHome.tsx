@@ -186,7 +186,7 @@ export default function WorldsHome() {
                             {/* Top bar */}
                             <div className="relative z-10 flex items-center justify-between px-6 pt-10">
                                 <p className="text-xs tracking-[0.25em] uppercase" style={{ color: C.textMuted }}>
-                                    DEEP END · {user?.membership?.toUpperCase() ?? 'TEST'}
+                                    DEEP END · {user?.lifecycleStage?.toUpperCase() ?? 'FREE'}
                                 </p>
                                 <button
                                     onClick={() => navigate('/dashboard')}
