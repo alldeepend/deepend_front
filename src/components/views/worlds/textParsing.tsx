@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { C } from '../../../styles/colors'
 
-const SIZE_PATTERN = /(?<plus>\+{1,4})(?<plusBody>[^+]+)\k<plus>|(?<minus>-{1,4})(?<minusBody>[^-]+)\k<minus>|\*\*_(?<bi1>[^_*]+)_\*\*|_\*\*(?<bi2>[^_*]+)\*\*_|\*\*(?<bold>[^*]+)\*\*|_(?<italic>[^_]+)_/g
+const SIZE_PATTERN = /(?<plus>\+{1,4})(?<plusBody>[^+]+)\k<plus>|(?<minus>-{1,4})(?<minusBody>[^-]+)\k<minus>|\*\*_(?<bi1>[^_*]+)_\*\*|_\*\*(?<bi2>[^_*]+)\*\*_|\*\*(?<bold>[^*]+)\*\*|_(?<italic>[^_]+)_|~(?<underline>[^~]+)~/g
 
 export function parseBold(text: string): React.ReactNode {
     const nodes: React.ReactNode[] = []
@@ -24,6 +24,8 @@ export function parseBold(text: string): React.ReactNode {
             nodes.push(<strong key={key++}>{parseBold(g.bold)}</strong>)
         } else if (g.italic !== undefined) {
             nodes.push(<em key={key++}>{parseBold(g.italic)}</em>)
+        } else if (g.underline !== undefined) {
+            nodes.push(<u key={key++}>{parseBold(g.underline)}</u>)
         }
         lastIndex = m.index + m[0].length
     }

@@ -45,6 +45,7 @@ export default function WorldsStation() {
     const [completedBlockIds, setCompletedBlockIds] = useState<Set<string>>(new Set())
     const [completionResult, setCompletionResult] = useState<BlockInteractResult | null>(null)
     const [showCelebration, setShowCelebration] = useState(false)
+    const [pacingBlocked, setPacingBlocked] = useState<{ reason: 'daily_limit' | 'weekly_world_limit'; availableAt: string } | null>(null)
     const [showWorldCompletion, setShowWorldCompletion] = useState(false)
     const [worldCompletionData, setWorldCompletionData] = useState<{
         world: any; nextWorld: any; xpEarned: number; badges: string[]; currentBadge: string | null; streak: number; completionImageUrl: string | null; completionVideoUrl: string | null
@@ -69,6 +70,7 @@ export default function WorldsStation() {
         setCompletedBlockIds(new Set())
         setResponses({})
         setReviewMode(false)
+        setPacingBlocked(null)
         journeyApi.getJourneyDetails(journeyId)
             .then(d => {
                 setData(d)
@@ -180,6 +182,11 @@ export default function WorldsStation() {
                 setTimeout(() => setXpFlash(null), 1800)
             }
 
+            if (result.blocked && result.availableAt) {
+                setPacingBlocked({ reason: result.blocked, availableAt: result.availableAt })
+                return result
+            }
+
             if (result.stationCompleted && !skipCelebration) {
                 // Check if the whole world is now complete
                 const sortedWorlds = data!.journey.worlds
@@ -277,6 +284,16 @@ export default function WorldsStation() {
         return (
             <WorldCompletionScreen
                 data={worldCompletionData}
+                onContinue={() => navigate(`/worlds/${journeyId}`)}
+            />
+        )
+    }
+
+    if (pacingBlocked) {
+        return (
+            <PacingBlockedScreen
+                reason={pacingBlocked.reason}
+                availableAt={pacingBlocked.availableAt}
                 onContinue={() => navigate(`/worlds/${journeyId}`)}
             />
         )
@@ -531,7 +548,8 @@ export default function WorldsStation() {
                             ? () => navigate(`/worlds/${journeyId}/station/${nextStation.id}`)
                             : undefined}
                         onCierreSubmit={async (destination: 'next' | 'world') => {
-                            await handleSubmitBlock(true)
+                            const result = await handleSubmitBlock(true)
+                            if (result?.blocked) return
                             if (destination === 'next' && nextStation) {
                                 navigate(`/worlds/${journeyId}/station/${nextStation.id}`)
                             } else {
@@ -565,9 +583,22 @@ function isResponseValid(blockType: string, response: any, content?: any): boole
                 const answersValid = answers.length > 0 && answers.every(a => !!(a?.trim()))
                 if (content?.arbolMultiSelectEnabled) {
                     const route = (content.routes ?? []).find((r: any) => r.id === v.selectedRoute)
-                    if (route?.arbolMultiSelectApplies !== false) {
-                        const selections: string[] = (v.allRouteSelections ?? {})[v.selectedRoute] ?? []
-                        return selections.length > 0 && answersValid
+                    const existingGroupIds = new Set((content.arbolMultiSelectGroups ?? []).map((g: any) => g.id))
+                    // Filtrado igual al que hace el render (activeGroups) — si un grupo
+                    // fue borrado después de que la ruta lo referenciara, no debe seguir
+                    // exigiendo una selección que ya no tiene ninguna UI para responderse.
+                    const groupIds: string[] = (route?.multiSelectGroupIds ?? []).filter((id: string) => existingGroupIds.has(id))
+                    if (groupIds.length > 0) {
+                        const groupSelections: Record<string, string[]> = (v.allRouteSelections ?? {})[v.selectedRoute] ?? {}
+                        const otherTexts: Record<string, string> = (v.allRouteOtherTexts ?? {})[v.selectedRoute] ?? {}
+                        const allGroupsValid = groupIds.every(groupId => {
+                            const selections = groupSelections[groupId] ?? []
+                            if (selections.length === 0) return false
+                            if (selections.includes('Otra — escribo yo') && !otherTexts[groupId]?.trim()) return false
+                            return true
+                        })
+                        if (!allGroupsValid) return false
+                        return answersValid
                     }
                 }
                 return answersValid
@@ -877,7 +908,7 @@ function PuntoPartida({ content, recalls, conditionalRecall }: { content: any; r
                 conditionalRecall.isFallback ? (
                     <div className="rounded-xl px-4 py-3" style={{ border: `1px dashed ${C.border}` }}>
                         <p className="text-sm leading-relaxed italic" style={{ color: C.textMuted }}>
-                            {conditionalRecall.text}
+                            {parseLines(conditionalRecall.text)}
                         </p>
                     </div>
                 ) : (
@@ -886,7 +917,7 @@ function PuntoPartida({ content, recalls, conditionalRecall }: { content: any; r
                         style={{ background: C.surface1, border: `1px solid ${C.green}40` }}
                     >
                         <p className="text-sm leading-relaxed italic" style={{ color: C.text }}>
-                            "{conditionalRecall.text}"
+                            {parseLines(conditionalRecall.text)}
                         </p>
                     </div>
                 )
@@ -1127,7 +1158,7 @@ function Activacion({
                                                             className="text-sm leading-relaxed italic"
                                                             style={{ color: C.textMuted, fontFamily: "'American Typewriter', Georgia, serif" }}
                                                         >
-                                                            {phrase.prefix}
+                                                            {parseBold(phrase.prefix)}
                                                         </p>
                                                     </div>
                                                     <div className="px-4 pb-3" style={{ background: C.surface1 }}>
@@ -1176,7 +1207,7 @@ function Activacion({
                                                 >
                                                     {isChosen ? '✓' : ''}
                                                 </span>
-                                                {phrase}
+                                                {parseBold(phrase)}
                                             </button>
                                         )
                                     })}
@@ -1228,7 +1259,7 @@ function Activacion({
 
     // ── Árbol de decisiones ──
     if (isArbol) {
-        const routes: { id: string; label: string; description: string; questions: (string | { isGuided: true; prefix: string })[]; multiSelectOptions?: string[]; arbolMultiSelectApplies?: boolean }[] = content.routes ?? []
+        const routes: { id: string; label: string; description: string; questions: (string | { isGuided: true; prefix: string })[]; multiSelectGroupIds?: string[] }[] = content.routes ?? []
         const selectedRoute: string | null = value?.selectedRoute ?? null
         // allRouteAnswers guarda respuestas por ruta: { A: [...], B: [...] }
         const allRouteAnswers: Record<string, string[]> = value?.allRouteAnswers ?? {}
@@ -1238,34 +1269,63 @@ function Activacion({
         const skipped: boolean = typeof value === 'object' && value !== null ? !!value.skipped : false
 
         // Selección múltiple opcional antes de abrir las preguntas de la ruta.
+        // Cada ruta puede apuntar a varios grupos (o a ninguno) — se muestran en
+        // secuencia, cada uno con su propia lista, texto e indicación y tope de
+        // cuántas marcar; rutas con el mismo grupo lo comparten.
         const arbolMultiSelectEnabled: boolean = !!content.arbolMultiSelectEnabled
-        const arbolMultiSelectShared: boolean = !!content.arbolMultiSelectShared
-        const arbolMultiSelectPrompt: string = content.arbolMultiSelectPrompt ?? ''
-        const activeRouteOptions: string[] = arbolMultiSelectShared
-            ? (content.arbolMultiSelectOptions ?? [])
-            : (activeRoute?.multiSelectOptions ?? [])
-        // allRouteSelections guarda lo marcado por ruta: { A: [...], B: [...] }
-        const allRouteSelections: Record<string, string[]> = value?.allRouteSelections ?? {}
-        const routeSelections: string[] = allRouteSelections[selectedRoute ?? ''] ?? []
-        // Por defecto la selección múltiple aplica a todas las rutas — el admin puede
-        // desmarcarla ruta por ruta (incluso dejarla activa en una sola).
-        const routeAppliesMultiSelect: boolean = arbolMultiSelectEnabled && activeRoute?.arbolMultiSelectApplies !== false
-        const questionsUnlocked: boolean = !routeAppliesMultiSelect || routeSelections.length > 0
+        type ArbolGroup = { id: string; name: string; prompt: string; options: string[]; max?: number }
+        const arbolMultiSelectGroups: ArbolGroup[] = content.arbolMultiSelectGroups ?? []
+        const activeGroups: ArbolGroup[] = (activeRoute?.multiSelectGroupIds ?? [])
+            .map(id => arbolMultiSelectGroups.find(g => g.id === id))
+            .filter((g): g is ArbolGroup => !!g)
+        // allRouteSelections guarda lo marcado por ruta y grupo: { A: { g1: [...], g2: [...] } }
+        const allRouteSelections: Record<string, Record<string, string[]>> = value?.allRouteSelections ?? {}
+        const routeGroupSelections: Record<string, string[]> = allRouteSelections[selectedRoute ?? ''] ?? {}
+        // Texto libre de "Otra — escribo yo", por ruta y grupo: { A: { g1: '...' } }
+        const allRouteOtherTexts: Record<string, Record<string, string>> = value?.allRouteOtherTexts ?? {}
+        const routeGroupOtherTexts: Record<string, string> = allRouteOtherTexts[selectedRoute ?? ''] ?? {}
+        const routeAppliesMultiSelect: boolean = arbolMultiSelectEnabled && activeGroups.length > 0
+        const questionsUnlocked: boolean = !routeAppliesMultiSelect
+            || activeGroups.every(g => (routeGroupSelections[g.id] ?? []).length > 0)
 
         const selectRoute = (id: string) => {
             if (disabled || skipped) return
-            onChange({ selectedRoute: id, allRouteAnswers, allRouteSelections, hasChangedRoute })
+            onChange({ selectedRoute: id, allRouteAnswers, allRouteSelections, allRouteOtherTexts, hasChangedRoute })
         }
         const setRouteAnswer = (i: number, text: string) => {
             const next = [...routeAnswers]
             while (next.length < (activeRoute?.questions.length ?? 0)) next.push('')
             next[i] = text
-            onChange({ selectedRoute, allRouteAnswers: { ...allRouteAnswers, [selectedRoute!]: next }, allRouteSelections, hasChangedRoute })
+            onChange({ selectedRoute, allRouteAnswers: { ...allRouteAnswers, [selectedRoute!]: next }, allRouteSelections, allRouteOtherTexts, hasChangedRoute })
         }
-        const toggleRouteSelection = (opt: string) => {
+        // Sin límite por defecto. Con máximo 1, elegir otra opción reemplaza la
+        // actual (selección única); con un máximo mayor, una vez alcanzado no
+        // deja marcar más hasta que se destilde alguna.
+        const toggleGroupSelection = (group: ArbolGroup, opt: string) => {
             if (disabled) return
-            const next = routeSelections.includes(opt) ? routeSelections.filter(x => x !== opt) : [...routeSelections, opt]
-            onChange({ selectedRoute, allRouteAnswers, allRouteSelections: { ...allRouteSelections, [selectedRoute!]: next }, hasChangedRoute })
+            const current = routeGroupSelections[group.id] ?? []
+            const isSelected = current.includes(opt)
+            let next: string[]
+            if (isSelected) {
+                next = current.filter(x => x !== opt)
+            } else if (group.max && current.length >= group.max) {
+                if (group.max === 1) next = [opt]
+                else return
+            } else {
+                next = [...current, opt]
+            }
+            onChange({
+                selectedRoute, allRouteAnswers,
+                allRouteSelections: { ...allRouteSelections, [selectedRoute!]: { ...routeGroupSelections, [group.id]: next } },
+                allRouteOtherTexts, hasChangedRoute,
+            })
+        }
+        const setGroupOtherText = (groupId: string, text: string) => {
+            onChange({
+                selectedRoute, allRouteAnswers, allRouteSelections,
+                allRouteOtherTexts: { ...allRouteOtherTexts, [selectedRoute!]: { ...routeGroupOtherTexts, [groupId]: text } },
+                hasChangedRoute,
+            })
         }
 
         return (
@@ -1276,7 +1336,7 @@ function Activacion({
                     <SkipCheckbox
                         checked={skipped}
                         label={content.skipLabel || 'Prefiero no responder esta pregunta'}
-                        onChange={next => onChange({ selectedRoute: next ? null : selectedRoute, allRouteAnswers, allRouteSelections, hasChangedRoute, skipped: next })}
+                        onChange={next => onChange({ selectedRoute: next ? null : selectedRoute, allRouteAnswers, allRouteSelections, allRouteOtherTexts, hasChangedRoute, skipped: next })}
                         disabled={disabled}
                     />
                 )}
@@ -1314,7 +1374,7 @@ function Activacion({
                                         {parseBold(route.label)}
                                     </p>
                                 </button>
-                                {isSelected && !(arbolMultiSelectEnabled && route.arbolMultiSelectApplies !== false) && route.description && (
+                                {isSelected && route.description && (
                                     <div className="mt-1.5 px-1">
                                         {parseText(route.description, 'text-xs leading-relaxed', { color: C.textMuted })}
                                     </div>
@@ -1324,43 +1384,75 @@ function Activacion({
                     })}
                 </div>
 
-                {/* Selección múltiple — antes de abrir las preguntas de la ruta */}
-                {activeRoute && routeAppliesMultiSelect && (
-                    <div className="space-y-3 pt-1">
-                        <div className="h-px" style={{ background: C.border }} />
-                        {arbolMultiSelectPrompt && (
-                            <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>{parseLines(arbolMultiSelectPrompt)}</p>
-                        )}
-                        <div className="space-y-2">
-                            {activeRouteOptions.map((opt, i) => (
-                                <button
-                                    key={i}
-                                    onClick={() => toggleRouteSelection(opt)}
-                                    disabled={disabled}
-                                    className="w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-200"
-                                    style={{
-                                        background: routeSelections.includes(opt) ? `${C.green}20` : C.surface2,
-                                        border: `1px solid ${routeSelections.includes(opt) ? C.green : C.border}`,
-                                        color: routeSelections.includes(opt) ? C.text : C.textMuted,
-                                        opacity: disabled && !routeSelections.includes(opt) ? 0.5 : 1,
-                                    }}
-                                >
-                                    <span
-                                        className="inline-flex w-5 h-5 rounded-full border items-center justify-center text-xs mr-3 shrink-0"
-                                        style={{
-                                            borderColor: routeSelections.includes(opt) ? C.green : C.border,
-                                            background: routeSelections.includes(opt) ? C.green : 'transparent',
-                                            color: '#fff',
-                                        }}
-                                    >
-                                        {routeSelections.includes(opt) ? '✓' : ''}
-                                    </span>
-                                    {opt}
-                                </button>
-                            ))}
+                {/* Selección múltiple — uno o más grupos, antes de abrir las preguntas de la ruta */}
+                {activeRoute && routeAppliesMultiSelect && activeGroups.map(group => {
+                    const groupSelections = routeGroupSelections[group.id] ?? []
+                    const groupOtherText = routeGroupOtherTexts[group.id] ?? ''
+                    return (
+                        <div key={group.id} className="space-y-3 pt-1">
+                            <div className="h-px" style={{ background: C.border }} />
+                            {group.prompt && (
+                                <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>{parseLines(group.prompt)}</p>
+                            )}
+                            {!!group.max && group.max > 1 && (
+                                <p className="text-xs" style={{ color: C.textMuted }}>
+                                    Máximo {group.max} opciones — llevas {groupSelections.length}
+                                </p>
+                            )}
+                            <div className="space-y-2">
+                                {group.options.map((opt, i) => {
+                                    const isOtra = opt === 'Otra — escribo yo'
+                                    const sel = groupSelections.includes(opt)
+                                    const lockedByMax = !sel && !!group.max && group.max > 1 && groupSelections.length >= group.max
+                                    return (
+                                        <div key={i} className="space-y-2">
+                                            <button
+                                                onClick={() => toggleGroupSelection(group, opt)}
+                                                disabled={disabled || lockedByMax}
+                                                className="w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-200"
+                                                style={{
+                                                    background: sel ? `${C.green}20` : C.surface2,
+                                                    border: `1px solid ${sel ? C.green : C.border}`,
+                                                    color: sel ? C.text : C.textMuted,
+                                                    opacity: (disabled && !sel) || lockedByMax ? 0.5 : 1,
+                                                }}
+                                            >
+                                                <span
+                                                    className="inline-flex w-5 h-5 rounded-full border items-center justify-center text-xs mr-3 shrink-0"
+                                                    style={{
+                                                        borderColor: sel ? C.green : C.border,
+                                                        background: sel ? C.green : 'transparent',
+                                                        color: '#fff',
+                                                    }}
+                                                >
+                                                    {sel ? '✓' : ''}
+                                                </span>
+                                                {parseBold(opt)}
+                                            </button>
+                                            {isOtra && sel && (
+                                                <input
+                                                    autoFocus
+                                                    maxLength={20}
+                                                    placeholder="Escribe aquí (máx. 20 caracteres)"
+                                                    value={groupOtherText}
+                                                    onChange={e => setGroupOtherText(group.id, e.target.value)}
+                                                    disabled={disabled}
+                                                    className="w-full rounded-xl px-4 py-2.5 text-sm outline-none placeholder:opacity-30"
+                                                    style={{
+                                                        background: C.surface2,
+                                                        border: `1px solid ${C.green}`,
+                                                        color: C.text,
+                                                        opacity: disabled ? 0.6 : 1,
+                                                    }}
+                                                />
+                                            )}
+                                        </div>
+                                    )
+                                })}
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )
+                })}
 
                 {/* Preguntas de la ruta seleccionada — bloqueadas hasta responder la selección múltiple, si aplica */}
                 {activeRoute && activeRoute.questions.length > 0 && !questionsUnlocked && (
@@ -1377,11 +1469,6 @@ function Activacion({
                 {activeRoute && activeRoute.questions.length > 0 && questionsUnlocked && (
                     <div className="space-y-3 pt-1">
                         <div className="h-px" style={{ background: C.border }} />
-                        {routeAppliesMultiSelect && activeRoute.description && (
-                            <div className="pb-1">
-                                {parseText(activeRoute.description, 'text-xs leading-relaxed', { color: C.textMuted })}
-                            </div>
-                        )}
                         {activeRoute.questions.map((q, i) => {
                             const isUnlocked = i === 0 || routeAnswers.slice(0, i).every(a => !!(a?.trim()))
                             if (!isUnlocked) {
@@ -1399,19 +1486,22 @@ function Activacion({
                             }
                             const isGuidedQuestion = typeof q === 'object' && q !== null && (q as any).isGuided
                             if (isGuidedQuestion) {
-                                const prefix = (q as { prefix: string }).prefix
+                                const { prefix, instruction } = q as { prefix: string; instruction?: string }
                                 return (
-                                    <div
-                                        key={i}
-                                        className="rounded-xl overflow-hidden"
-                                        style={{ border: `1px solid ${(routeAnswers[i] ?? '').trim() ? C.green : C.border}` }}
-                                    >
+                                    <div key={i} className="space-y-1.5">
+                                        {instruction && (
+                                            <p className="text-sm font-medium" style={{ color: C.text }}>{parseBold(instruction)}</p>
+                                        )}
+                                        <div
+                                            className="rounded-xl overflow-hidden"
+                                            style={{ border: `1px solid ${(routeAnswers[i] ?? '').trim() ? C.green : C.border}` }}
+                                        >
                                         <div className="px-4 pt-3 pb-1" style={{ background: C.surface1 }}>
                                             <p
                                                 className="text-sm leading-relaxed italic"
                                                 style={{ color: C.textMuted, fontFamily: "'American Typewriter', Georgia, serif" }}
                                             >
-                                                {prefix}
+                                                {parseBold(prefix)}
                                             </p>
                                         </div>
                                         <div className="px-4 pb-3" style={{ background: C.surface1 }}>
@@ -1429,6 +1519,7 @@ function Activacion({
                                                     opacity: disabled ? 0.6 : 1,
                                                 }}
                                             />
+                                        </div>
                                         </div>
                                     </div>
                                 )
@@ -1492,7 +1583,7 @@ function Activacion({
                                     <div className="space-y-2">
                                         <button
                                             onClick={() => {
-                                                onChange({ selectedRoute: null, allRouteAnswers, allRouteSelections, hasChangedRoute: true })
+                                                onChange({ selectedRoute: null, allRouteAnswers, allRouteSelections, allRouteOtherTexts, hasChangedRoute: true })
                                                 setShowRouteChangeWarning(false)
                                             }}
                                             className="w-full py-3 rounded-xl font-semibold text-sm"
@@ -1660,7 +1751,7 @@ function Activacion({
                                     >
                                         {sel ? '✓' : ''}
                                     </span>
-                                    {opt}
+                                    {parseBold(opt)}
                                 </button>
                                 {isOtra && sel && (
                                     <input
@@ -1758,7 +1849,7 @@ function OpcionesRespuesta({
                         >
                             {isSelected(opt) ? '✓' : ''}
                         </span>
-                        {opt}
+                        {parseBold(opt)}
                     </button>
                 ))}
             </div>
@@ -1841,7 +1932,7 @@ function AccionReal({
                                 >
                                     {sel ? '✓' : ''}
                                 </span>
-                                {opt}
+                                {parseBold(opt)}
                             </button>
                         )
                     })}
@@ -2180,7 +2271,7 @@ function Recompensa({ content }: { content: any }) {
                     className="text-lg leading-relaxed"
                     style={{ fontFamily: "'American Typewriter', Georgia, serif", color: C.text }}
                 >
-                    {content.message}
+                    {parseLines(content.message)}
                 </p>
             )}
             {content.xp && (
@@ -2518,6 +2609,75 @@ function CelebrationScreen({
                         {nextStation ? '← Volver al mundo' : 'Continuar mi viaje →'}
                     </button>
                 </div>
+            </div>
+        </div>
+    )
+}
+
+// Se muestra cuando la última respuesta de la estación ya quedó guardada pero
+// el límite de ritmo (2 estaciones/día o 1 mundo nuevo cada 7 días) impide
+// darla por completada todavía — nada se pierde, solo hay que esperar.
+function PacingBlockedScreen({
+    reason,
+    availableAt,
+    onContinue,
+}: {
+    reason: 'daily_limit' | 'weekly_world_limit'
+    availableAt: string
+    onContinue: () => void
+}) {
+    const isDaily = reason === 'daily_limit'
+    const dateLabel = new Date(availableAt).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })
+
+    return (
+        <div
+            className="min-h-screen flex flex-col items-center justify-center px-6 text-center"
+            style={{ background: C.bg, color: C.text, fontFamily: 'Montserrat, sans-serif' }}
+        >
+            <div className="space-y-6 max-w-sm mx-auto w-full">
+                <div
+                    className="flex items-center justify-center w-16 h-16 rounded-full mx-auto"
+                    style={{ background: `${C.green}20`, border: `1.5px solid ${C.green}` }}
+                >
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="2">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 7v5l3 3" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                </div>
+
+                <div>
+                    <h1
+                        className="text-2xl font-bold leading-tight"
+                        style={{ fontFamily: "'American Typewriter', Georgia, serif" }}
+                    >
+                        {isDaily ? 'Ya avanzaste bastante por hoy' : 'Este mundo se abre pronto'}
+                    </h1>
+                    <p className="text-sm mt-3 leading-relaxed" style={{ color: C.textSec }}>
+                        {isDaily
+                            ? 'Ya completaste tus 2 estaciones de hoy. Tu respuesta quedó guardada — vuelve mañana para seguir.'
+                            : 'Para darte tiempo de asentar lo que ya viviste, el siguiente mundo se desbloquea el momento justo, no antes.'}
+                    </p>
+                </div>
+
+                <div
+                    className="rounded-2xl p-5"
+                    style={{ background: C.surface1, border: `1px solid ${C.border}` }}
+                >
+                    <p className="text-[10px] tracking-[0.2em] uppercase font-semibold" style={{ color: C.green }}>
+                        {isDaily ? 'Vuelves a poder avanzar' : 'Se desbloquea el'}
+                    </p>
+                    <p className="text-lg font-bold mt-1" style={{ fontFamily: "'American Typewriter', Georgia, serif" }}>
+                        {isDaily ? 'Mañana' : dateLabel}
+                    </p>
+                </div>
+
+                <button
+                    onClick={onContinue}
+                    className="w-full py-3.5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90"
+                    style={{ background: C.red, color: '#fff' }}
+                >
+                    Volver al mundo
+                </button>
             </div>
         </div>
     )

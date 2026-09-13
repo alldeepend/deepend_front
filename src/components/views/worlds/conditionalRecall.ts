@@ -2,17 +2,22 @@ import type { GateStatus, JourneyDetailsResponse } from '../../../types/journey'
 import { resolveRecallRef } from './recallUtils'
 
 // Feature nueva e independiente del sistema de marcadores {N} (recallUtils/
-// parseTextWithRecalls) — no lo modifica, solo reutiliza resolveRecallRef
-// para probar cada candidato de la cadena en orden.
+// parseTextWithRecalls) — no lo modifica.
+//
+// El admin elige N condiciones (candidates[0..N-1]) y escribe un texto fijo
+// para cada una de las 2^N combinaciones posibles de "tiene respuesta / no
+// tiene respuesta" de esas N condiciones. La combinación se guarda indexada
+// por bitmask: el bit i vale 1 si candidates[i] tiene respuesta. El mask 0
+// (ninguna condición cumplida) es el equivalente al fallback de antes.
 
 export type ConditionalRecall = {
     candidates: string[]
-    fallbackText: string
+    combinations: string[] // longitud 2^candidates.length, indexado por bitmask
 }
 
 export type ResolvedConditionalRecall = {
     text: string
-    isFallback: boolean
+    isFallback: boolean // true cuando no se cumplió ninguna condición (mask 0)
 }
 
 export function resolveConditionalRecall(
@@ -20,11 +25,14 @@ export function resolveConditionalRecall(
     data: JourneyDetailsResponse | null,
     gateStatus: GateStatus | null
 ): ResolvedConditionalRecall | null {
-    if (!config) return null
-    for (const ref of config.candidates ?? []) {
-        const answer = resolveRecallRef(ref, data, gateStatus)
-        if (answer) return { text: answer, isFallback: false }
-    }
-    if (config.fallbackText?.trim()) return { text: config.fallbackText, isFallback: true }
-    return null
+    if (!config || !config.candidates?.length) return null
+
+    let mask = 0
+    config.candidates.forEach((ref, i) => {
+        if (ref && resolveRecallRef(ref, data, gateStatus)) mask |= (1 << i)
+    })
+
+    const text = config.combinations?.[mask]
+    if (!text?.trim()) return null
+    return { text, isFallback: mask === 0 }
 }

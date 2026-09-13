@@ -134,6 +134,11 @@ export interface BlockInteractResult {
     newStreak?: number;
     badgeEarned?: string | null;
     earnedBadges?: string[];
+    // Presente cuando la estación quedó lista para completarse pero el límite
+    // de ritmo (2 estaciones/día o 1 mundo nuevo cada 7 días) lo impidió —
+    // las respuestas ya quedaron guardadas, solo falta que se cumpla el plazo.
+    blocked?: 'daily_limit' | 'weekly_world_limit';
+    availableAt?: string;
 }
 
 export type GateEvidenceType = 'texto' | 'audio' | 'foto' | 'check';
