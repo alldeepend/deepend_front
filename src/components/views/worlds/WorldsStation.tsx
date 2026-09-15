@@ -907,18 +907,14 @@ function PuntoPartida({ content, recalls, conditionalRecall }: { content: any; r
             {conditionalRecall && (
                 conditionalRecall.isFallback ? (
                     <div className="rounded-xl px-4 py-3" style={{ border: `1px dashed ${C.border}` }}>
-                        <p className="text-sm leading-relaxed italic" style={{ color: C.textMuted }}>
-                            {parseLines(conditionalRecall.text)}
-                        </p>
+                        {parseTextWithRecalls(conditionalRecall.text, conditionalRecall.recalls, 'text-sm leading-relaxed italic', { color: C.textMuted })}
                     </div>
                 ) : (
                     <div
                         className="rounded-xl px-4 py-3"
                         style={{ background: C.surface1, border: `1px solid ${C.green}40` }}
                     >
-                        <p className="text-sm leading-relaxed italic" style={{ color: C.text }}>
-                            {parseLines(conditionalRecall.text)}
-                        </p>
+                        {parseTextWithRecalls(conditionalRecall.text, conditionalRecall.recalls, 'text-sm leading-relaxed italic', { color: C.text })}
                     </div>
                 )
             )}
