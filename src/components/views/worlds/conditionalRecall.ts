@@ -18,6 +18,7 @@ export type ConditionalRecall = {
 export type ResolvedConditionalRecall = {
     text: string
     isFallback: boolean // true cuando no se cumplió ninguna condición (mask 0)
+    recalls: (string | null)[]
 }
 
 export function resolveConditionalRecall(
@@ -27,12 +28,13 @@ export function resolveConditionalRecall(
 ): ResolvedConditionalRecall | null {
     if (!config || !config.candidates?.length) return null
 
+    const recalls: (string | null)[] = config.candidates.map(ref =>
+        ref ? resolveRecallRef(ref, data, gateStatus) : null
+    )
     let mask = 0
-    config.candidates.forEach((ref, i) => {
-        if (ref && resolveRecallRef(ref, data, gateStatus)) mask |= (1 << i)
-    })
+    recalls.forEach((answer, i) => { if (answer) mask |= (1 << i) })
 
     const text = config.combinations?.[mask]
     if (!text?.trim()) return null
-    return { text, isFallback: mask === 0 }
+    return { text, isFallback: mask === 0, recalls }
 }
