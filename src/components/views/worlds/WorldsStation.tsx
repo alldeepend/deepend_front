@@ -579,29 +579,31 @@ function isResponseValid(blockType: string, response: any, content?: any): boole
             const v = response ?? {}
             if (v.skipped) return true
             if (v.selectedRoute) {
+                // Una sola lista de pasos por ruta (preguntas/frases guiadas y
+                // grupos de selección, en cualquier orden) — se recorre entera y
+                // cada tipo se valida con su propia regla. Los pasos de pregunta
+                // siguen leyendo allRouteAnswers por posición (solo entre ellos,
+                // igual que siempre); un grupo borrado después de asignarse ya no
+                // exige selección (mismo criterio que el render).
+                const route = (content?.routes ?? []).find((r: any) => r.id === v.selectedRoute)
+                const steps: any[] = route?.steps ?? []
+                const existingGroupIds = new Set((content?.arbolMultiSelectGroups ?? []).map((g: any) => g.id))
                 const answers: string[] = (v.allRouteAnswers ?? {})[v.selectedRoute] ?? []
-                const answersValid = answers.length > 0 && answers.every(a => !!(a?.trim()))
-                if (content?.arbolMultiSelectEnabled) {
-                    const route = (content.routes ?? []).find((r: any) => r.id === v.selectedRoute)
-                    const existingGroupIds = new Set((content.arbolMultiSelectGroups ?? []).map((g: any) => g.id))
-                    // Filtrado igual al que hace el render (activeGroups) — si un grupo
-                    // fue borrado después de que la ruta lo referenciara, no debe seguir
-                    // exigiendo una selección que ya no tiene ninguna UI para responderse.
-                    const groupIds: string[] = (route?.multiSelectGroupIds ?? []).filter((id: string) => existingGroupIds.has(id))
-                    if (groupIds.length > 0) {
-                        const groupSelections: Record<string, string[]> = (v.allRouteSelections ?? {})[v.selectedRoute] ?? {}
-                        const otherTexts: Record<string, string> = (v.allRouteOtherTexts ?? {})[v.selectedRoute] ?? {}
-                        const allGroupsValid = groupIds.every(groupId => {
-                            const selections = groupSelections[groupId] ?? []
-                            if (selections.length === 0) return false
-                            if (selections.includes('Otra — escribo yo') && !otherTexts[groupId]?.trim()) return false
-                            return true
-                        })
-                        if (!allGroupsValid) return false
-                        return answersValid
+                const groupSelections: Record<string, string[]> = (v.allRouteSelections ?? {})[v.selectedRoute] ?? {}
+                const otherTexts: Record<string, string> = (v.allRouteOtherTexts ?? {})[v.selectedRoute] ?? {}
+
+                let qIndex = -1
+                for (const step of steps) {
+                    if (step.kind === 'question' || step.kind === 'guided') {
+                        qIndex++
+                        if (!(answers[qIndex]?.trim())) return false
+                    } else if (step.kind === 'group' && content?.arbolMultiSelectEnabled && existingGroupIds.has(step.groupId)) {
+                        const selections = groupSelections[step.groupId] ?? []
+                        if (selections.length === 0) return false
+                        if (selections.includes('Otra — escribo yo') && !otherTexts[step.groupId]?.trim()) return false
                     }
                 }
-                return answersValid
+                return true
             }
             const mode = v.mode ?? 'text'
             if (mode === 'reescritura_guiada') {
@@ -1255,43 +1257,72 @@ function Activacion({
 
     // ── Árbol de decisiones ──
     if (isArbol) {
-        const routes: { id: string; label: string; description: string; questions: (string | { isGuided: true; prefix: string })[]; multiSelectGroupIds?: string[] }[] = content.routes ?? []
+        type ArbolStep =
+            | { kind: 'question'; text: string }
+            | { kind: 'guided'; prefix: string; instruction?: string }
+            | { kind: 'group'; groupId: string }
+        const routes: { id: string; label: string; description: string; steps?: ArbolStep[] }[] = content.routes ?? []
         const selectedRoute: string | null = value?.selectedRoute ?? null
-        // allRouteAnswers guarda respuestas por ruta: { A: [...], B: [...] }
+        // allRouteAnswers guarda respuestas por ruta: { A: [...], B: [...] } —
+        // indexado por posición entre los pasos de tipo pregunta/guiada de esa
+        // ruta únicamente (los pasos de selección no ocupan posición ahí).
         const allRouteAnswers: Record<string, string[]> = value?.allRouteAnswers ?? {}
         const routeAnswers: string[] = allRouteAnswers[selectedRoute ?? ''] ?? []
         const activeRoute = routes.find(r => r.id === selectedRoute) ?? null
         const hasChangedRoute: boolean = value?.hasChangedRoute ?? false
         const skipped: boolean = typeof value === 'object' && value !== null ? !!value.skipped : false
 
-        // Selección múltiple opcional antes de abrir las preguntas de la ruta.
-        // Cada ruta puede apuntar a varios grupos (o a ninguno) — se muestran en
-        // secuencia, cada uno con su propia lista, texto e indicación y tope de
-        // cuántas marcar; rutas con el mismo grupo lo comparten.
-        const arbolMultiSelectEnabled: boolean = !!content.arbolMultiSelectEnabled
+        // Una sola lista de pasos por ruta: preguntas, frases guiadas y grupos
+        // de selección múltiple, en el orden exacto que el admin definió — ya
+        // no hay un bloque fijo de "selección primero" o "preguntas primero".
         type ArbolGroup = { id: string; name: string; prompt: string; options: string[]; max?: number }
         const arbolMultiSelectGroups: ArbolGroup[] = content.arbolMultiSelectGroups ?? []
-        const activeGroups: ArbolGroup[] = (activeRoute?.multiSelectGroupIds ?? [])
-            .map(id => arbolMultiSelectGroups.find(g => g.id === id))
-            .filter((g): g is ArbolGroup => !!g)
+        // El toggle "Habilitar selección múltiple" del admin es un apagado
+        // rápido: si está desmarcado, los pasos de grupo que la ruta ya tenga
+        // asignados se ignoran por completo (no se muestran ni bloquean nada),
+        // sin necesidad de borrarlos uno por uno de cada ruta.
+        const allSteps: ArbolStep[] = activeRoute?.steps ?? []
+        const steps: ArbolStep[] = content.arbolMultiSelectEnabled ? allSteps : allSteps.filter(s => s.kind !== 'group')
+        // Índice de cada paso dentro de SOLO los pasos de pregunta/guiada (-1
+        // para los de grupo) — es la posición que usa allRouteAnswers.
+        const stepQuestionIndex: number[] = (() => {
+            let qi = -1
+            return steps.map(s => (s.kind === 'group' ? -1 : ++qi))
+        })()
         // allRouteSelections guarda lo marcado por ruta y grupo: { A: { g1: [...], g2: [...] } }
         const allRouteSelections: Record<string, Record<string, string[]>> = value?.allRouteSelections ?? {}
         const routeGroupSelections: Record<string, string[]> = allRouteSelections[selectedRoute ?? ''] ?? {}
         // Texto libre de "Otra — escribo yo", por ruta y grupo: { A: { g1: '...' } }
         const allRouteOtherTexts: Record<string, Record<string, string>> = value?.allRouteOtherTexts ?? {}
         const routeGroupOtherTexts: Record<string, string> = allRouteOtherTexts[selectedRoute ?? ''] ?? {}
-        const routeAppliesMultiSelect: boolean = arbolMultiSelectEnabled && activeGroups.length > 0
-        const questionsUnlocked: boolean = !routeAppliesMultiSelect
-            || activeGroups.every(g => (routeGroupSelections[g.id] ?? []).length > 0)
+        // Un paso de grupo cuenta como satisfecho si ya no existe (fue borrado
+        // en el admin después de asignarse) — no debe bloquear para siempre.
+        const isStepSatisfied = (i: number): boolean => {
+            const step = steps[i]
+            if (step.kind === 'group') {
+                const group = arbolMultiSelectGroups.find(g => g.id === step.groupId)
+                if (!group) return true
+                return (routeGroupSelections[step.groupId] ?? []).length > 0
+            }
+            return !!(routeAnswers[stepQuestionIndex[i]]?.trim())
+        }
+        // Un paso está desbloqueado si todos los anteriores en la secuencia ya
+        // están satisfechos — generaliza tanto el desbloqueo pregunta-a-pregunta
+        // de siempre como el de "grupo bloquea preguntas", ahora aplicado paso a
+        // paso sin importar el tipo ni el orden en que el admin los puso.
+        const isStepUnlocked = (i: number): boolean => {
+            for (let j = 0; j < i; j++) { if (!isStepSatisfied(j)) return false }
+            return true
+        }
 
         const selectRoute = (id: string) => {
             if (disabled || skipped) return
             onChange({ selectedRoute: id, allRouteAnswers, allRouteSelections, allRouteOtherTexts, hasChangedRoute })
         }
-        const setRouteAnswer = (i: number, text: string) => {
+        const setRouteAnswer = (qi: number, text: string) => {
             const next = [...routeAnswers]
-            while (next.length < (activeRoute?.questions.length ?? 0)) next.push('')
-            next[i] = text
+            while (next.length <= qi) next.push('')
+            next[qi] = text
             onChange({ selectedRoute, allRouteAnswers: { ...allRouteAnswers, [selectedRoute!]: next }, allRouteSelections, allRouteOtherTexts, hasChangedRoute })
         }
         // Sin límite por defecto. Con máximo 1, elegir otra opción reemplaza la
@@ -1380,94 +1411,13 @@ function Activacion({
                     })}
                 </div>
 
-                {/* Selección múltiple — uno o más grupos, antes de abrir las preguntas de la ruta */}
-                {activeRoute && routeAppliesMultiSelect && activeGroups.map(group => {
-                    const groupSelections = routeGroupSelections[group.id] ?? []
-                    const groupOtherText = routeGroupOtherTexts[group.id] ?? ''
-                    return (
-                        <div key={group.id} className="space-y-3 pt-1">
-                            <div className="h-px" style={{ background: C.border }} />
-                            {group.prompt && (
-                                <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>{parseLines(group.prompt)}</p>
-                            )}
-                            {!!group.max && group.max > 1 && (
-                                <p className="text-xs" style={{ color: C.textMuted }}>
-                                    Máximo {group.max} opciones — llevas {groupSelections.length}
-                                </p>
-                            )}
-                            <div className="space-y-2">
-                                {group.options.map((opt, i) => {
-                                    const isOtra = opt === 'Otra — escribo yo'
-                                    const sel = groupSelections.includes(opt)
-                                    const lockedByMax = !sel && !!group.max && group.max > 1 && groupSelections.length >= group.max
-                                    return (
-                                        <div key={i} className="space-y-2">
-                                            <button
-                                                onClick={() => toggleGroupSelection(group, opt)}
-                                                disabled={disabled || lockedByMax}
-                                                className="w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-200"
-                                                style={{
-                                                    background: sel ? `${C.green}20` : C.surface2,
-                                                    border: `1px solid ${sel ? C.green : C.border}`,
-                                                    color: sel ? C.text : C.textMuted,
-                                                    opacity: (disabled && !sel) || lockedByMax ? 0.5 : 1,
-                                                }}
-                                            >
-                                                <span
-                                                    className="inline-flex w-5 h-5 rounded-full border items-center justify-center text-xs mr-3 shrink-0"
-                                                    style={{
-                                                        borderColor: sel ? C.green : C.border,
-                                                        background: sel ? C.green : 'transparent',
-                                                        color: '#fff',
-                                                    }}
-                                                >
-                                                    {sel ? '✓' : ''}
-                                                </span>
-                                                {parseBold(opt)}
-                                            </button>
-                                            {isOtra && sel && (
-                                                <input
-                                                    autoFocus
-                                                    maxLength={20}
-                                                    placeholder="Escribe aquí (máx. 20 caracteres)"
-                                                    value={groupOtherText}
-                                                    onChange={e => setGroupOtherText(group.id, e.target.value)}
-                                                    disabled={disabled}
-                                                    className="w-full rounded-xl px-4 py-2.5 text-sm outline-none placeholder:opacity-30"
-                                                    style={{
-                                                        background: C.surface2,
-                                                        border: `1px solid ${C.green}`,
-                                                        color: C.text,
-                                                        opacity: disabled ? 0.6 : 1,
-                                                    }}
-                                                />
-                                            )}
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        </div>
-                    )
-                })}
-
-                {/* Preguntas de la ruta seleccionada — bloqueadas hasta responder la selección múltiple, si aplica */}
-                {activeRoute && activeRoute.questions.length > 0 && !questionsUnlocked && (
-                    <div
-                        className="rounded-xl p-4 flex flex-col items-center gap-2 text-center"
-                        style={{ background: C.surface1, border: `1px dashed ${C.border}` }}
-                    >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: C.label }}>
-                            <rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" />
-                        </svg>
-                        <p className="text-xs" style={{ color: C.label }}>Elige al menos una opción para ver las preguntas de esta ruta.</p>
-                    </div>
-                )}
-                {activeRoute && activeRoute.questions.length > 0 && questionsUnlocked && (
+                {/* Pasos de la ruta seleccionada — preguntas y grupos de selección, en
+                    el orden que definió el admin, desbloqueados uno a uno en secuencia */}
+                {activeRoute && steps.length > 0 && (
                     <div className="space-y-3 pt-1">
                         <div className="h-px" style={{ background: C.border }} />
-                        {activeRoute.questions.map((q, i) => {
-                            const isUnlocked = i === 0 || routeAnswers.slice(0, i).every(a => !!(a?.trim()))
-                            if (!isUnlocked) {
+                        {steps.map((step, i) => {
+                            if (!isStepUnlocked(i)) {
                                 return (
                                     <div
                                         key={i}
@@ -1475,14 +1425,85 @@ function Activacion({
                                         style={{ background: C.surface1, border: `1px dashed ${C.border}`, opacity: 0.45 }}
                                     >
                                         <p className="text-xs" style={{ color: C.textMuted }}>
-                                            Responde la pregunta {i} para desbloquear
+                                            Completa el paso anterior para ver esto.
                                         </p>
                                     </div>
                                 )
                             }
-                            const isGuidedQuestion = typeof q === 'object' && q !== null && (q as any).isGuided
-                            if (isGuidedQuestion) {
-                                const { prefix, instruction } = q as { prefix: string; instruction?: string }
+
+                            if (step.kind === 'group') {
+                                const group = arbolMultiSelectGroups.find(g => g.id === step.groupId)
+                                if (!group) return null
+                                const groupSelections = routeGroupSelections[group.id] ?? []
+                                const groupOtherText = routeGroupOtherTexts[group.id] ?? ''
+                                return (
+                                    <div key={i} className="space-y-3">
+                                        {group.prompt && (
+                                            <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>{parseLines(group.prompt)}</p>
+                                        )}
+                                        {!!group.max && group.max > 1 && (
+                                            <p className="text-xs" style={{ color: C.textMuted }}>
+                                                Máximo {group.max} opciones — llevas {groupSelections.length}
+                                            </p>
+                                        )}
+                                        <div className="space-y-2">
+                                            {group.options.map((opt, oi) => {
+                                                const isOtra = opt === 'Otra — escribo yo'
+                                                const sel = groupSelections.includes(opt)
+                                                const lockedByMax = !sel && !!group.max && group.max > 1 && groupSelections.length >= group.max
+                                                return (
+                                                    <div key={oi} className="space-y-2">
+                                                        <button
+                                                            onClick={() => toggleGroupSelection(group, opt)}
+                                                            disabled={disabled || lockedByMax}
+                                                            className="w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-200"
+                                                            style={{
+                                                                background: sel ? `${C.green}20` : C.surface2,
+                                                                border: `1px solid ${sel ? C.green : C.border}`,
+                                                                color: sel ? C.text : C.textMuted,
+                                                                opacity: (disabled && !sel) || lockedByMax ? 0.5 : 1,
+                                                            }}
+                                                        >
+                                                            <span
+                                                                className="inline-flex w-5 h-5 rounded-full border items-center justify-center text-xs mr-3 shrink-0"
+                                                                style={{
+                                                                    borderColor: sel ? C.green : C.border,
+                                                                    background: sel ? C.green : 'transparent',
+                                                                    color: '#fff',
+                                                                }}
+                                                            >
+                                                                {sel ? '✓' : ''}
+                                                            </span>
+                                                            {parseBold(opt)}
+                                                        </button>
+                                                        {isOtra && sel && (
+                                                            <input
+                                                                autoFocus
+                                                                maxLength={20}
+                                                                placeholder="Escribe aquí (máx. 20 caracteres)"
+                                                                value={groupOtherText}
+                                                                onChange={e => setGroupOtherText(group.id, e.target.value)}
+                                                                disabled={disabled}
+                                                                className="w-full rounded-xl px-4 py-2.5 text-sm outline-none placeholder:opacity-30"
+                                                                style={{
+                                                                    background: C.surface2,
+                                                                    border: `1px solid ${C.green}`,
+                                                                    color: C.text,
+                                                                    opacity: disabled ? 0.6 : 1,
+                                                                }}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+                                )
+                            }
+
+                            const qi = stepQuestionIndex[i]
+                            if (step.kind === 'guided') {
+                                const { prefix, instruction } = step
                                 return (
                                     <div key={i} className="space-y-1.5">
                                         {instruction && (
@@ -1490,7 +1511,7 @@ function Activacion({
                                         )}
                                         <div
                                             className="rounded-xl overflow-hidden"
-                                            style={{ border: `1px solid ${(routeAnswers[i] ?? '').trim() ? C.green : C.border}` }}
+                                            style={{ border: `1px solid ${(routeAnswers[qi] ?? '').trim() ? C.green : C.border}` }}
                                         >
                                         <div className="px-4 pt-3 pb-1" style={{ background: C.surface1 }}>
                                             <p
@@ -1504,13 +1525,13 @@ function Activacion({
                                             <input
                                                 type="text"
                                                 placeholder="completa aquí..."
-                                                value={routeAnswers[i] ?? ''}
-                                                onChange={e => setRouteAnswer(i, e.target.value)}
+                                                value={routeAnswers[qi] ?? ''}
+                                                onChange={e => setRouteAnswer(qi, e.target.value)}
                                                 disabled={disabled}
                                                 className="w-full rounded-lg px-3 py-2.5 text-sm outline-none placeholder:opacity-30"
                                                 style={{
                                                     background: C.surface2,
-                                                    border: `1px solid ${(routeAnswers[i] ?? '').trim() ? `${C.green}60` : C.border}`,
+                                                    border: `1px solid ${(routeAnswers[qi] ?? '').trim() ? `${C.green}60` : C.border}`,
                                                     color: C.text,
                                                     opacity: disabled ? 0.6 : 1,
                                                 }}
@@ -1520,15 +1541,16 @@ function Activacion({
                                     </div>
                                 )
                             }
+
                             return (
                                 <div key={i} className="space-y-1.5">
-                                    <p className="text-sm font-medium" style={{ color: C.text }}>{parseLines(q as string)}</p>
+                                    <p className="text-sm font-medium" style={{ color: C.text }}>{parseLines(step.text)}</p>
                                     <textarea
                                         rows={3}
                                         maxLength={400}
                                         placeholder="Escribe tu respuesta..."
-                                        value={routeAnswers[i] ?? ''}
-                                        onChange={e => setRouteAnswer(i, e.target.value)}
+                                        value={routeAnswers[qi] ?? ''}
+                                        onChange={e => setRouteAnswer(qi, e.target.value)}
                                         onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px`; }}
                                         disabled={disabled}
                                         className="w-full rounded-xl p-3 text-sm resize-none outline-none"
@@ -1539,8 +1561,8 @@ function Activacion({
                                             opacity: disabled ? 0.6 : 1,
                                         }}
                                     />
-                                    <p className="text-xs text-right mt-1" style={{ color: (routeAnswers[i] ?? '').length > 360 ? C.red : C.textMuted }}>
-                                        {(routeAnswers[i] ?? '').length}/400
+                                    <p className="text-xs text-right mt-1" style={{ color: (routeAnswers[qi] ?? '').length > 360 ? C.red : C.textMuted }}>
+                                        {(routeAnswers[qi] ?? '').length}/400
                                     </p>
                                 </div>
                             )
