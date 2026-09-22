@@ -38,6 +38,7 @@ import PrivacyPolicy from './components/views/PrivacyPolicy';
 import Creditos from './components/views/Creditos';
 import { useEffect } from 'react';
 import { useAuth } from './store/useAuth';
+import ViewOnlyBanner from './components/shared/ViewOnlyBanner';
 
 function App() {
     const host = window.location.hostname;
@@ -56,6 +57,7 @@ function App() {
 
     return (
         <>
+            <ViewOnlyBanner />
             <MaintenanceGate>
             <Routes>
                 <Route path="/" element={
