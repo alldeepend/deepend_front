@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Edit2, Save, X, User as UserIcon, Calendar, MapPin, Phone, RefreshCw, Trash2, AlertTriangle, Camera, Loader2, Plus, Heart, Sparkles, Zap, Brain, Award, Fingerprint } from 'lucide-react';
+import { ArrowLeft, Edit2, Save, X, User as UserIcon, Calendar, MapPin, Phone, RefreshCw, Trash2, AlertTriangle, Camera, Loader2, Plus, Heart, Sparkles, Zap, Brain, Award, Fingerprint, MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { HomeSidebar } from '../home/HomeSidebar';
 import { useAuth } from '../../store/useAuth';
 import Header from '../../components/shared/Header';
 import { C } from '../../styles/colors';
 import { journeyApi } from '../../services/journey';
+import FeedbackModal from '../modals/FeedbackModal';
 import { earnedBadgesFromAreas, totalXpFromAreas, badgeColorFor, type SidebarBadge } from './worlds/WorldsRightSidebar';
 import { useArchetypeInfo } from '../../hooks/useArchetypeInfo';
 
@@ -42,6 +43,7 @@ export default function Perfil() {
     const [saving, setSaving] = useState(false);
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
+    const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
     // XP e insignias — antes solo visibles en el sidebar derecho de escritorio
     // (Dashboard/Mundos); en celular ese sidebar está oculto, así que se
@@ -555,11 +557,33 @@ export default function Perfil() {
                                         </button>
                                     </div>
                                 </div>
+
+                                <div className="rounded-2xl p-6 mt-4" style={{ background: C.surface1, borderWidth: 1, borderStyle: 'solid', borderColor: C.border }}>
+                                    <div className="flex flex-col md:flex-row items-center gap-6">
+                                        <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm shrink-0" style={{ background: C.surface2, color: C.green }}>
+                                            <MessageCircle size={24} />
+                                        </div>
+                                        <div className="flex-1 text-center md:text-left">
+                                            <h5 className="font-bold mb-1" style={{ color: C.text }}>¿Algo no funcionó, o se te ocurre algo?</h5>
+                                            <p className="text-xs leading-relaxed" style={{ color: C.textMuted }}>
+                                                Cuéntanos si encontraste un error o tienes una sugerencia — lo revisamos directamente.
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={() => setShowFeedbackModal(true)}
+                                            className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all shadow-sm active:scale-95 whitespace-nowrap" style={{ background: C.surface2, borderWidth: 1, borderStyle: 'solid', borderColor: C.border, color: C.text }}
+                                        >
+                                            <MessageCircle size={16} />
+                                            Reportar o sugerir
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}
                 </div>
             </main>
+            {showFeedbackModal && <FeedbackModal onClose={() => setShowFeedbackModal(false)} />}
         </div>
     );
 }

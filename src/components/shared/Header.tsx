@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../store/useAuth';
-import { LogOut, Bell, Check, X, Loader2, Menu, LayoutDashboard, Compass, Flag, BookOpen, User, Globe, Newspaper, CalendarDays, Mic } from 'lucide-react';
+import { LogOut, Bell, Check, X, Loader2, Menu, LayoutDashboard, Compass, Flag, BookOpen, User, Globe, Newspaper, CalendarDays, Mic, MessageCircle } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { C } from '../../styles/colors';
 import { useLegacyChallengesAccess } from '../../hooks/useLegacyChallengesAccess';
 import NotificationBell from './NotificationBell';
+import FeedbackModal from '../modals/FeedbackModal';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -32,6 +33,8 @@ export default function Header({ dark = true }: { dark?: boolean }) {
   // Mobile Menu State
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
   /* const fetchNotifications = async () => {
     try {
@@ -424,6 +427,19 @@ export default function Header({ dark = true }: { dark?: boolean }) {
                   <li>
                     <button
                       onClick={() => {
+                        setShowFeedbackModal(true);
+                        setShowMobileMenu(false);
+                      }}
+                      className="flex items-center gap-3 w-full text-left px-4 py-3 transition-colors"
+                      style={{ color: dark ? muted : '#44403c' }}
+                    >
+                      <MessageCircle size={20} />
+                      <span className="font-medium">Reportar un problema</span>
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => {
                         logout();
                         navigate('/');
                         setShowMobileMenu(false);
@@ -442,6 +458,7 @@ export default function Header({ dark = true }: { dark?: boolean }) {
             </div>
         </div>
       </nav>
+      {showFeedbackModal && <FeedbackModal onClose={() => setShowFeedbackModal(false)} />}
     </header>
   )
 }
