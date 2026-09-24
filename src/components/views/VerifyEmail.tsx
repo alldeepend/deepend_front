@@ -77,6 +77,24 @@ const VerifyEmail = () => {
                 body: JSON.stringify({ email })
             });
             const data = await response.json();
+
+            if (!response.ok && data.code === 'ALREADY_VERIFIED') {
+                // El navegador quedó con un token/usuario viejo guardado de antes de
+                // verificar (ej. se verificó desde el correo en otro dispositivo, o el
+                // envío falló la primera vez y se verificó después) — ese token trae
+                // emailVerified:false grabado y no se actualiza solo. Sin limpiarlo,
+                // la persona queda atrapada acá para siempre: nunca puede volver a
+                // pedir el correo (ya está verificado) ni entrar (el token viejo la
+                // sigue mandando a esta pantalla). Se limpia la sesión vieja y se
+                // manda a iniciar sesión de nuevo, que sí trae el estado real.
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                setUser(null);
+                setResendMessage('Tu correo ya está verificado. Vuelve a iniciar sesión para continuar.');
+                setTimeout(() => navigate('/login'), 2000);
+                return;
+            }
+
             setResendMessage(response.ok ? (data.message || 'Correo reenviado.') : (data.error || 'No se pudo reenviar el correo.'));
         } catch (err) {
             setResendMessage('Error de conexión. Intenta de nuevo.');
