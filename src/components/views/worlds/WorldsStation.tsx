@@ -120,7 +120,7 @@ export default function WorldsStation() {
     // Recordatorios nuevos — se resuelven aquí y se insertan inline donde el
     // admin puso el marcador {N} dentro del campo de texto del bloque.
     const recalls: (string | null)[] = (currentBlock?.content?.recallRefs ?? [])
-        .map((ref: string) => resolveRecallRef(ref, data ?? null, gateStatus))
+        .map((ref: string) => resolveRecallRef(ref, data ?? null, gateStatus, currentBlock?.content?.arbolRouteRecallSteps?.[ref]))
     // Recuerdo condicional — feature nueva y separada, solo para Punto de Partida:
     // prueba una cadena de candidatos en orden y cae a un texto de respaldo si
     // ninguno tiene respuesta.
@@ -1261,6 +1261,7 @@ function Activacion({
             | { kind: 'question'; text: string }
             | { kind: 'guided'; prefix: string; instruction?: string }
             | { kind: 'group'; groupId: string }
+            | { kind: 'text'; text: string }
         const routes: { id: string; label: string; description: string; steps?: ArbolStep[] }[] = content.routes ?? []
         const selectedRoute: string | null = value?.selectedRoute ?? null
         // allRouteAnswers guarda respuestas por ruta: { A: [...], B: [...] } —
@@ -1284,10 +1285,10 @@ function Activacion({
         const allSteps: ArbolStep[] = activeRoute?.steps ?? []
         const steps: ArbolStep[] = content.arbolMultiSelectEnabled ? allSteps : allSteps.filter(s => s.kind !== 'group')
         // Índice de cada paso dentro de SOLO los pasos de pregunta/guiada (-1
-        // para los de grupo) — es la posición que usa allRouteAnswers.
+        // para los de grupo o de texto) — es la posición que usa allRouteAnswers.
         const stepQuestionIndex: number[] = (() => {
             let qi = -1
-            return steps.map(s => (s.kind === 'group' ? -1 : ++qi))
+            return steps.map(s => (s.kind === 'group' || s.kind === 'text' ? -1 : ++qi))
         })()
         // allRouteSelections guarda lo marcado por ruta y grupo: { A: { g1: [...], g2: [...] } }
         const allRouteSelections: Record<string, Record<string, string[]>> = value?.allRouteSelections ?? {}
@@ -1304,6 +1305,8 @@ function Activacion({
                 if (!group) return true
                 return (routeGroupSelections[step.groupId] ?? []).length > 0
             }
+            // Un paso de texto no pide nada — queda satisfecho apenas se muestra.
+            if (step.kind === 'text') return true
             return !!(routeAnswers[stepQuestionIndex[i]]?.trim())
         }
         // Un paso está desbloqueado si todos los anteriores en la secuencia ya
@@ -1428,6 +1431,14 @@ function Activacion({
                                             Completa el paso anterior para ver esto.
                                         </p>
                                     </div>
+                                )
+                            }
+
+                            if (step.kind === 'text') {
+                                return (
+                                    <p key={i} className="text-sm leading-relaxed" style={{ color: C.text }}>
+                                        {parseLines(step.text)}
+                                    </p>
                                 )
                             }
 

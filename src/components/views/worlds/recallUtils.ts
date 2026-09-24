@@ -18,8 +18,27 @@ export function findBlockById(data: JourneyDetailsResponse, blockId: string): Bl
     return null
 }
 
-// Convierte la respuesta guardada (forma distinta según el tipo/modo del bloque) en texto legible
-export function extractRecallText(blockType: string, content: any, value: any): string {
+// Para un árbol de decisiones, calcula en qué posición cae un paso dado
+// dentro de SOLO los pasos de pregunta/guiada de esa ruta (-1 si no es de
+// ese tipo) — es la misma cuenta que stepQuestionIndex en WorldsStation.tsx,
+// necesaria acá para poder leer allRouteAnswers en la posición correcta.
+function arbolStepQuestionIndex(steps: any[], stepIndex: number): number {
+    let qi = -1
+    for (let i = 0; i <= stepIndex; i++) {
+        const kind = steps[i]?.kind
+        if (kind === 'question' || kind === 'guided') qi++
+    }
+    return qi
+}
+
+// Convierte la respuesta guardada (forma distinta según el tipo/modo del bloque) en texto legible.
+// arbolRouteStep (opcional): para un bloque de árbol de decisiones, qué paso
+// puntual traer según la ruta que la persona haya elegido — configurado por
+// el admin al marcar el recordatorio (content.arbolRouteRecallSteps en el
+// bloque que RECUERDA, no en el bloque recordado). Sin esto, se usa el
+// comportamiento de siempre: todas las preguntas/frases guiadas de la ruta,
+// juntas.
+export function extractRecallText(blockType: string, content: any, value: any, arbolRouteStep?: Record<string, number>): string {
     if (value == null) return ''
     if (blockType === 'accion_real' && content?.actionType === 'foto' && typeof value === 'string') {
         return value ? '(Foto subida)' : ''
@@ -39,6 +58,25 @@ export function extractRecallText(blockType: string, content: any, value: any): 
         }
         if (isArbol) {
             const route = value.selectedRoute
+            const routeConfig = (content?.routes ?? []).find((r: any) => r.id === route)
+            const configuredStepIndex = route ? arbolRouteStep?.[route] : undefined
+            if (routeConfig && configuredStepIndex !== undefined) {
+                const step = routeConfig.steps?.[configuredStepIndex]
+                if (!step) return ''
+                if (step.kind === 'question' || step.kind === 'guided') {
+                    const qi = arbolStepQuestionIndex(routeConfig.steps, configuredStepIndex)
+                    const answers: string[] = (value.allRouteAnswers ?? {})[route] ?? []
+                    return answers[qi] ?? ''
+                }
+                if (step.kind === 'group') {
+                    const selections: string[] = (value.allRouteSelections ?? {})[route]?.[step.groupId] ?? []
+                    const otherText: string = (value.allRouteOtherTexts ?? {})[route]?.[step.groupId] ?? ''
+                    return selections.map(s => (s === 'Otra — escribo yo' ? otherText : s)).filter(Boolean).join(', ')
+                }
+                return ''
+            }
+            // Sin configuración por ruta: comportamiento de siempre — todas las
+            // preguntas/frases guiadas de la ruta, juntas.
             const answers: string[] = (value.allRouteAnswers ?? {})[route] ?? []
             return answers.filter(Boolean).join(' · ')
         }
@@ -66,13 +104,17 @@ export function extractRecallText(blockType: string, content: any, value: any): 
     return value.text ?? ''
 }
 
-export function getRecalledAnswer(data: JourneyDetailsResponse | null, recallBlockId: string | undefined): string | null {
+export function getRecalledAnswer(
+    data: JourneyDetailsResponse | null,
+    recallBlockId: string | undefined,
+    arbolRouteStep?: Record<string, number>
+): string | null {
     if (!data || !recallBlockId) return null
     const block = findBlockById(data, recallBlockId)
     if (!block) return null
     const interaction = data.progress.blockInteractions.find(bi => bi.blockId === recallBlockId)
     if (!interaction || interaction.responses == null) return null
-    const text = extractRecallText(block.type, block.content, interaction.responses)
+    const text = extractRecallText(block.type, block.content, interaction.responses, arbolRouteStep)
     return text.trim() || null
 }
 
@@ -89,18 +131,21 @@ export function getRecalledGateAnswer(gateStatus: GateStatus | null, recallGateD
 
 // Resuelve una referencia con prefijo ("block:<id>" o "gateday:<id>") al texto
 // recordado correspondiente, usando la fuente de datos que aplique.
+// arbolRouteStep: la configuración por ruta de ESTE recuerdo puntual (si el
+// bloque que lo definió tiene content.arbolRouteRecallSteps[ref]).
 export function resolveRecallRef(
     ref: string,
     data: JourneyDetailsResponse | null,
-    gateStatus: GateStatus | null
+    gateStatus: GateStatus | null,
+    arbolRouteStep?: Record<string, number>
 ): string | null {
     if (ref.startsWith('gateday:')) {
         return getRecalledGateAnswer(gateStatus, ref.slice('gateday:'.length))
     }
     if (ref.startsWith('block:')) {
-        return getRecalledAnswer(data, ref.slice('block:'.length))
+        return getRecalledAnswer(data, ref.slice('block:'.length), arbolRouteStep)
     }
     // Compatibilidad: referencias guardadas sin prefijo se tratan como bloque.
-    return getRecalledAnswer(data, ref)
+    return getRecalledAnswer(data, ref, arbolRouteStep)
 }
 
