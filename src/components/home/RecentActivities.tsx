@@ -19,6 +19,7 @@ interface ActivityLog {
     activity: string;
     duration: string;
     evidenceUrl: string;
+    evidenceUrls?: string[];
     createdAt: string;
 }
 
@@ -27,10 +28,21 @@ interface RecentActivitiesProps {
 }
 
 function ActivityTile({ activity }: { activity: ActivityLog }) {
+    const extraPhotos = (activity.evidenceUrls?.length ?? 0) - 1;
     return (
         <div className="rounded-xl p-3 flex flex-col gap-2" style={{ background: '#252020' }}>
             {activity.evidenceUrl ? (
-                <img src={activity.evidenceUrl} alt={activity.activity} className="w-full h-20 rounded-lg object-cover" />
+                <div className="relative">
+                    <img src={activity.evidenceUrl} alt={activity.activity} className="w-full h-20 rounded-lg object-cover" />
+                    {extraPhotos > 0 && (
+                        <span
+                            className="absolute bottom-1 right-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                            style={{ background: '#000000b3', color: '#fff' }}
+                        >
+                            +{extraPhotos}
+                        </span>
+                    )}
+                </div>
             ) : (
                 <div className="w-full h-20 rounded-lg flex items-center justify-center" style={{ background: '#1E1A1B' }}>
                     <Dumbbell size={24} style={{ color: '#6B6460' }} />

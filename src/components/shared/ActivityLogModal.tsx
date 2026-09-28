@@ -18,10 +18,11 @@ const CHECKIN_OPTIONS = [
 ];
 
 export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalProps) {
+    const MAX_PHOTOS = 5;
     const [activity, setActivity] = useState('');
     const [duration, setDuration] = useState('');
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const [previewUrls, setPreviewUrls] = useState<string[]>([]);
     const [checkinResponse, setCheckinResponse] = useState('');
     const [formError, setFormError] = useState('');
     const [uploadError, setUploadError] = useState('');
@@ -75,8 +76,8 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
     const resetForm = () => {
         setActivity('');
         setDuration('');
-        setSelectedFile(null);
-        setPreviewUrl(null);
+        setSelectedFiles([]);
+        setPreviewUrls([]);
         setCheckinResponse('');
         setFormError('');
         setUploadError('');
@@ -209,22 +210,35 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
     };
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            if (file.size > 10 * 1024 * 1024) {
-                alert(`La imagen pesa ${(file.size / (1024 * 1024)).toFixed(2)}MB. Máximo 10MB.`);
-                if (fileInputRef.current) fileInputRef.current.value = '';
-                return;
-            }
-            try {
-                const compressed = await compressImage(file, 1200, 1200, 0.8);
-                setSelectedFile(compressed);
-                setPreviewUrl(URL.createObjectURL(compressed));
-            } catch {
-                setSelectedFile(file);
-                setPreviewUrl(URL.createObjectURL(file));
-            }
+        const files = Array.from(e.target.files ?? []);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        if (files.length === 0) return;
+
+        const room = MAX_PHOTOS - selectedFiles.length;
+        if (room <= 0) return;
+        const toAdd = files.slice(0, room);
+
+        const oversized = toAdd.find(f => f.size > 10 * 1024 * 1024);
+        if (oversized) {
+            alert(`La imagen pesa ${(oversized.size / (1024 * 1024)).toFixed(2)}MB. Máximo 10MB.`);
+            return;
         }
+
+        const compressedFiles = await Promise.all(toAdd.map(async file => {
+            try {
+                return await compressImage(file, 1200, 1200, 0.8);
+            } catch {
+                return file;
+            }
+        }));
+
+        setSelectedFiles(prev => [...prev, ...compressedFiles]);
+        setPreviewUrls(prev => [...prev, ...compressedFiles.map(f => URL.createObjectURL(f))]);
+    };
+
+    const removePhoto = (index: number) => {
+        setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+        setPreviewUrls(prev => prev.filter((_, i) => i !== index));
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -242,7 +256,7 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
         const formData = new FormData();
         formData.append('activity', activity);
         formData.append('duration', duration);
-        if (selectedFile) formData.append('evidence', selectedFile);
+        selectedFiles.forEach(file => formData.append('evidence', file));
         logMutation.mutate(formData);
     };
 
@@ -324,7 +338,7 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
                         {/* Check-in semanal — participantes que aún no han respondido esta semana */}
                         {showCheckin && (
                             <div className="rounded-xl p-4 border" style={{ background: '#252020', borderColor: formError && !checkinResponse ? '#EE2A28' : '#333330' }}>
-                                <p className="text-sm font-bold mb-3" style={{ color: '#F5F0E8' }}>¿Cómo va tu semana?</p>
+                                <p className="text-sm font-bold mb-3" style={{ color: '#F5F0E8' }}>¿Cómo va tu semana? <span style={{ color: '#EE2A28' }}>*</span></p>
                                 <div className="space-y-2">
                                     {CHECKIN_OPTIONS.map(opt => (
                                         <button
@@ -349,7 +363,7 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
                         )}
 
                         <div>
-                            <label className="block text-sm font-bold mb-2" style={{ color: '#F5F0E8' }}>Actividad Realizada</label>
+                            <label className="block text-sm font-bold mb-2" style={{ color: '#F5F0E8' }}>Actividad Realizada <span style={{ color: '#EE2A28' }}>*</span></label>
                             <input
                                 type="text"
                                 value={activity}
@@ -362,7 +376,7 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
 
                         <div>
                             <label className="block text-sm font-bold mb-2 flex items-center gap-2" style={{ color: '#F5F0E8' }}>
-                                <Clock size={16} style={{ color: '#A8A29E' }} /> Tiempo / Duración (minutos)
+                                <Clock size={16} style={{ color: '#A8A29E' }} /> Tiempo / Duración (minutos) <span style={{ color: '#EE2A28' }}>*</span>
                             </label>
                             <input
                                 type="number"
@@ -376,34 +390,56 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold mb-2" style={{ color: '#F5F0E8' }}>Evidencia (Foto - Opcional)</label>
-                            <div
-                                onClick={() => fileInputRef.current?.click()}
-                                className="border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all"
-                                style={{ borderColor: '#333330', color: '#A8A29E' }}
-                            >
-                                {previewUrl ? (
-                                    <div className="relative w-full h-48 rounded-lg overflow-hidden">
-                                        <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                                            <p className="text-white font-medium">Cambiar foto</p>
+                            <label className="block text-sm font-bold mb-2" style={{ color: '#F5F0E8' }}>
+                                Evidencia <span className="font-normal" style={{ color: '#666' }}>· {previewUrls.length}/{MAX_PHOTOS}</span>
+                            </label>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                className="hidden"
+                                accept="image/*"
+                                multiple
+                                onChange={handleFileChange}
+                            />
+                            {previewUrls.length === 0 ? (
+                                <div
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all"
+                                    style={{ borderColor: '#333330', color: '#A8A29E' }}
+                                >
+                                    <Upload size={32} className="mb-2" style={{ color: '#A8A29E' }} />
+                                    <p className="text-sm font-medium">Click para subir evidencia</p>
+                                    <p className="text-xs mt-1" style={{ color: '#666' }}>Hasta {MAX_PHOTOS} · JPG, PNG, WebP (Max 10MB c/u)</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-3 gap-2">
+                                    {previewUrls.map((url, i) => (
+                                        <div key={i} className="relative aspect-square rounded-lg overflow-hidden">
+                                            <img src={url} alt="" className="w-full h-full object-cover" />
+                                            <button
+                                                type="button"
+                                                onClick={() => removePhoto(i)}
+                                                className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center"
+                                                style={{ background: '#000000b3', color: '#fff' }}
+                                                aria-label="Quitar foto"
+                                            >
+                                                <X size={12} />
+                                            </button>
                                         </div>
-                                    </div>
-                                ) : (
-                                    <>
-                                        <Upload size={32} className="mb-2" style={{ color: '#A8A29E' }} />
-                                        <p className="text-sm font-medium">Click para subir foto (Opcional)</p>
-                                        <p className="text-xs mt-1" style={{ color: '#666' }}>JPG, PNG, WebP (Max 10MB)</p>
-                                    </>
-                                )}
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    className="hidden"
-                                    accept="image/*"
-                                    onChange={handleFileChange}
-                                />
-                            </div>
+                                    ))}
+                                    {previewUrls.length < MAX_PHOTOS && (
+                                        <button
+                                            type="button"
+                                            onClick={() => fileInputRef.current?.click()}
+                                            className="aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-colors"
+                                            style={{ borderColor: '#333330', color: '#A8A29E' }}
+                                        >
+                                            <Upload size={18} />
+                                            <span className="text-[10px] font-medium">Agregar</span>
+                                        </button>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         <button

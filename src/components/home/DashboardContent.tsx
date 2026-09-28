@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { C } from '../../styles/colors';
 import { HomeHeader } from './HomeHeader';
 import { StatsCard } from './StatsCard';
@@ -33,6 +33,17 @@ export const DashboardContent = () => {
     const [goalPopupVisible, setGoalPopupVisible] = useState(false);
     const queryClient = useQueryClient();
     const openChangelogTour = useChangelogTour(s => s.openTour);
+
+    // En móvil, "Registrar actividad" se muestra justo debajo de "Tu progreso
+    // semanal" (antes del viaje actual); en desktop se deja donde estaba, al
+    // final, debajo de las 3 tarjetas.
+    const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 767px)').matches);
+    useEffect(() => {
+        const mq = window.matchMedia('(max-width: 767px)');
+        const onChange = () => setIsMobile(mq.matches);
+        mq.addEventListener('change', onChange);
+        return () => mq.removeEventListener('change', onChange);
+    }, []);
 
     const targetChallengeId = '6cae6006-7b14-42ba-ba21-b6f4aeb6fd7c';
     const targetTaskId = 'd9f07188-27fd-4252-a2ff-9d61806374f9';
@@ -199,6 +210,7 @@ export const DashboardContent = () => {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
                 <StatsCard />
                 <WeeklyChallengeProgressCard />
+                {isMobile && <RecentActivities onAddActivity={() => setIsModalOpen(true)} />}
                 <CurrentJourneyCard />
             </div>
 
@@ -220,7 +232,7 @@ export const DashboardContent = () => {
                 </div>
             )}
 
-            <RecentActivities onAddActivity={() => setIsModalOpen(true)} />
+            {!isMobile && <RecentActivities onAddActivity={() => setIsModalOpen(true)} />}
 
             <ActivityLogModal
                 isOpen={isModalOpen}

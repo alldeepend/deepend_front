@@ -9,7 +9,18 @@ import WorldsRightSidebar, { badgesForJourney, badgeColorFor } from './WorldsRig
 import { HomeSidebar } from '../../home/HomeSidebar'
 import { PhotoUploadField, AudioRecorderField, SkipCheckbox } from './EvidenceFields'
 import { parseBold, parseLines, parseText, parseTextWithRecalls } from './textParsing'
-import { getRecalledAnswer, getRecalledGateAnswer, resolveRecallRef } from './recallUtils'
+import { findBlockById, getRecalledAnswer, getRecalledGateAnswer, resolveRecallRef } from './recallUtils'
+
+// Compara solo año/mes/día en hora local del navegador — suficiente para
+// decidir en el front si el último registro de un reto diario "ya fue hoy"
+// (la fuente de verdad de esa regla es el backend, en hora Colombia; acá
+// solo es para decidir qué tarjeta mostrar, no para bloquear nada).
+function isTodayLocal(iso?: string): boolean {
+    if (!iso) return false
+    const d = new Date(iso)
+    const now = new Date()
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()
+}
 import { resolveConditionalRecall, type ResolvedConditionalRecall } from './conditionalRecall'
 
 const BLOCK_LABELS: Record<string, string> = {
@@ -41,6 +52,10 @@ export default function WorldsStation() {
     // Block navigation
     const [blockIndex, setBlockIndex] = useState(0)
     const [responses, setResponses] = useState<Record<string, any>>({})
+    // Historial de cumplimientos ya confirmados por el servidor, por bloque de
+    // "retos diarios" — separado de `responses` porque ese sigue guardando el
+    // borrador del registro de HOY sin enviar todavía, no el historial.
+    const [retoHistory, setRetoHistory] = useState<Record<string, any[]>>({})
     const [submitting, setSubmitting] = useState(false)
     const [completedBlockIds, setCompletedBlockIds] = useState<Set<string>>(new Set())
     const [completionResult, setCompletionResult] = useState<BlockInteractResult | null>(null)
@@ -69,6 +84,7 @@ export default function WorldsStation() {
         setBlockIndex(0)
         setCompletedBlockIds(new Set())
         setResponses({})
+        setRetoHistory({})
         setReviewMode(false)
         setPacingBlocked(null)
         journeyApi.getJourneyDetails(journeyId)
@@ -83,10 +99,22 @@ export default function WorldsStation() {
                 setCompletedBlockIds(done)
                 // Pre-populate previous responses
                 const saved: Record<string, any> = {}
+                const retoHist: Record<string, any[]> = {}
                 d.progress.blockInteractions.forEach(bi => {
+                    const blk = findBlockById(d, bi.blockId)
+                    const isRetosDiarios = blk?.type === 'accion_real' && (blk.content as any)?.actionType === 'retos_diarios'
+                    if (isRetosDiarios) {
+                        retoHist[bi.blockId] = Array.isArray(bi.responses?.submissions) ? bi.responses.submissions : []
+                        // El historial se lee de `retoHistory`, no de `responses` — ese
+                        // slot se deja vacío para que siempre arranque como un borrador
+                        // nuevo (el registro de hoy, si aplica), nunca precargado con
+                        // la lista completa de cumplimientos pasados.
+                        return
+                    }
                     if (bi.responses != null) saved[bi.blockId] = bi.responses
                 })
                 setResponses(saved)
+                setRetoHistory(retoHist)
                 // Start at first incomplete block
                 const station = findStation(d, stationId!)
                 if (station) {
@@ -155,6 +183,11 @@ export default function WorldsStation() {
         ? data.progress.stationProgress.some(sp => sp.stationId === stationId && sp.isCompleted)
         : false
 
+    const handleExitStation = () => {
+        if (stationAlreadyCompleted) navigate(`/worlds/${journeyId}`)
+        else setShowExitWarning(true)
+    }
+
     const handleSubmitBlock = async (skipCelebration = false): Promise<BlockInteractResult | null> => {
         if (!currentBlock || submitting) return null
         setSubmitting(true)
@@ -171,6 +204,28 @@ export default function WorldsStation() {
                 currentBlock.id,
                 responseToSubmit
             )
+
+            // "Retos diarios": este envío registró un cumplimiento pero el
+            // bloque todavía no se completa (faltan más días) — se guarda el
+            // historial actualizado, se limpia el borrador de hoy y se queda
+            // en el mismo bloque, sin tocar completedBlockIds/XP/avance.
+            if (result.interaction && result.interaction.isCompleted === false) {
+                setRetoHistory(prev => ({
+                    ...prev,
+                    [currentBlock.id]: result.interaction.responses?.submissions ?? [],
+                }))
+                setResponses(prev => ({ ...prev, [currentBlock.id]: null }))
+                return result
+            }
+
+            if (
+                currentBlock.type === 'accion_real' &&
+                (currentBlock.content as any)?.actionType === 'retos_diarios' &&
+                result.interaction?.responses?.submissions
+            ) {
+                setRetoHistory(prev => ({ ...prev, [currentBlock.id]: result.interaction.responses.submissions }))
+            }
+
             setCompletedBlockIds(prev => new Set([...prev, currentBlock.id]))
 
             if (!wasAlreadyDone && !XP_EXCLUDED.includes(currentBlock.type) && xpPerBlock > 0) {
@@ -443,7 +498,7 @@ export default function WorldsStation() {
                 style={{ borderBottom: `1px solid ${C.border}` }}
             >
                 <button
-                    onClick={() => stationAlreadyCompleted ? navigate(`/worlds/${journeyId}`) : setShowExitWarning(true)}
+                    onClick={handleExitStation}
                     className="text-sm shrink-0"
                     style={{ color: C.textMuted }}
                 >
@@ -517,9 +572,11 @@ export default function WorldsStation() {
                         recalls={recalls}
                         conditionalRecall={conditionalRecall}
                         response={responses[currentBlock.id]}
+                        retoHistory={retoHistory[currentBlock.id] ?? []}
                         onResponse={val =>
                             setResponses(prev => ({ ...prev, [currentBlock.id]: val }))
                         }
+                        onExitStation={handleExitStation}
                         locked={blocksLocked}
                         onSubmit={handleSubmitBlock}
                         submitting={submitting}
@@ -598,8 +655,12 @@ function isResponseValid(blockType: string, response: any, content?: any): boole
                         qIndex++
                         if (!(answers[qIndex]?.trim())) return false
                     } else if (step.kind === 'group' && content?.arbolMultiSelectEnabled && existingGroupIds.has(step.groupId)) {
+                        const groupDef = (content?.arbolMultiSelectGroups ?? []).find((g: any) => g.id === step.groupId)
                         const selections = groupSelections[step.groupId] ?? []
-                        if (selections.length === 0) return false
+                        if (selections.length === 0) {
+                            if (groupDef?.optional) continue
+                            return false
+                        }
                         if (selections.includes('Otra — escribo yo') && !otherTexts[step.groupId]?.trim()) return false
                     }
                 }
@@ -669,6 +730,7 @@ function BlockPlayer({
     recalls,
     conditionalRecall,
     response,
+    retoHistory,
     onResponse,
     locked,
     onSubmit,
@@ -684,12 +746,15 @@ function BlockPlayer({
     nextBlockType,
     onCierreSubmit,
     onGoToNextStation,
+    onExitStation,
 }: {
     block: Block
     station: Station
     legacyRecalledAnswer: string | null
     recalls: (string | null)[]
     conditionalRecall: ResolvedConditionalRecall | null
+    retoHistory: any[]
+    onExitStation: () => void
     response: any
     onResponse: (val: any) => void
     locked: boolean
@@ -713,6 +778,18 @@ function BlockPlayer({
 
     const isCierre = block.type === 'cierre'
     const canSubmit = isResponseValid(block.type, response, c)
+
+    // Acción Real · "Retos diarios": mientras el registro de hoy ya se envió
+    // pero aún faltan más días para completar el bloque, no hay nada que
+    // enviar — se oculta la CTA genérica en vez de mostrarla deshabilitada
+    // (el mensaje de "vuelve mañana" ya vive dentro de la tarjeta del reto).
+    const isRetosDiarios = block.type === 'accion_real' && c?.actionType === 'retos_diarios'
+    const retosTotal = isRetosDiarios ? Math.max(1, c?.retosCount ?? 3) : 0
+    const retosSubmittedToday = isRetosDiarios
+        && retoHistory.length > 0
+        && retoHistory.length < retosTotal
+        && isTodayLocal(retoHistory[retoHistory.length - 1]?.date)
+    const retosAllDone = isRetosDiarios && retoHistory.length >= retosTotal
 
     const showStation1Celebration = block.type === 'punto_partida' && station.orderIndex === 2
     const showLastStationCelebration = block.type === 'punto_partida' && isLastStation
@@ -808,7 +885,7 @@ function BlockPlayer({
                 <OpcionesRespuesta content={c} value={response} onChange={onResponse} disabled={locked} />
             )}
             {block.type === 'accion_real' && (
-                <AccionReal content={c} value={response} onChange={onResponse} disabled={locked} blockId={block.id} recalls={recalls} />
+                <AccionReal content={c} value={response} onChange={onResponse} disabled={locked} blockId={block.id} recalls={recalls} history={retoHistory} />
             )}
             {block.type === 'evidencia' && (
                 <Evidencia content={c} value={response} onChange={onResponse} disabled={locked} />
@@ -826,10 +903,13 @@ function BlockPlayer({
                 />
             )}
 
-            {/* CTA — oculto para cierre (maneja su propia navegación) */}
+            {/* CTA — oculto solo para cierre (maneja su propia navegación).
+                Para "retos diarios": mientras falten retos por completar se
+                deja "← Anterior" para poder salir de la pantalla de espera;
+                una vez completados todos, se reemplaza el envío por "Siguiente →". */}
             {!isCierre && (
                 <div className="space-y-2 pt-1">
-                    {!locked && nextBlockType === 'refuerzo' && canSubmit && (
+                    {!locked && !retosAllDone && nextBlockType === 'refuerzo' && canSubmit && (
                         <div
                             className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm leading-relaxed"
                             style={{ background: `${C.amber}20`, border: `1px solid ${C.amber}50` }}
@@ -840,7 +920,7 @@ function BlockPlayer({
                             </p>
                         </div>
                     )}
-                    {!locked && (
+                    {!locked && !retosAllDone && !retosSubmittedToday && (
                         <>
                             <button
                                 onClick={() => onSubmit()}
@@ -853,7 +933,7 @@ function BlockPlayer({
                                     cursor: !canSubmit ? 'not-allowed' : 'pointer',
                                 }}
                             >
-                                {submitting ? 'Guardando...' : block.type === 'refuerzo' ? 'Continuar mi viaje →' : isLast ? 'Completar estación' : 'Continuar'}
+                                {submitting ? 'Guardando...' : isRetosDiarios ? 'Enviar evidencia' : block.type === 'refuerzo' ? 'Continuar mi viaje →' : isLast ? 'Completar estación' : 'Continuar'}
                             </button>
                             {!canSubmit && (
                                 <p className="text-xs text-center" style={{ color: C.textMuted }}>
@@ -863,7 +943,7 @@ function BlockPlayer({
                         </>
                     )}
 
-                    {locked && canGoNext && (
+                    {(locked || retosAllDone) && canGoNext && (
                         <button
                             onClick={onNext}
                             className="w-full py-3.5 rounded-xl font-semibold text-sm"
@@ -873,7 +953,7 @@ function BlockPlayer({
                         </button>
                     )}
 
-                    {locked && isLast && !isLastStation && onGoToNextStation && (
+                    {(locked || retosAllDone) && isLast && !isLastStation && onGoToNextStation && (
                         <button
                             onClick={onGoToNextStation}
                             className="w-full py-3.5 rounded-xl font-semibold text-sm"
@@ -883,7 +963,7 @@ function BlockPlayer({
                         </button>
                     )}
 
-                    {canGoPrev && (
+                    {canGoPrev ? (
                         <button
                             onClick={onPrev}
                             className="w-full py-3 rounded-xl text-sm"
@@ -891,7 +971,19 @@ function BlockPlayer({
                         >
                             ← Anterior
                         </button>
-                    )}
+                    ) : isRetosDiarios && !retosAllDone ? (
+                        // Sin bloque anterior dentro de la estación (es el
+                        // primero) y todavía faltan retos — se ofrece la misma
+                        // salida que el "← Volver" de la barra superior, para
+                        // no dejar la pantalla de espera sin ningún botón.
+                        <button
+                            onClick={onExitStation}
+                            className="w-full py-3 rounded-xl text-sm"
+                            style={{ color: C.textMuted, border: `1px solid ${C.border}` }}
+                        >
+                            ← Volver
+                        </button>
+                    ) : null}
                 </div>
             )}
         </div>
@@ -1276,7 +1368,7 @@ function Activacion({
         // Una sola lista de pasos por ruta: preguntas, frases guiadas y grupos
         // de selección múltiple, en el orden exacto que el admin definió — ya
         // no hay un bloque fijo de "selección primero" o "preguntas primero".
-        type ArbolGroup = { id: string; name: string; prompt: string; options: string[]; max?: number }
+        type ArbolGroup = { id: string; name: string; prompt: string; options: string[]; max?: number; optional?: boolean }
         const arbolMultiSelectGroups: ArbolGroup[] = content.arbolMultiSelectGroups ?? []
         // El toggle "Habilitar selección múltiple" del admin es un apagado
         // rápido: si está desmarcado, los pasos de grupo que la ruta ya tenga
@@ -1303,6 +1395,7 @@ function Activacion({
             if (step.kind === 'group') {
                 const group = arbolMultiSelectGroups.find(g => g.id === step.groupId)
                 if (!group) return true
+                if (group.optional) return true
                 return (routeGroupSelections[step.groupId] ?? []).length > 0
             }
             // Un paso de texto no pide nada — queda satisfecho apenas se muestra.
@@ -1887,10 +1980,11 @@ function OpcionesRespuesta({
 }
 
 function AccionReal({
-    content, value, onChange, disabled, blockId, recalls,
-}: { content: any; value: any; onChange: (v: any) => void; disabled: boolean; blockId: string; recalls: (string | null)[] }) {
+    content, value, onChange, disabled, blockId, recalls, history,
+}: { content: any; value: any; onChange: (v: any) => void; disabled: boolean; blockId: string; recalls: (string | null)[]; history?: any[] }) {
     const phrase = content.phrase ?? ''
     const isSeleccion = content.actionType === 'seleccion'
+    const isRetosDiarios = content.actionType === 'retos_diarios'
 
     const freeText: string = typeof value === 'object' && value !== null && 'text' in value
         ? (value.text ?? '')
@@ -1903,6 +1997,179 @@ function AccionReal({
             ? value.activeTab
             : 'text'
     const [activeTab, setActiveTab] = useState<'text' | 'photo' | 'audio'>(initialTab)
+
+    // ── Retos diarios mode ──
+    if (isRetosDiarios) {
+        const total = Math.max(1, content.retosCount ?? 3)
+        const hist = history ?? []
+        const doneCount = hist.length
+        const submittedToday = doneCount > 0 && isTodayLocal(hist[doneCount - 1]?.date)
+        const allDone = doneCount >= total
+        const tabLabels: Record<string, string> = { text: 'Descripción escrita', photo: 'Foto', audio: 'Nota de voz' }
+        const progressPct = Math.round((doneCount / total) * 100)
+
+        const TABS = [
+            { id: 'text' as const, label: 'Escribe' },
+            { id: 'photo' as const, label: 'Foto o imagen' },
+            { id: 'audio' as const, label: 'Nota de voz' },
+        ]
+
+        const retos = Array.from({ length: total }, (_, idx) => {
+            const n = idx + 1
+            let estado: 'completado' | 'activo' | 'enviado' | 'bloqueado'
+            if (n <= doneCount) {
+                estado = (n === doneCount && submittedToday && n !== total) ? 'enviado' : 'completado'
+            } else if (n === doneCount + 1 && !submittedToday) {
+                // El siguiente reto solo se activa si el de hoy YA NO está
+                // pendiente de espera — si el último registro fue hoy, ningún
+                // otro reto se desbloquea hasta el día siguiente.
+                estado = 'activo'
+            } else {
+                estado = 'bloqueado'
+            }
+            return { n, estado, tab: hist[n - 1]?.tab }
+        })
+
+        return (
+            <div className="space-y-4">
+                {content.prompt && parseTextWithRecalls(content.prompt, recalls, 'text-sm leading-relaxed', { color: C.textMuted })}
+
+                <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs" style={{ color: C.textMuted }}>{doneCount} de {total} retos completados</span>
+                        <span className="text-xs font-semibold" style={{ color: C.green }}>{allDone ? 'Completo' : `Reto ${doneCount + 1} de ${total}`}</span>
+                    </div>
+                    <div className="h-[5px] rounded-full overflow-hidden" style={{ background: C.border }}>
+                        <div className="h-full rounded-full transition-all" style={{ background: C.green, width: `${progressPct}%` }} />
+                    </div>
+                </div>
+
+                <div className="space-y-3">
+                    {retos.map(reto => {
+                        if (reto.estado === 'bloqueado') {
+                            return (
+                                <div key={reto.n} className="rounded-2xl px-4 py-3 flex items-center gap-3" style={{ border: `1px dashed ${C.border}`, opacity: 0.5 }}>
+                                    <span className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ border: `1px solid ${C.border}` }}>
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.label} strokeWidth={2}><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+                                    </span>
+                                    <div className="flex flex-col gap-0.5">
+                                        <span className="text-sm font-semibold" style={{ color: C.textMuted }}>Reto {reto.n}</span>
+                                        <span className="text-xs" style={{ color: C.label }}>Se desbloquea al completar el reto anterior</span>
+                                    </div>
+                                </div>
+                            )
+                        }
+                        if (reto.estado === 'completado') {
+                            return (
+                                <div key={reto.n} className="rounded-2xl px-4 py-3 flex items-center gap-3" style={{ border: `1px solid ${C.border}`, background: C.surface1 }}>
+                                    <span className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold" style={{ background: C.green, color: C.surface1 }}>✓</span>
+                                    <div className="flex flex-col gap-0.5">
+                                        <span className="text-sm font-semibold" style={{ color: C.text }}>Reto {reto.n} completado</span>
+                                        <span className="text-xs" style={{ color: C.textMuted }}>Enviaste: {tabLabels[reto.tab] ?? ''}</span>
+                                    </div>
+                                </div>
+                            )
+                        }
+                        if (reto.estado === 'enviado') {
+                            return (
+                                <div key={reto.n} className="rounded-2xl p-5 space-y-3.5" style={{ border: `1px solid ${C.green}66`, background: C.surface1 }}>
+                                    <div className="flex items-center gap-3">
+                                        <span className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold" style={{ background: C.green, color: C.surface1 }}>✓</span>
+                                        <div className="flex flex-col gap-0.5">
+                                            <span className="text-sm font-semibold" style={{ color: C.text }}>Reto {reto.n} — registrado hoy</span>
+                                            <span className="text-xs" style={{ color: C.textMuted }}>Enviaste: {tabLabels[reto.tab] ?? ''}</span>
+                                        </div>
+                                    </div>
+                                    <div className="rounded-xl px-3.5 py-3" style={{ background: `${C.green}1A`, border: `1px solid ${C.green}4D` }}>
+                                        <p className="text-[13px] leading-relaxed" style={{ color: C.text }}>
+                                            Vuelve al día siguiente o cuando lo desees para completar el <strong>Reto {reto.n + 1} de {total}</strong>.
+                                        </p>
+                                    </div>
+                                </div>
+                            )
+                        }
+                        // activo
+                        return (
+                            <div key={reto.n} className="rounded-2xl p-5 space-y-4" style={{ border: `1px solid ${C.green}`, background: C.surface1 }}>
+                                <span className="text-sm font-semibold" style={{ color: C.text }}>Reto {reto.n} de {total}</span>
+                                <div className="space-y-2">
+                                    <span className="text-[13px]" style={{ color: C.textMuted }}>Elige cómo enviar tu evidencia</span>
+                                    <div className="flex gap-2">
+                                        {TABS.map(tab => (
+                                            <button
+                                                key={tab.id}
+                                                type="button"
+                                                onClick={() => {
+                                                    if (disabled) return
+                                                    setActiveTab(tab.id)
+                                                    onChange({ text: freeText, activeTab: tab.id, photoUrl, audioUrl })
+                                                }}
+                                                disabled={disabled}
+                                                className="flex-1 py-2.5 px-2 rounded-xl text-xs font-semibold text-center transition-colors"
+                                                style={{
+                                                    border: `1px solid ${activeTab === tab.id ? C.green : C.amber}`,
+                                                    color: activeTab === tab.id ? C.green : C.amber,
+                                                    background: C.surface2,
+                                                }}
+                                            >
+                                                {tab.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {activeTab === 'text' && (
+                                    <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${C.border}` }}>
+                                        <div className="px-4 py-3" style={{ background: C.surface1 }}>
+                                            <textarea
+                                                rows={4}
+                                                maxLength={500}
+                                                placeholder="completa aquí..."
+                                                value={freeText}
+                                                onChange={e => onChange({ text: e.target.value, activeTab, photoUrl, audioUrl })}
+                                                disabled={disabled}
+                                                className="w-full rounded-lg p-3 text-sm resize-none outline-none"
+                                                style={{ background: C.surface2, border: `1px solid ${C.border}`, color: C.text, opacity: disabled ? 0.6 : 1 }}
+                                            />
+                                            <p className="text-xs text-right mt-1" style={{ color: freeText.length > 450 ? C.red : C.textMuted }}>
+                                                {freeText.length}/500
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                                {activeTab === 'photo' && (
+                                    <PhotoUploadField
+                                        blockId={blockId}
+                                        value={photoUrl ?? null}
+                                        onChange={url => onChange({ text: freeText, activeTab, photoUrl: url ?? undefined, audioUrl })}
+                                        disabled={disabled}
+                                    />
+                                )}
+                                {activeTab === 'audio' && (
+                                    <AudioRecorderField
+                                        blockId={blockId}
+                                        value={audioUrl ?? null}
+                                        onChange={url => onChange({ text: freeText, activeTab, audioUrl: url ?? undefined, photoUrl })}
+                                        disabled={disabled}
+                                    />
+                                )}
+                            </div>
+                        )
+                    })}
+                </div>
+
+                {allDone && (
+                    <div className="rounded-2xl p-5 flex items-center gap-3.5" style={{ background: `${C.green}1F`, border: `1px solid ${C.green}66` }}>
+                        <span className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm font-bold" style={{ background: C.green, color: C.surface1 }}>✓</span>
+                        <div className="flex flex-col gap-0.5">
+                            <span className="text-[15px] font-bold" style={{ color: C.text }}>Compromiso cumplido</span>
+                            <span className="text-xs" style={{ color: C.textMuted }}>Completaste los {total} retos de este bloque.</span>
+                        </div>
+                    </div>
+                )}
+            </div>
+        )
+    }
 
     // ── Selección guiada mode ──
     if (isSeleccion) {

@@ -49,7 +49,6 @@ export function PhotoUploadField({
                 ref={inputRef}
                 type="file"
                 accept="image/*"
-                capture="environment"
                 className="hidden"
                 disabled={disabled || uploading}
                 onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])}
