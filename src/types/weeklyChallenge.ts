@@ -75,3 +75,16 @@ export interface WeeklyChallengeCycleSummary {
     compromiso: string | null;
     totals: { totalMinutes: number; weeksCompleted: number; weeksLight: number };
 }
+
+export interface WeeklyPodiumEntry {
+    userId: string;
+    displayName: string;
+    daysActive: number;
+    photoDays: number;
+    rank: number;
+}
+
+export interface WeeklyPodium {
+    top: WeeklyPodiumEntry[];
+    me: WeeklyPodiumEntry | null;
+}

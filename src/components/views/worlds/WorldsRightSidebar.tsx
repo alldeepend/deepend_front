@@ -68,9 +68,13 @@ interface Props {
     journeyTitle?: string
     badges: SidebarBadge[]
     totalXp: number
+    // El Dashboard ahora tiene su propia tarjeta de arquetipo en el centro —
+    // se apaga acá para no duplicarlo, pero se deja prendido (default) en el
+    // resto de pestañas que también usan este sidebar.
+    showArchetype?: boolean
 }
 
-export default function WorldsRightSidebar({ mode, journeyTitle, badges: allBadges, totalXp }: Props) {
+export default function WorldsRightSidebar({ mode, journeyTitle, badges: allBadges, totalXp, showArchetype = true }: Props) {
     const badges = useMemo(
         () => mode === 'journey' ? allBadges : allBadges.filter(b => b.earned),
         [mode, allBadges]
@@ -115,7 +119,7 @@ export default function WorldsRightSidebar({ mode, journeyTitle, badges: allBadg
                 </div>
 
                 {/* Archetype */}
-                {archetypeInfo !== undefined && (
+                {showArchetype && archetypeInfo !== undefined && (
                     <div id="tour-target-archetype">
                         <p className="text-[10px] font-bold tracking-widest uppercase mb-3" style={{ color: C.label }}>
                             Mi Arquetipo

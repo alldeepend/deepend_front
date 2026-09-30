@@ -37,6 +37,8 @@ export interface ArchetypeResultContent {
     microAction: string;
     traits: string[];
     audioUrl: string | null;
+    imageFemenino: string | null;
+    imageMasculino: string | null;
 }
 
 export interface ArchetypeConfig {
@@ -55,6 +57,9 @@ export interface ArchetypeResultPayload {
 
 export interface MyArchetypeResult {
     hasResult: boolean;
+    // Para elegir imageFemenino vs imageMasculino del arquetipo — no viene en
+    // /auth/me, así que se trae junto con el resultado.
+    genero: string | null;
     result: {
         dominantVariantId: string | null;
         secondaryFamilyId: string | null;

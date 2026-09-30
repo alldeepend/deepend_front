@@ -7,6 +7,7 @@ import RecognitionChestModal from '../shared/RecognitionChestModal';
 import { RecentActivities } from './RecentActivities';
 import { WeeklyChallengeProgressCard } from './WeeklyChallengeProgressCard';
 import { CurrentJourneyCard } from './CurrentJourneyCard';
+import { ArchetypeCard } from './ArchetypeCard';
 import { Star, Sparkles } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useChangelogTour } from '../../store/useChangelogTour';
@@ -207,8 +208,11 @@ export const DashboardContent = () => {
                 }
             />
 
+            {/* StatsCard (Miradas) oculta temporalmente — solo para previsualizar
+                cómo quedarían las otras 3 tarjetas si se termina quitando. */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
-                <StatsCard />
+                {/* <StatsCard /> */}
+                <ArchetypeCard />
                 <WeeklyChallengeProgressCard />
                 {isMobile && <RecentActivities onAddActivity={() => setIsModalOpen(true)} />}
                 <CurrentJourneyCard />

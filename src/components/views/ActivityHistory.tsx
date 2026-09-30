@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Clock, Calendar, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router';
 import { C } from '../../styles/colors';
+import type { ActivityMetric } from '../../utils/activityMetrics';
 
 const host = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/api\/?$/, '');
 
@@ -13,6 +14,7 @@ interface ActivityLog {
     activity: string;
     duration: string;
     evidenceUrl: string;
+    metrics?: ActivityMetric[] | null;
     createdAt: string;
 }
 
@@ -86,6 +88,19 @@ export default function ActivityHistory() {
                                         {new Date(log.createdAt).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                                     </div>
                                     <h3 className="text-lg font-bold leading-tight" style={{ color: C.text }}>{log.activity}</h3>
+                                    {log.metrics && log.metrics.length > 0 && (
+                                        <div className="flex flex-wrap gap-1.5 mt-2.5">
+                                            {log.metrics.map((m, i) => (
+                                                <span
+                                                    key={i}
+                                                    className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                                                    style={{ background: C.surface2, color: C.textMuted }}
+                                                >
+                                                    {m.value} {m.unit}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         ))}

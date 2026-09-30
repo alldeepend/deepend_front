@@ -137,7 +137,7 @@ export default function HomePage() {
             )}
 
             {/* Right sidebar (desktop only) */}
-            <WorldsRightSidebar mode="home" badges={earnedBadgesFromAreas(areas)} totalXp={totalXpFromAreas(areas)} />
+            <WorldsRightSidebar mode="home" badges={earnedBadgesFromAreas(areas)} totalXp={totalXpFromAreas(areas)} showArchetype={false} />
 
             {/* MobileNav removed */}
 

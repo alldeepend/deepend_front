@@ -8,12 +8,14 @@ import DynamicForm from '../shared/DynamicForm';
 import { C } from '../../styles/colors';
 import { weeklyChallengeApi } from '../../services/weeklyChallenge';
 import WeeklyChallengeGrid from '../shared/WeeklyChallengeGrid';
+import WeeklyPodium from '../shared/WeeklyPodium';
+import ActivityLogModal from '../shared/ActivityLogModal';
 import { getYouTubeEmbedUrl } from '../../utils/youtube';
 import { journeyApi } from '../../services/journey';
 import type { Area } from '../../types/journey';
 import WorldsRightSidebar, { earnedBadgesFromAreas, totalXpFromAreas } from './worlds/WorldsRightSidebar';
 
-type Tab = 'actual' | 'historial';
+type Tab = 'actual' | 'podio' | 'historial';
 
 export default function RetoSemanal() {
     const navigate = useNavigate();
@@ -23,6 +25,7 @@ export default function RetoSemanal() {
     const [showIntroForm, setShowIntroForm] = useState(false);
     const [tab, setTab] = useState<Tab>('actual');
     const [areas, setAreas] = useState<Area[]>([]);
+    const [isLogModalOpen, setIsLogModalOpen] = useState(false);
 
     useEffect(() => {
         journeyApi.getAvailableJourneys()
@@ -51,6 +54,12 @@ export default function RetoSemanal() {
         queryKey: ['weekly-challenge-cycles'],
         queryFn: weeklyChallengeApi.getCycles,
         enabled: tab === 'historial',
+    });
+
+    const { data: podiumData, isLoading: loadingPodium } = useQuery({
+        queryKey: ['weekly-challenge-podium'],
+        queryFn: weeklyChallengeApi.getPodium,
+        enabled: tab === 'podio',
     });
 
     const activateMutation = useMutation({
@@ -332,6 +341,15 @@ export default function RetoSemanal() {
                                     Ciclo actual
                                 </button>
                                 <button
+                                    onClick={() => setTab('podio')}
+                                    className="px-4 py-2 rounded-full text-sm font-semibold transition-colors"
+                                    style={tab === 'podio'
+                                        ? { background: C.green, color: '#fff' }
+                                        : { background: C.surface2, color: C.textMuted, border: `1px solid ${C.border}` }}
+                                >
+                                    Podio
+                                </button>
+                                <button
                                     onClick={() => setTab('historial')}
                                     className="px-4 py-2 rounded-full text-sm font-semibold transition-colors"
                                     style={tab === 'historial'
@@ -356,6 +374,14 @@ export default function RetoSemanal() {
                                     )}
                                 </>
                             ) : null}
+
+                            {tab === 'podio' && (
+                                <WeeklyPodium
+                                    podium={podiumData}
+                                    isLoading={loadingPodium}
+                                    onRegister={() => setIsLogModalOpen(true)}
+                                />
+                            )}
 
                             {tab === 'historial' && (
                                 <div className="space-y-3">
@@ -409,6 +435,8 @@ export default function RetoSemanal() {
             </main>
 
             <WorldsRightSidebar mode="home" badges={earnedBadgesFromAreas(areas)} totalXp={totalXpFromAreas(areas)} />
+
+            <ActivityLogModal isOpen={isLogModalOpen} onClose={() => setIsLogModalOpen(false)} />
         </div>
     );
 }

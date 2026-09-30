@@ -4,6 +4,7 @@ import { X, Upload, Clock, Activity, Loader2, CheckCircle2, Lock } from 'lucide-
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import AlertModal from './AlertModal';
 import PaywallModal from '../subscription/PaywallModal';
+import { ACTIVITY_METRIC_TYPES } from '../../utils/activityMetrics';
 
 interface ActivityLogModalProps {
     isOpen: boolean;
@@ -23,6 +24,11 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
     const [duration, setDuration] = useState('');
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+    const [activeMetrics, setActiveMetrics] = useState<Record<string, boolean>>({});
+    const [metricValues, setMetricValues] = useState<Record<string, string>>({});
+    const [metricUnits, setMetricUnits] = useState<Record<string, string>>(() =>
+        Object.fromEntries(ACTIVITY_METRIC_TYPES.map(t => [t.id, t.unitOptions[0].value]))
+    );
     const [checkinResponse, setCheckinResponse] = useState('');
     const [formError, setFormError] = useState('');
     const [uploadError, setUploadError] = useState('');
@@ -78,6 +84,8 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
         setDuration('');
         setSelectedFiles([]);
         setPreviewUrls([]);
+        setActiveMetrics({});
+        setMetricValues({});
         setCheckinResponse('');
         setFormError('');
         setUploadError('');
@@ -149,6 +157,7 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
             queryClient.invalidateQueries({ queryKey: ['all-activities'] });
             queryClient.invalidateQueries({ queryKey: ['challenge-progress'] });
             queryClient.invalidateQueries({ queryKey: ['weekly-challenge-progress'] });
+            queryClient.invalidateQueries({ queryKey: ['weekly-challenge-podium'] });
             queryClient.invalidateQueries({ queryKey: ['activity-log-limit-status'] });
 
             // Save check-in if provided (reto viejo "Desde Aquí" y/o Reto Semanal, el que aplique)
@@ -253,10 +262,15 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
             setFormError('Por favor indica cómo va tu semana.');
             return;
         }
+        const metrics = ACTIVITY_METRIC_TYPES
+            .filter(t => activeMetrics[t.id] && metricValues[t.id]?.trim())
+            .map(t => ({ type: t.id, value: metricValues[t.id].trim(), unit: metricUnits[t.id] }));
+
         const formData = new FormData();
         formData.append('activity', activity);
         formData.append('duration', duration);
         selectedFiles.forEach(file => formData.append('evidence', file));
+        if (metrics.length > 0) formData.append('metrics', JSON.stringify(metrics));
         logMutation.mutate(formData);
     };
 
@@ -387,6 +401,60 @@ export default function ActivityLogModal({ isOpen, onClose }: ActivityLogModalPr
                                 className="w-full px-4 py-3 rounded-xl border outline-none transition-all focus:ring-2"
                                 style={{ background: '#252020', borderColor: '#333330', color: '#F5F0E8', ['--tw-ring-color' as any]: '#52B788' }}
                             />
+                        </div>
+
+                        <div className="space-y-2.5">
+                            <div>
+                                <label className="text-sm font-bold" style={{ color: '#F5F0E8' }}>¿Cómo más lo registraste?</label>
+                                <p className="mt-0.5" style={{ fontSize: 11, color: '#6B6460' }}>Puedes elegir varias</p>
+                            </div>
+                            <div className="flex gap-2 flex-wrap">
+                                {ACTIVITY_METRIC_TYPES.map(t => {
+                                    const active = !!activeMetrics[t.id];
+                                    return (
+                                        <button
+                                            key={t.id}
+                                            type="button"
+                                            onClick={() => setActiveMetrics(prev => ({ ...prev, [t.id]: !prev[t.id] }))}
+                                            className="rounded-xl text-xs font-semibold text-center"
+                                            style={{
+                                                flex: '1 1 44%',
+                                                padding: '10px 8px',
+                                                background: '#252020',
+                                                border: `1px solid ${active ? '#52B788' : '#EF9F27'}`,
+                                                color: active ? '#52B788' : '#EF9F27',
+                                            }}
+                                        >
+                                            {t.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            {ACTIVITY_METRIC_TYPES.filter(t => activeMetrics[t.id]).map(t => (
+                                <div key={t.id} className="flex flex-col gap-1">
+                                    <span style={{ fontSize: 11, fontWeight: 700, color: '#6B6460', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t.label}</span>
+                                    <div className="flex items-stretch gap-1.5 rounded-xl p-1.5" style={{ background: '#252020', border: '1px solid #333330' }}>
+                                        <input
+                                            type="text"
+                                            value={metricValues[t.id] ?? ''}
+                                            onChange={(e) => setMetricValues(prev => ({ ...prev, [t.id]: e.target.value }))}
+                                            placeholder={t.placeholder}
+                                            className="flex-1 min-w-0 outline-none"
+                                            style={{ background: 'transparent', border: 'none', color: '#F5F0E8', fontSize: 14, padding: '8px 10px' }}
+                                        />
+                                        <select
+                                            value={metricUnits[t.id]}
+                                            onChange={(e) => setMetricUnits(prev => ({ ...prev, [t.id]: e.target.value }))}
+                                            className="rounded-lg"
+                                            style={{ border: 'none', background: '#333330', color: '#EF9F27', fontSize: 12, fontWeight: 700, padding: '0 10px' }}
+                                        >
+                                            {t.unitOptions.map(u => (
+                                                <option key={u.value} value={u.value}>{u.label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
 
                         <div>

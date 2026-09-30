@@ -1,6 +1,6 @@
 import type {
     ProgressHistory, WeeklyChallengeMe, WeeklyChallengeProgress, WeeklyChallengeActivateResult,
-    WeeklyChallengeCycleSummary, WeeklyChallengeIntroContent
+    WeeklyChallengeCycleSummary, WeeklyChallengeIntroContent, WeeklyPodium
 } from '../types/weeklyChallenge';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
@@ -95,6 +95,15 @@ export const weeklyChallengeApi = {
             headers: authHeaders()
         });
         if (!response.ok) throw new Error('Error fetching weekly challenge cycles');
+        return response.json();
+    },
+
+    getPodium: async (): Promise<WeeklyPodium> => {
+        const response = await fetch(`${API_URL}/v2/weekly-challenge/podium`, {
+            method: 'GET',
+            headers: authHeaders()
+        });
+        if (!response.ok) throw new Error('Error fetching weekly challenge podium');
         return response.json();
     },
 };
